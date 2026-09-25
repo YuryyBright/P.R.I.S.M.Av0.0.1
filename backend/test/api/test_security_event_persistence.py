@@ -17,7 +17,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import settings
-from app.models.audit_log_model import AuditLog
+from app.models.audit.audit_log_model import AuditLog
 from app.utils.account_email_dispatch import ACCOUNT_EMAIL_UNIFORM_MESSAGE
 
 PASSWORD = "TestPassw0rd!47"

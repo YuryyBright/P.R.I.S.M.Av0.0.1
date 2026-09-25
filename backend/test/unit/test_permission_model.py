@@ -4,9 +4,9 @@ import pytest
 import pytest_asyncio
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.models.permission_group_model import PermissionGroup
-from app.models.permission_model import Permission
-from app.models.user_model import User
+from app.models.users.permission_group_model import PermissionGroup
+from app.models.users.permission_model import Permission
+from app.models.users.user_model import User
 
 
 @pytest_asyncio.fixture(scope="function")

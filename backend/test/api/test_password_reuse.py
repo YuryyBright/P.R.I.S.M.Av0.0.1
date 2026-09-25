@@ -35,7 +35,7 @@ from app.core import security
 from app.core.config import settings
 from app.core.security import PasswordValidator
 from app.crud.user_crud import password_reuse_window, user_crud
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.schemas.common_schema import TokenType
 from app.utils.token import add_token_to_redis
 

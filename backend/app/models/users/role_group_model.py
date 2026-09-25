@@ -5,11 +5,11 @@ from sqlalchemy.orm import backref
 from sqlmodel import Field, Relationship, SQLModel, String
 
 from app.models.base_uuid_model import BaseUUIDModel
-from app.models.role_group_map_model import RoleGroupMap
+from app.models.users.role_group_map_model import RoleGroupMap
 
 if TYPE_CHECKING:
-    from app.models.role_model import Role
-    from app.models.user_model import User
+    from app.models.users.role_model import Role
+    from app.models.users.user_model import User
 
 
 class RoleGroupBase(SQLModel):

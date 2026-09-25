@@ -1,9 +1,9 @@
 from sqlalchemy import Boolean, cast, desc, func, select
 from sqlmodel.ext.asyncio.session import AsyncSession  # Use SQLModel's AsyncSession
 
-from app.models.permission_model import Permission
-from app.models.role_model import Role
-from app.models.user_model import User
+from app.models.users.permission_model import Permission
+from app.models.users.role_model import Role
+from app.models.users.user_model import User
 
 # Assuming you have a way to track active sessions, e.g., via a separate model or Redis.
 # For this example, we'll mock active sessions or assume it's handled elsewhere.

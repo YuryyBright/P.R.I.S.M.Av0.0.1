@@ -11,8 +11,8 @@ from app.crud.role_crud import role_crud
 from app.crud.role_group_crud import role_group
 from app.crud.user_crud import user_crud
 from app.models.role_group_map_model import RoleGroupMap
-from app.models.role_group_model import RoleGroup
-from app.models.user_model import User
+from app.models.users.role_group_model import RoleGroup
+from app.models.users.user_model import User
 from app.schemas.role_group_schema import IRoleGroupCreate, IRoleGroupUpdate
 from app.schemas.role_schema import IRoleCreate
 from app.schemas.user_schema import IUserCreate

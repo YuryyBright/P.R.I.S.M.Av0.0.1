@@ -11,11 +11,11 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.crud.base_crud import CRUDBase
-from app.models.permission_model import Permission
-from app.models.role_model import Role
-from app.models.role_permission_model import RolePermission
-from app.models.user_model import User
-from app.schemas.role_schema import IRoleCreate, IRoleUpdate
+from app.models.users.permission_model import Permission
+from app.models.users.role_model import Role
+from app.models.users.role_permission_model import RolePermission
+from app.models.users.user_model import User
+from app.schemas.users.role_schema import IRoleCreate, IRoleUpdate
 from app.utils.exceptions.common_exception import ResourceNotFoundException
 from app.utils.security_audit import create_audit_log
 

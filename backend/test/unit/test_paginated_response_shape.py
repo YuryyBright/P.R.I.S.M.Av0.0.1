@@ -133,7 +133,7 @@ def test_nothing_touches_items_on_a_paginated_result() -> None:
 def paginated_row_schemas() -> list[type]:
     """Every schema that appears as IGetResponsePaginated[...] on a route."""
     from app.schemas.permission_group_schema import IPermissionGroupReadWithPermissions
-    from app.schemas.permission_schema import IPermissionRead
+    from from app.schemas.users.permission_schema import IPermissionRead
     from app.schemas.role_group_schema import IRoleGroupRead
     from app.schemas.role_schema import IRoleRead
     from app.schemas.user_schema import IUserRead
@@ -208,7 +208,7 @@ def test_role_page_builds_from_orm_rows() -> None:
     from datetime import datetime, timezone
     from uuid import uuid4
 
-    from app.models.role_model import Role
+    from app.models.users.role_model import Role
     from app.schemas.role_schema import IRoleRead
 
     rows = [

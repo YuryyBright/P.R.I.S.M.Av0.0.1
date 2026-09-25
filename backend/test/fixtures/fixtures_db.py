@@ -42,16 +42,16 @@ async def db_engine() -> AsyncGenerator[AsyncEngine, None]:
         connect_args = {}
     engine = create_async_engine(TEST_SQLALCHEMY_DATABASE_URI, echo=False, connect_args=connect_args)
     # Import all models to ensure they are registered with SQLAlchemy
-    from app.models.audit_log_model import AuditLog  # noqa: F401
+    from backend.app.models.audit.audit_log_model import AuditLog  # noqa: F401
     from app.models.base_uuid_model import SQLModel
     from app.models.password_history_model import UserPasswordHistory  # noqa: F401
-    from app.models.permission_group_model import PermissionGroup  # noqa: F401
-    from app.models.permission_model import Permission  # noqa: F401
+    from app.models.users.permission_group_model import PermissionGroup  # noqa: F401
+    from app.models.users.permission_model import Permission  # noqa: F401
     from app.models.role_group_map_model import RoleGroupMap  # noqa: F401
-    from app.models.role_group_model import RoleGroup  # noqa: F401
-    from app.models.role_model import Role  # noqa: F401
+    from app.models.users.role_group_model import RoleGroup  # noqa: F401
+    from app.models.users.role_model import Role  # noqa: F401
     from app.models.role_permission_model import RolePermission  # noqa: F401
-    from app.models.user_model import User  # noqa: F401
+    from app.models.users.user_model import User  # noqa: F401
     from app.models.user_role_model import UserRole  # noqa: F401
 
     async with engine.begin() as conn:
@@ -115,16 +115,16 @@ async def db(db_engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
 async def initialize_db(db_engine: AsyncEngine) -> AsyncGenerator[None, None]:
     """Initialize the database for the test session."""
     # Import all models to ensure they are registered
-    from app.models.audit_log_model import AuditLog  # noqa: F401
+    from backend.app.models.audit.audit_log_model import AuditLog  # noqa: F401
     from app.models.base_uuid_model import SQLModel
     from app.models.password_history_model import UserPasswordHistory  # noqa: F401
-    from app.models.permission_group_model import PermissionGroup  # noqa: F401
-    from app.models.permission_model import Permission  # noqa: F401
+    from app.models.users.permission_group_model import PermissionGroup  # noqa: F401
+    from app.models.users.permission_model import Permission  # noqa: F401
     from app.models.role_group_map_model import RoleGroupMap  # noqa: F401
-    from app.models.role_group_model import RoleGroup  # noqa: F401
-    from app.models.role_model import Role  # noqa: F401
+    from app.models.users.role_group_model import RoleGroup  # noqa: F401
+    from app.models.users.role_model import Role  # noqa: F401
     from app.models.role_permission_model import RolePermission  # noqa: F401
-    from app.models.user_model import User  # noqa: F401
+    from app.models.users.user_model import User  # noqa: F401
     from app.models.user_role_model import UserRole  # noqa: F401
 
     async with db_engine.begin() as conn:

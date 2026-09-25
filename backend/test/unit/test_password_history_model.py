@@ -6,7 +6,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.password_history_model import UserPasswordHistory
-from app.models.user_model import User
+from app.models.users.user_model import User
 
 
 @pytest.mark.asyncio

@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field  # Added ConfigDict import
 
-from app.models.user_model import User, UserBase
+from app.models.users.user_model import User, UserBase
 from app.utils.partial import optional
 
 # Removed unused SQLModel import

@@ -11,7 +11,7 @@ import factory
 from factory import Faker
 from factory.alchemy import SQLAlchemyModelFactory
 
-from app.models.audit_log_model import AuditLog
+from app.models.audit.audit_log_model import AuditLog
 from app.utils.uuid6 import uuid7
 
 

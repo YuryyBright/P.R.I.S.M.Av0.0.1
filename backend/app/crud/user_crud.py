@@ -14,15 +14,15 @@ from sqlmodel.ext.asyncio.session import AsyncSession  # Keep this import
 from app.core.config import settings
 from app.core.security import PasswordValidator
 from app.crud.base_crud import CRUDBase
-from app.models.audit_log_model import AuditLog
-from app.models.password_history_model import UserPasswordHistory
-from app.models.permission_group_model import PermissionGroup
-from app.models.permission_model import Permission
-from app.models.role_group_model import RoleGroup
-from app.models.role_model import Role
-from app.models.user_model import User
-from app.models.user_role_model import UserRole
-from app.schemas.user_schema import IUserCreate, IUserUpdate
+from app.models.audit.audit_log_model import AuditLog
+from app.models.users.password_history_model import UserPasswordHistory
+from app.models.users.permission_group_model import PermissionGroup
+from app.models.users.permission_model import Permission
+from app.models.users.role_group_model import RoleGroup
+from app.models.users.role_model import Role
+from app.models.users.user_model import User
+from app.models.users.user_role_model import UserRole
+from app.schemas.users.user_schema import IUserCreate, IUserUpdate
 
 
 class PasswordReuseError(ValueError):

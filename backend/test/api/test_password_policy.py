@@ -26,7 +26,7 @@ from app import crud
 from app.core import security
 from app.core.config import settings
 from app.core.security import PasswordValidator
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.schemas.common_schema import TokenType
 from app.utils.account_email_dispatch import ACCOUNT_EMAIL_UNIFORM_MESSAGE
 from app.utils.password_policy import PASSWORD_COMPLEXITY_FAILURE_MESSAGE

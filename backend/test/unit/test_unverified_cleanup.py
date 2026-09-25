@@ -15,7 +15,7 @@ import pytest
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.models.user_role_model import UserRole
 from app.utils.unverified_cleanup import (
     delete_if_still_pending,

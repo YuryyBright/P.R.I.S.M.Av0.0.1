@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.models.role_model import Role
+from app.models.users.role_model import Role
 
 
 def serialize_role(role: Role) -> dict[str, Any]:

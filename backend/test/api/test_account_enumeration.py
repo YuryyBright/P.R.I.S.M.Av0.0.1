@@ -266,7 +266,7 @@ async def test_reregistration_does_not_create_a_second_user(
     """An established address must not gain a duplicate row."""
     from sqlmodel import select
 
-    from app.models.user_model import User
+    from app.models.users.user_model import User
 
     await user_factory.create(email=ESTABLISHED_EMAIL, password=PASSWORD, verified=True, is_active=True)
 

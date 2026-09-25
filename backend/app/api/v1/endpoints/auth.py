@@ -22,12 +22,12 @@ from app.core.security import (  # For password complexity / JWT audit mapping
     decode_token,
     map_jwt_http_error_to_event,
 )
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.schemas.common_schema import TokenType
-from app.schemas.response_schema import IPostResponseBase, create_response
-from app.schemas.token_schema import PasswordResetConfirm, RefreshToken, Token, TokenRead
-from app.schemas.user_schema import PasswordResetRequest  # Used for resend-verification
-from app.schemas.user_schema import (
+from app.schemas.users.response_schema import IPostResponseBase, create_response
+from app.schemas.users.token_schema import PasswordResetConfirm, RefreshToken, Token, TokenRead
+from app.schemas.users.user_schema import PasswordResetRequest  # Used for resend-verification
+from app.schemas.users.user_schema import (
     IUserRead,
     UserRegister,
     VerifyEmail,

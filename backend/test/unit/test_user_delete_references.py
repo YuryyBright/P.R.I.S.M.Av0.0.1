@@ -11,14 +11,14 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.crud.user_crud import user_crud
-from app.models.audit_log_model import AuditLog
-from app.models.password_history_model import UserPasswordHistory
-from app.models.permission_group_model import PermissionGroup
-from app.models.permission_model import Permission
-from app.models.role_group_model import RoleGroup
-from app.models.role_model import Role
-from app.models.user_model import User
-from app.models.user_role_model import UserRole
+from app.models.audit.audit_log_model import AuditLog
+from app.models.users.password_history_model import UserPasswordHistory
+from app.models.users.permission_group_model import PermissionGroup
+from app.models.users.permission_model import Permission
+from app.models.users.role_group_model import RoleGroup
+from app.models.users.role_model import Role
+from app.models.users.user_model import User
+from app.models.users.user_role_model import UserRole
 
 
 async def _create_user(db: AsyncSession) -> User:

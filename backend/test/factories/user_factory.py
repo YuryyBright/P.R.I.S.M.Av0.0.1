@@ -12,8 +12,8 @@ from factory.faker import Faker
 from sqlalchemy.orm import Session
 
 from app.core.security import PasswordValidator
-from app.models.role_model import Role
-from app.models.user_model import User
+from app.models.users.role_model import Role
+from app.models.users.user_model import User
 from app.utils.uuid6 import uuid7
 
 

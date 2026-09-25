@@ -29,7 +29,7 @@ from app.celery_app import celery_app
 from app.core.config import ModeEnum, settings
 from app.core.rate_limit import limiter
 from app.core.service_config import service_settings
-from app.schemas.response_schema import ErrorDetail, create_error_response
+from app.schemas.users.response_schema import ErrorDetail, create_error_response
 from app.utils.client_address import ProxyHeadersMiddleware
 from app.utils.exceptions.user_exceptions import UserSelfDeleteException
 from app.utils.fastapi_globals import GlobalsMiddleware, g

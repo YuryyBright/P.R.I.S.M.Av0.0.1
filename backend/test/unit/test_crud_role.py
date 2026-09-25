@@ -9,9 +9,9 @@ from app.crud.permission_crud import permission_crud
 from app.crud.permission_group_crud import permission_group_crud
 from app.crud.role_crud import role_crud
 from app.crud.user_crud import user_crud
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.schemas.permission_group_schema import IPermissionGroupCreate
-from app.schemas.permission_schema import IPermissionCreate
+from from app.schemas.users.permission_schema import IPermissionCreate
 from app.schemas.role_schema import IRoleCreate, IRoleUpdate
 from app.schemas.user_schema import IUserCreate
 from app.utils.exceptions.common_exception import ResourceNotFoundException

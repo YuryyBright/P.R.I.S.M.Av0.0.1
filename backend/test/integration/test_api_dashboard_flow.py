@@ -34,7 +34,7 @@ class TestDashboardFlow:
         # Debug: List all users before login
         from sqlmodel import select
 
-        from app.models.user_model import User as UserModel
+        from app.models.users.user_model import User as UserModel
 
         result = await db.exec(select(UserModel))
         users = result.all()
@@ -288,7 +288,7 @@ class TestDashboardFlow:
         # Debug: Print all users and their roles before login
         from sqlmodel import select
 
-        from app.models.user_model import User as UserModel
+        from app.models.users.user_model import User as UserModel
 
         result = await db.exec(select(UserModel))
         users = result.all()
@@ -333,7 +333,7 @@ class TestDashboardFlow:
         admin_password = settings.FIRST_SUPERUSER_PASSWORD
         from sqlmodel import select
 
-        from app.models.user_model import User as UserModel
+        from app.models.users.user_model import User as UserModel
 
         result = await db.exec(select(UserModel))
         users = result.all()

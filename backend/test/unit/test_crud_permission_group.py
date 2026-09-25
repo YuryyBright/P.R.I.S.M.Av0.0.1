@@ -7,10 +7,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.crud.permission_crud import permission_crud
 from app.crud.permission_group_crud import permission_group_crud
-from app.models.permission_group_model import PermissionGroup
-from app.models.permission_model import Permission
+from app.models.users.permission_group_model import PermissionGroup
+from app.models.users.permission_model import Permission
 from app.schemas.permission_group_schema import IPermissionGroupCreate, IPermissionGroupUpdate
-from app.schemas.permission_schema import IPermissionCreate
+from from app.schemas.users.permission_schema import IPermissionCreate
 
 
 @pytest.mark.asyncio

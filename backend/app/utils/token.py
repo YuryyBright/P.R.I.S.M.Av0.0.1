@@ -7,7 +7,7 @@ from uuid import UUID
 from redis.asyncio import Redis
 
 from app.core.config import settings
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.schemas.common_schema import TokenType
 from app.utils.origin_network import is_different_network
 

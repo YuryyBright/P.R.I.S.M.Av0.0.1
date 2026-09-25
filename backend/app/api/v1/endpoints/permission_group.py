@@ -7,16 +7,16 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app import crud
 from app.api import deps
 from app.deps import permission_group_deps
-from app.models.permission_group_model import PermissionGroup
-from app.models.user_model import User
-from app.schemas.permission_group_schema import (
+from app.models.users.permission_group_model import PermissionGroup
+from app.models.users.user_model import User
+from app.schemas.users.permission_group_schema import (
     IPermissionGroupCreate,
     IPermissionGroupRead,
     IPermissionGroupReadWithPermissions,
     IPermissionGroupUpdate,
     IPermissionGroupWithPermissions,
 )
-from app.schemas.response_schema import (
+from app.schemas.users.response_schema import (
     IGetResponseBase,
     IGetResponsePaginated,
     IPostResponseBase,

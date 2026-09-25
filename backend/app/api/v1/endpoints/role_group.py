@@ -11,16 +11,16 @@ from app import crud
 from app.api import deps
 from app.api.deps import get_redis_client
 from app.deps import role_group_deps
-from app.models.role_group_model import RoleGroup
-from app.models.user_model import User
-from app.schemas.response_schema import (
+from app.models.users.role_group_model import RoleGroup
+from app.models.users.user_model import User
+from app.schemas.users.response_schema import (
     IGetResponseBase,
     IGetResponsePaginated,
     IPostResponseBase,
     IPutResponseBase,
     create_response,
 )
-from app.schemas.role_group_schema import (
+from app.schemas.users.role_group_schema import (
     IRoleGroupCreate,
     IRoleGroupRead,
     IRoleGroupUpdate,

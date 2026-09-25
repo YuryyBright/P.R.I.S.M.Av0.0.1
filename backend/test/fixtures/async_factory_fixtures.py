@@ -18,7 +18,7 @@ from typing import Any, Dict
 import pytest
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.models.user_model import User
+from app.models.users.user_model import User
 
 
 @pytest.fixture

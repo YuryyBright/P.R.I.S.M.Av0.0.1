@@ -6,8 +6,8 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.role_group_map_model import RoleGroupMap
-from app.models.role_group_model import RoleGroup
-from app.models.role_model import Role
+from app.models.users.role_group_model import RoleGroup
+from app.models.users.role_model import Role
 
 
 @pytest.mark.asyncio

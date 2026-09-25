@@ -12,7 +12,7 @@ from app.models import Role as RoleModel
 from app.models import RoleGroup as RoleGroupModel
 from app.models import User as UserModel
 from app.schemas.permission_group_schema import IPermissionGroupCreate
-from app.schemas.permission_schema import IPermissionCreate
+from from app.schemas.users.permission_schema import IPermissionCreate
 from app.schemas.role_group_schema import IRoleGroupCreate
 from app.schemas.role_schema import IRoleCreate
 from app.schemas.user_schema import IUserCreate

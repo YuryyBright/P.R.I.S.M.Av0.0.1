@@ -11,7 +11,7 @@ from app.crud.permission_group_crud import permission_group_crud
 from app.crud.role_crud import role_crud
 from app.models import RolePermission
 from app.schemas.permission_group_schema import IPermissionGroupCreate
-from app.schemas.permission_schema import IPermissionCreate, IPermissionUpdate
+from from app.schemas.users.permission_schema import IPermissionCreate, IPermissionUpdate
 from app.schemas.role_schema import IRoleCreate
 
 

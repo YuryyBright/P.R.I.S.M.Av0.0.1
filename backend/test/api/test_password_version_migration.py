@@ -18,7 +18,7 @@ from sqlalchemy.engine import Connection, Engine
 from alembic.migration import MigrationContext
 from alembic.operations import Operations
 from app.models.base_uuid_model import SQLModel
-from app.models.user_model import User  # noqa: F401  registers the mapped table
+from app.models.users.user_model import User  # noqa: F401  registers the mapped table
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 MIGRATION_PATH = BACKEND_DIR / "alembic" / "versions" / "2026_09_05_0000_drop_password_version.py"

@@ -174,7 +174,7 @@ async def test_get_current_user_establishes_identity_for_the_limiter(
 ) -> None:
     from app.api.deps import get_current_user
     from app.core import security
-    from app.models.user_model import User
+    from app.models.users.user_model import User
     from app.utils.token import add_session_tokens_to_redis
 
     redis = MockRedisClient()

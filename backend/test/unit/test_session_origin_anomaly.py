@@ -25,7 +25,7 @@ from fastapi import BackgroundTasks, HTTPException, Request
 from app.api.v1.endpoints.auth import get_new_access_token
 from app.core import security
 from app.core.config import settings
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.schemas.common_schema import TokenType
 from app.utils.token import (
     add_session_tokens_to_redis,

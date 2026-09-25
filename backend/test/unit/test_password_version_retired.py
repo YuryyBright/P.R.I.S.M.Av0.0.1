@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from app.models.base_uuid_model import SQLModel
-from app.models.user_model import User  # noqa: F401  registers the mapped table
+from app.models.users.user_model import User  # noqa: F401  registers the mapped table
 
 APP_DIR = Path(__file__).resolve().parents[2] / "app"
 USER_TABLE = SQLModel.metadata.tables["User"]

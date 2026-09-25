@@ -13,12 +13,12 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.security import PasswordValidator
-from app.models.permission_group_model import PermissionGroup
-from app.models.permission_model import Permission
-from app.models.role_group_model import RoleGroup
-from app.models.role_model import Role
+from app.models.users.permission_group_model import PermissionGroup
+from app.models.users.permission_model import Permission
+from app.models.users.role_group_model import RoleGroup
+from app.models.users.role_model import Role
 from app.models.role_permission_model import RolePermission
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.models.user_role_model import UserRole
 from app.utils.uuid6 import uuid7
 

@@ -12,10 +12,10 @@ import factory
 from factory.alchemy import SQLAlchemyModelFactory
 from sqlalchemy.orm import Session
 
-from app.models.permission_group_model import PermissionGroup
-from app.models.permission_model import Permission
-from app.models.role_group_model import RoleGroup
-from app.models.role_model import Role
+from app.models.users.permission_group_model import PermissionGroup
+from app.models.users.permission_model import Permission
+from app.models.users.role_group_model import RoleGroup
+from app.models.users.role_model import Role
 from app.utils.uuid6 import uuid7
 
 

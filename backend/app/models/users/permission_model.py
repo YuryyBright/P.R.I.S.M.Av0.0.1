@@ -4,12 +4,12 @@ from uuid import UUID
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.base_uuid_model import BaseUUIDModel
-from app.models.role_permission_model import RolePermission
+from app.models.users.role_permission_model import RolePermission
 
 if TYPE_CHECKING:
-    from app.models.permission_group_model import PermissionGroup
-    from app.models.role_model import Role
-    from app.models.user_model import User
+    from app.models.users.permission_group_model import PermissionGroup
+    from app.models.users.role_model import Role
+    from app.models.users.user_model import User
 
 
 class PermissionBase(SQLModel):

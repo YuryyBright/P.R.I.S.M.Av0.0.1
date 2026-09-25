@@ -8,11 +8,11 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.crud.base_crud import CRUDBase
-from app.models.role_group_map_model import RoleGroupMap
-from app.models.role_group_model import RoleGroup
-from app.models.role_model import Role
-from app.models.user_model import User
-from app.schemas.role_group_schema import IRoleGroupCreate, IRoleGroupUpdate
+from app.models.users.role_group_map_model import RoleGroupMap
+from app.models.users.role_group_model import RoleGroup
+from app.models.users.role_model import Role
+from app.models.users.user_model import User
+from app.schemas.users.role_group_schema import IRoleGroupCreate, IRoleGroupUpdate
 from app.utils.exceptions.common_exception import NameExistException, ResourceNotFoundException
 from app.utils.security_audit import create_audit_log
 
@@ -446,7 +446,7 @@ class CRUDRoleGroup(CRUDBase[RoleGroup, IRoleGroupCreate, IRoleGroupUpdate]):
         if name:
             existing = await self.get_group_by_name(name=name, db_session=db_session)
             if existing:
-                from app.models.role_group_model import RoleGroup
+                from app.models.users.role_group_model import RoleGroup
                 from app.utils.exceptions.common_exception import NameExistException
 
                 raise NameExistException(RoleGroup, name=name)

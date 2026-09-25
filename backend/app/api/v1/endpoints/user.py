@@ -14,14 +14,14 @@ from app.api.deps import get_redis_client
 from app.core.config import settings
 from app.deps import user_deps
 from app.models import User
-from app.schemas.response_schema import (
+from app.schemas.users.response_schema import (
     IDeleteResponseBase,
     IGetResponseBase,
     IGetResponsePaginated,
     IPostResponseBase,
     create_response,
 )
-from app.schemas.user_schema import IUserCreate, IUserRead, IUserRoleAssign, IUserUpdate
+from app.schemas.users.user_schema import IUserCreate, IUserRead, IUserRoleAssign, IUserUpdate
 from app.utils import password_policy
 from app.utils.account_email_dispatch import issue_verification
 from app.utils.exceptions.user_exceptions import UserSelfDeleteException

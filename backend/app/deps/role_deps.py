@@ -6,7 +6,7 @@ from typing_extensions import Annotated
 
 from app import crud
 from app.api import deps
-from app.models.role_model import Role
+from app.models.users.role_model import Role
 from app.utils.exceptions.common_exception import IdNotFoundException, NameNotFoundException
 
 

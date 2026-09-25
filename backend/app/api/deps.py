@@ -18,7 +18,7 @@ from app.core.config import Settings, settings
 from app.core.rate_limit import remember_authenticated_identity
 from app.core.security import decode_token
 from app.db.session import SessionLocal, get_redis_client
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.schemas.common_schema import TokenType
 from app.utils.sanitization import InputSanitizer
 from app.utils.token import get_valid_tokens, token_is_allowlisted
@@ -27,7 +27,7 @@ from app.utils.token import get_valid_tokens, token_is_allowlisted
 csrf_protect = None  # Will be set by main.py during startup
 
 # Ensure Permission model and relationship attributes are correctly imported/handled
-# from app.models.permission_model import Permission # If direct import is needed
+# from app.models.users.permission_model import Permission # If direct import is needed
 # from app.schemas.role_schema import IRoleEnum # If still used elsewhere or for default roles
 
 

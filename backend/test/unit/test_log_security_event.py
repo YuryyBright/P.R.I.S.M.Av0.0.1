@@ -16,8 +16,8 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import ModeEnum, settings
-from app.models.audit_log_model import AuditLog
-from app.models.user_model import User
+from backend.app.models.audit.audit_log_model import AuditLog
+from app.models.users.user_model import User
 from app.utils import background_tasks as background_tasks_module
 from app.utils.background_tasks import log_security_event
 from app.worker import log_security_event_task

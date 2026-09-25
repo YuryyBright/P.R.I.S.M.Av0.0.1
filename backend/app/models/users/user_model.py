@@ -5,12 +5,12 @@ from pydantic import EmailStr, field_validator  # Modified import
 from sqlmodel import Column, Field, Relationship, String
 
 from app.models.base_uuid_model import BaseUUIDModel, SQLModel
-from app.models.user_role_model import UserRole
+from app.models.users.user_role_model import UserRole
 
 if TYPE_CHECKING:
-    from app.models.permission_group_model import PermissionGroup
-    from app.models.permission_model import Permission
-    from app.models.role_model import Role
+    from app.models.users.permission_group_model import PermissionGroup
+    from app.models.users.permission_model import Permission
+    from app.models.users.role_model import Role
 
 
 class UserBase(SQLModel):

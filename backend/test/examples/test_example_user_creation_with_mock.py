@@ -17,7 +17,7 @@ from httpx import AsyncClient
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import settings
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.utils.uuid6 import uuid7
 
 

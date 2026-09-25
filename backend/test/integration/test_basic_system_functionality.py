@@ -134,12 +134,12 @@ def test_imports_working() -> None:
     # Test core imports
     from app.core.config import settings
     from app.main import app
-    from app.models.permission_model import Permission  # Test schema imports
-    from app.models.role_model import Role
+    from app.models.users.permission_model import Permission  # Test schema imports
+    from app.models.users.role_model import Role
 
     # Test model imports
-    from app.models.user_model import User
-    from app.schemas.permission_schema import IPermissionRead
+    from app.models.users.user_model import User
+    from from app.schemas.users.permission_schema import IPermissionRead
     from app.schemas.role_schema import IRoleRead
     from app.schemas.user_schema import IUserRead
 

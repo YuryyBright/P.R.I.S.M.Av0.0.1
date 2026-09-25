@@ -7,9 +7,9 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.crud.base_crud import CRUDBase
-from app.models.permission_group_model import PermissionGroup
-from app.schemas.permission_group_schema import IPermissionGroupCreate, IPermissionGroupUpdate
-from app.schemas.response_schema import IGetResponsePaginated
+from app.models.users.permission_group_model import PermissionGroup
+from app.schemas.users.permission_group_schema import IPermissionGroupCreate, IPermissionGroupUpdate
+from app.schemas.users.response_schema import IGetResponsePaginated
 
 
 class PermissionGroupData(TypedDict):

@@ -25,7 +25,7 @@ from app import crud
 from app.api.v1.endpoints.user import bulk_update_users
 from app.core.config import settings
 from app.core.security import PasswordValidator
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.utils.password_policy import PASSWORD_COMPLEXITY_FAILURE_MESSAGE
 
 # Satisfies every rule in settings. Shared with the self-service policy tests.

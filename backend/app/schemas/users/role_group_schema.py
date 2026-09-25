@@ -2,9 +2,9 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from app.models.role_group_model import RoleGroupBase
+from app.models.users.role_group_model import RoleGroupBase
 from app.schemas.base_schema import IBaseSchema
-from app.schemas.role_schema import IRoleRead
+from app.schemas.users.role_schema import IRoleRead
 from app.utils.partial import optional
 
 

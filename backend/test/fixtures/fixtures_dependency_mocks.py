@@ -9,7 +9,7 @@ from typing import Any, AsyncGenerator, Callable, Dict, List, Optional, Type, Ty
 import pytest_asyncio
 from fastapi import FastAPI
 
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.utils.uuid6 import uuid7
 
 T = TypeVar("T")

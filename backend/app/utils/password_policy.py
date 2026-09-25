@@ -40,7 +40,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app import crud
 from app.core.security import PasswordValidator
 from app.crud.user_crud import PasswordReuseError
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.utils.background_tasks import log_security_event
 from app.utils.token import revoke_all_user_tokens
 

@@ -4,7 +4,7 @@ from uuid import UUID
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.models.audit_log_model import AuditLog
+from app.models.audit.audit_log_model import AuditLog
 
 
 async def create_audit_log(

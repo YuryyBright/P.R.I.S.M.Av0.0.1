@@ -26,8 +26,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app import crud
 from app.core import security
 from app.core.config import settings
-from app.models.user_model import User
-from app.schemas.user_schema import IUserCreate, UserRegister
+from app.models.users.user_model import User
+from app.schemas.users.user_schema import IUserCreate, UserRegister
 from app.utils.background_tasks import (
     log_security_event,
     send_registration_notice_email,

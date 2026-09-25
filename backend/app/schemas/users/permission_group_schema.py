@@ -5,7 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from app.models import Permission
-from app.models.permission_group_model import PermissionGroupBase
+from app.models.users.permission_group_model import PermissionGroupBase
 from app.utils.partial import optional
 
 

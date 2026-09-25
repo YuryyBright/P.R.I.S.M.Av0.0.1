@@ -7,8 +7,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.crud.base_crud import CRUDBase
 from app.models import RolePermission
-from app.models.permission_model import Permission
-from app.schemas.permission_schema import IPermissionCreate, IPermissionUpdate
+from app.models.users.permission_model import Permission
+from app.schemas.users.permission_schema import IPermissionCreate, IPermissionUpdate
 
 
 class CRUDPermission(CRUDBase[Permission, IPermissionCreate, IPermissionUpdate]):

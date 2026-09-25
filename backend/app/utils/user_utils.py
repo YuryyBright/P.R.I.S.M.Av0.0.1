@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.models.user_model import User
+from app.models.users.user_model import User
 
 
 def serialize_user(user: User) -> dict[str, Any]:

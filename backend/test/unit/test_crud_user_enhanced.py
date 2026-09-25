@@ -13,7 +13,7 @@ from fastapi_pagination import Params
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app import crud
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.schemas.user_schema import IUserCreate
 
 

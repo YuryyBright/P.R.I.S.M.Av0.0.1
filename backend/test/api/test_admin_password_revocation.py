@@ -19,7 +19,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.api.v1.endpoints.user import update_user
 from app.core.config import settings
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.schemas.common_schema import TokenType
 from app.schemas.user_schema import IUserUpdate
 from app.utils.token import add_token_to_redis, get_valid_tokens, token_is_allowlisted

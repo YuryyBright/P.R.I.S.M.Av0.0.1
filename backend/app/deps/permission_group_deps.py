@@ -6,7 +6,7 @@ from typing_extensions import Annotated
 
 from app import crud
 from app.api import deps
-from app.models.permission_group_model import PermissionGroup
+from app.models.users.permission_group_model import PermissionGroup
 from app.utils.exceptions.common_exception import IdNotFoundException, NameNotFoundException
 
 

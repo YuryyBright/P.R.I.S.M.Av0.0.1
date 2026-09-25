@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.crud import crud_dashboard
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.schemas.dashboard_schema import (
     DashboardStats,
     IDashboardResponse,
@@ -13,7 +13,7 @@ from app.schemas.dashboard_schema import (
     RecentLoginUser,
     UserSummaryForTable,
 )
-from app.schemas.role_schema import IRoleEnum  # For role checking
+from app.schemas.users.role_schema import IRoleEnum  # For role checking
 
 router = APIRouter()
 

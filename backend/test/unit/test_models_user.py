@@ -6,8 +6,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.models.role_model import Role
-from app.models.user_model import User
+from app.models.users.role_model import Role
+from app.models.users.user_model import User
 from app.models.user_role_model import UserRole
 
 

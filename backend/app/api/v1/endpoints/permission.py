@@ -8,10 +8,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app import crud
 from app.api import deps
 from app.deps import permission_deps
-from app.models.permission_model import Permission
-from app.models.user_model import User
-from app.schemas.permission_schema import IPermissionCreate, IPermissionRead
-from app.schemas.response_schema import (
+from app.models.users.permission_model import Permission
+from app.models.users.user_model import User
+from app.schemas.users.permission_schema import IPermissionCreate, IPermissionRead
+from app.schemas.users.response_schema import (
     IDeleteResponseBase,
     IGetResponseBase,
     IGetResponsePaginated,

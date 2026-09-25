@@ -7,8 +7,8 @@ from sqlmodel import Field, Relationship, SQLModel, String
 from app.models.base_uuid_model import BaseUUIDModel
 
 if TYPE_CHECKING:
-    from app.models.permission_model import Permission
-    from app.models.user_model import User
+    from app.models.users.permission_model import Permission
+    from app.models.users.user_model import User
 
 
 class PermissionGroupBase(SQLModel):

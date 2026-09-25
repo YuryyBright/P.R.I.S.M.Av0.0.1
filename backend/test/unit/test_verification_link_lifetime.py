@@ -24,7 +24,7 @@ from fastapi import BackgroundTasks
 
 from app.core import security
 from app.core.config import settings
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.utils.account_email_dispatch import issue_verification
 from app.utils.email.email import html_to_plain_text, render_template
 

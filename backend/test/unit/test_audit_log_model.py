@@ -6,8 +6,8 @@ import pytest
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.models.audit_log_model import AuditLog
-from app.models.user_model import User
+from backend.app.models.audit.audit_log_model import AuditLog
+from app.models.users.user_model import User
 
 
 @pytest.mark.asyncio

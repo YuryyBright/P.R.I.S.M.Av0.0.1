@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from app.schemas.base_schema import IBaseSchema
-from app.schemas.permission_schema import IPermissionRead
+from app.schemas.users.permission_schema import IPermissionRead
 from app.utils.partial import optional
 
 

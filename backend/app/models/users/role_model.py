@@ -7,14 +7,14 @@ from sqlalchemy.orm.mapper import Mapper
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.base_uuid_model import BaseUUIDModel
-from app.models.role_group_map_model import RoleGroupMap
-from app.models.role_permission_model import RolePermission
-from app.models.user_role_model import UserRole
+from app.models.users.role_group_map_model import RoleGroupMap
+from app.models.users.role_permission_model import RolePermission
+from app.models.users.user_role_model import UserRole
 
 if TYPE_CHECKING:
-    from app.models.permission_model import Permission
-    from app.models.role_group_model import RoleGroup
-    from app.models.user_model import User
+    from app.models.users.permission_model import Permission
+    from app.models.users.role_group_model import RoleGroup
+    from app.models.users.user_model import User
 
 
 class RoleBase(SQLModel):

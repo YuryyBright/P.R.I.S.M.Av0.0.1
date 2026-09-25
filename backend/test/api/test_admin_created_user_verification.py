@@ -32,7 +32,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.api.v1.endpoints.user import create_user
 from app.core.config import settings
-from app.models.user_model import User
+from app.models.users.user_model import User
 from app.schemas.user_schema import IUserCreate
 
 PASSWORD = "AdminMadeThis!47"
