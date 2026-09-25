@@ -1,0 +1,229 @@
+# Backend Development Docker Compose
+# Optimized for local development with hot-reload and debugging
+# Note: Database and Redis services are defined in the root docker-compose.dev.yml
+
+services:
+  # FastAPI Backend Development Service
+  prisma_dev:
+    build:
+      context: ${BACKEND_SRC:-.}
+      dockerfile: Dockerfile
+      target: development
+      args:
+        - NODE_ENV=development
+        - ENVIRONMENT=development
+    image: prisma:dev
+    container_name: prisma_dev
+    environment:
+      - MODE=development
+      - ENVIRONMENT=development
+      - FASTAPI_ENV=development
+      - DATABASE_HOST=prisma_db_dev
+      - REDIS_HOST=prisma_redis_dev
+      - SMTP_HOST=mailhog_dev
+    env_file:
+      - .env.development
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${BACKEND_SRC:-.}:/app
+      - ./logs:/app/logs
+    command: ["bash", "/app/scripts/docker/entrypoint-dev.sh"]
+    networks:
+      - prisma_dev_network
+    depends_on:
+      prisma_db_dev:
+        condition: service_healthy
+      prisma_redis_dev:
+        condition: service_healthy
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Celery worker for background tasks - Development
+  prisma_worker_dev:
+    build:
+      context: ${BACKEND_SRC:-.}
+      dockerfile: queue.dockerfile
+      args:
+        - NODE_ENV=development
+    image: prisma_worker:dev
+    container_name: prisma_worker_dev
+    volumes:
+      - ${BACKEND_SRC:-.}:/app
+      - ./logs:/app/logs
+    environment:
+      - MODE=development
+      - ENVIRONMENT=development
+      - C_FORCE_ROOT=true
+      - DATABASE_HOST=prisma_db_dev
+      - REDIS_HOST=prisma_redis_dev
+      - SMTP_HOST=mailhog_dev
+    env_file:
+      - .env.development
+    command: ["/bin/bash", "/app/scripts/docker/start-worker.sh"]
+    depends_on:
+      prisma_redis_dev:
+        condition: service_healthy
+      prisma_dev:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - prisma_dev_network
+
+  # Celery beat scheduler for periodic tasks - Development
+  prisma_beat_dev:
+    build:
+      context: ${BACKEND_SRC:-.}
+      dockerfile: queue.dockerfile
+      args:
+        - NODE_ENV=development
+    image: prisma_worker:dev
+    container_name: prisma_beat_dev
+    volumes:
+      - ${BACKEND_SRC:-.}:/app
+      - ./logs:/app/logs
+      - prisma_celery_beat_dev_schedule:/app
+    environment:
+      - MODE=development
+      - ENVIRONMENT=development
+      - C_FORCE_ROOT=true
+      - DATABASE_HOST=prisma_db_dev
+      - REDIS_HOST=prisma_redis_dev
+      - SMTP_HOST=mailhog_dev
+    env_file:
+      - .env.development
+    command: ["/bin/bash", "/app/scripts/docker/start-beat.sh"]
+    depends_on:
+      prisma_redis_dev:
+        condition: service_healthy
+      prisma_worker_dev:
+        condition: service_started
+    restart: on-failure
+    networks:
+      - prisma_dev_network
+
+  # Celery Flower monitoring dashboard - Development
+  prisma_flower_dev:
+    build:
+      context: ${BACKEND_SRC:-.}
+      dockerfile: queue.dockerfile
+      args:
+        - NODE_ENV=development
+    image: prisma_worker:dev
+    container_name: prisma_flower_dev
+    volumes:
+      - ${BACKEND_SRC:-.}:/app
+      - ./logs:/app/logs
+    environment:
+      - MODE=development
+      - ENVIRONMENT=development
+      - DATABASE_HOST=prisma_db_dev
+      - REDIS_HOST=prisma_redis_dev
+    env_file:
+      - .env.development
+    ports:
+      - "5555:5555" # Flower web interface
+    command: ["/bin/bash", "/app/scripts/docker/start-flower.sh"]
+    depends_on:
+      prisma_redis_dev:
+        condition: service_healthy
+      prisma_worker_dev:
+        condition: service_started
+    restart: on-failure
+    networks:
+      - prisma_dev_network
+
+  # Mail testing service for development
+  mailhog_dev:
+    image: mailhog/mailhog:latest
+    container_name: prisma_mailhog_dev
+    ports:
+      - "1025:1025"
+      - "8025:8025" # Web UI
+    restart: unless-stopped
+    networks:
+      - prisma_dev_network
+
+  # PostgreSQL Database for development
+  prisma_db_dev:
+    image: postgres:15-alpine
+    restart: always
+    container_name: prisma_db_dev
+    ports:
+      - "5433:5432" # Different port to avoid conflicts
+    env_file:
+      - .env.development
+    environment:
+      - POSTGRES_USER=${DATABASE_USER:-postgres}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-postgres}
+      - POSTGRES_DB=${DATABASE_NAME:-fastapi_dev_db}
+    volumes:
+      - ${BACKEND_DB_DATA:-./postgres_dev_data}:/var/lib/postgresql/data
+      - ./init-scripts/dev:/docker-entrypoint-initdb.d:ro
+    networks:
+      - prisma_dev_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PgAdmin for development
+  prisma_pgadmin_dev:
+    image: dpage/pgadmin4:8.7
+    container_name: prisma_pgadmin_dev
+    restart: always
+    ports:
+      - "8080:80" # Different port for dev
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD:-admin}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    volumes:
+      - ${BACKEND_DB_DATA:-./pgadmin_dev_data}:/var/lib/pgadmin
+    networks:
+      - prisma_dev_network
+    depends_on:
+      prisma_db_dev:
+        condition: service_healthy
+
+  # Redis for development
+  prisma_redis_dev:
+    image: redis:7.2-alpine
+    container_name: prisma_redis_dev
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - prisma_redis_dev_data:/data
+    expose:
+      - 6379
+    networks:
+      - prisma_dev_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  prisma_celery_beat_dev_schedule:
+    name: prisma_celery_beat_dev_schedule
+  prisma_db_dev_data:
+    name: prisma_db_dev_data
+  prisma_pgadmin_dev_data:
+    name: prisma_pgadmin_dev_data
+  prisma_redis_dev_data:
+    name: prisma_redis_dev_data
+
+networks:
+  prisma_dev_network:
+    name: prisma_dev_network
+    driver: bridge
+    external: true

@@ -1,0 +1,170 @@
+# Hub runtime package — pulls published Docker Hub images.
+# Usage (on the host, after env is ready):
+#   docker compose --env-file .env -f compose.yml up -d
+#
+# Services: caddy (public HTTPS) → api; worker + beat; db + redis (internal).
+# Secrets and broker URLs live in .env only (see env.example + bootstrap.sh).
+# Redis is not published; auth is omitted on the private Docker network so this
+# file stays free of password substitutions that trip secret scanners.
+
+name: prisma-hub-runtime
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-rbac-api.mnfprofile.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - hub_runtime
+
+  api:
+    image: mnaimfaizy/prisma-backend:${IMAGE_TAG:-v1.2.3}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MODE: production
+      DATABASE_HOST: db
+      REDIS_HOST: redis
+      REDIS_SSL: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hub_runtime
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  worker:
+    image: mnaimfaizy/prisma-worker:${IMAGE_TAG:-v1.2.3}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MODE: production
+      DATABASE_HOST: db
+      REDIS_HOST: redis
+      REDIS_SSL: "false"
+    command: ["/bin/bash", "/app/scripts/docker/start-worker.sh"]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A app.worker:celery_app inspect ping -t 10 >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 120s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    networks:
+      - hub_runtime
+
+  beat:
+    image: mnaimfaizy/prisma-worker:${IMAGE_TAG:-v1.2.3}
+    restart: unless-stopped
+    # Named volumes are root-owned; image USER is appuser (uid 1000). Start as
+    # root only long enough to chown the schedule dir, then drop privileges.
+    user: "0:0"
+    env_file:
+      - .env
+    environment:
+      MODE: production
+      DATABASE_HOST: db
+      REDIS_HOST: redis
+      REDIS_SSL: "false"
+      CELERY_BEAT_SCHEDULER: celery.beat:PersistentScheduler
+      PYTHONPATH: /app
+    # Same image as worker; schedule file on a volume (do not mount over /app).
+    command:
+      [
+        "/bin/bash",
+        "-c",
+        "set -euo pipefail && mkdir -p /var/lib/celery && chown -R appuser:appuser /var/lib/celery && exec runuser -u appuser -- env PYTHONPATH=/app bash -c 'python ./app/backend_pre_start.py && exec celery -A app.worker:celery_app beat --loglevel=info --schedule=/var/lib/celery/celerybeat-schedule.db'",
+      ]
+    volumes:
+      - beat_schedule:/var/lib/celery
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import pathlib; raise SystemExit(0 if any(b''beat'' in (pathlib.Path(''/proc'')/d/''cmdline'').read_bytes() for d in pathlib.Path(''/proc'').iterdir() if d.name.isdigit()) else 1)"',
+        ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      worker:
+        condition: service_started
+    networks:
+      - hub_runtime
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    # Credentials come from .env via env_file (POSTGRES_* set by bootstrap.sh).
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        ["CMD-SHELL", 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hub_runtime
+
+  redis:
+    image: redis:7.2-alpine
+    restart: unless-stopped
+    # Not published outside the Compose network; no --requirepass in this file.
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hub_runtime
+
+volumes:
+  postgres_data:
+  redis_data:
+  beat_schedule:
+  caddy_data:
+  caddy_config:
+
+networks:
+  hub_runtime:
+    driver: bridge

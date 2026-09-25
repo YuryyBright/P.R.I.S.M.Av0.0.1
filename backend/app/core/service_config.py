@@ -1,0 +1,127 @@
+"""
+Service configuration for environment-specific settings.
+Manages Redis, Celery, and other service configurations.
+"""
+
+import os
+from typing import Any, Dict
+
+from app.core.config import ModeEnum, settings
+
+
+class ServiceSettings:
+    """
+    Environment-specific service settings for Celery,
+    Redis, and other external services.
+    """
+
+    def __init__(self) -> None:
+        self.mode = settings.MODE
+
+    @property
+    def redis_url(self) -> str:
+        """
+        Get the Redis URL based on current environment.
+
+        For production, uses rediss:// (SSL) with proper certificate validation.
+        For development and testing, uses redis:// without SSL unless explicitly enabled.
+
+        The returned URL is compatible with redis-py's from_url() method but should
+        ideally be used with RedisConnectionFactory for better SSL handling.
+        """
+        if self.mode == ModeEnum.development:
+            # For development, use the configured Redis host (Docker container or localhost)
+            host = os.getenv("REDIS_HOST", settings.REDIS_HOST)
+            port = os.getenv("REDIS_PORT", settings.REDIS_PORT)
+            return f"redis://{host}:{port}/0"
+        elif self.mode == ModeEnum.testing:
+            # For testing, use the configured Redis host (Docker container or localhost)
+            host = os.getenv("REDIS_HOST", settings.REDIS_HOST)
+            port = os.getenv("REDIS_PORT", settings.REDIS_PORT)
+            db = os.getenv("REDIS_DB", "0")  # Use configured DB or default to 0
+            return f"redis://{host}:{port}/{db}"
+        else:
+            # For production, use SSL with proper certificate paths
+            # Note: URL-based SSL parameters are less flexible than using RedisConnectionFactory
+            # This is kept for backward compatibility with code using from_url()
+            password = settings.REDIS_PASSWORD or ""
+            username = "default"  # Redis 6+ ACL
+            host = settings.REDIS_HOST
+            port = settings.REDIS_PORT
+
+            # Build rediss:// URL with SSL parameters
+            # The cert path will be handled by RedisConnectionFactory when possible
+            return f"rediss://{username}:{password}@{host}:{port}/0"
+
+    @property
+    def celery_broker_url(self) -> str:
+        """
+        Get the Celery broker URL based on current environment
+        """
+        return self.redis_url
+
+    @property
+    def celery_result_backend(self) -> str:
+        """
+        Get the Celery result backend URL based on current environment
+        """
+        return self.redis_url
+
+    @property
+    def use_celery(self) -> bool:
+        """
+        Determine whether to use Celery based on environment
+        """
+        return self.mode in [ModeEnum.development, ModeEnum.production]
+
+    @property
+    def email_settings(self) -> Dict[str, Any]:
+        """
+        Get email configuration based on environment
+        """
+        if self.mode == ModeEnum.development:
+            return {
+                "SMTP_HOST": os.getenv("SMTP_HOST", "mailhog"),
+                "SMTP_PORT": int(os.getenv("SMTP_PORT", "1025")),
+                "SMTP_TLS": os.getenv("SMTP_TLS", "false").lower() == "true",
+                "SMTP_USER": os.getenv("SMTP_USER", ""),
+                "SMTP_PASSWORD": os.getenv("SMTP_PASSWORD", ""),
+            }
+        elif self.mode == ModeEnum.testing:
+            return {
+                "SMTP_HOST": os.getenv("SMTP_HOST", "mailhog_test"),
+                "SMTP_PORT": int(os.getenv("SMTP_PORT", "1025")),
+                "SMTP_TLS": os.getenv("SMTP_TLS", "false").lower() == "true",
+                "SMTP_USER": os.getenv("SMTP_USER", ""),
+                "SMTP_PASSWORD": os.getenv("SMTP_PASSWORD", ""),
+            }
+        else:
+            # Production settings
+            return {
+                "SMTP_HOST": settings.SMTP_HOST,
+                "SMTP_PORT": settings.SMTP_PORT,
+                "SMTP_TLS": settings.SMTP_TLS,
+                "SMTP_USER": settings.SMTP_USER,
+                "SMTP_PASSWORD": settings.SMTP_PASSWORD,
+            }
+
+    @property
+    def database_url(self) -> str:
+        """
+        Get database URL based on environment
+        """
+        if self.mode == ModeEnum.testing:
+            # Use environment variables for testing
+            host = os.getenv("DATABASE_HOST", settings.DATABASE_HOST)
+            port = os.getenv("DATABASE_PORT", str(settings.DATABASE_PORT))
+            user = os.getenv("DATABASE_USER", settings.DATABASE_USER)
+            password = os.getenv("DATABASE_PASSWORD", settings.DATABASE_PASSWORD)
+            db_name = os.getenv("DATABASE_NAME", settings.DATABASE_NAME)
+            return f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
+        else:
+            # Use settings for development and production
+            return str(settings.DATABASE_URL)
+
+
+# Global instance
+service_settings = ServiceSettings()

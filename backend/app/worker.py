@@ -1,0 +1,104 @@
+"""
+Celery worker configuration for handling background tasks.
+"""
+
+# Import the Celery app from the centralized configuration
+from typing import Any
+
+from app.celery_app import celery_app
+
+
+# Define tasks that convert the existing background functions to Celery tasks
+@celery_app.task
+def send_email_task(
+    email_to: str,
+    subject: str,
+    template_name: str,
+    context: dict,
+) -> None:
+    """Celery task for sending emails"""
+    from app.utils.email.email import send_email_with_template
+
+    send_email_with_template(
+        email_to=email_to,
+        subject=subject,
+        template_name=template_name,
+        context=context,
+    )
+
+
+@celery_app.task
+def log_security_event_task(
+    event_type: str, user_id: str | None = None, details: dict[Any, Any] | None = None
+) -> None:
+    """Unused: security events are written in-process by log_security_event (#243).
+
+    Left registered so a delayed message still in the queue is not
+    NotRegistered. This task must not write a second AuditLog row.
+    """
+    _ = (event_type, user_id, details)
+    return None
+
+
+@celery_app.task
+def process_account_lockout_task(user_id: str, lock_duration_hours: int = 24) -> None:
+    """Celery task for processing account lockouts"""
+    import asyncio
+    from datetime import datetime, timedelta, timezone
+    from uuid import UUID
+
+    async def async_process_lockout(user_id_str: str, lock_duration_hours: int) -> None:
+        from sqlmodel.ext.asyncio.session import AsyncSession  # Ensure correct import
+
+        from app import crud
+        from app.db.session import get_async_session
+
+        user_id_obj = UUID(user_id_str)
+
+        async for db_session in get_async_session():
+            assert isinstance(db_session, AsyncSession)
+            user = await crud.user.get(id=user_id_obj, db_session=db_session)
+            if user:  # Create a dict with the updates to use as obj_new
+                updates = {
+                    "is_locked": True,
+                    "locked_until": (
+                        datetime.now(timezone.utc) + timedelta(hours=lock_duration_hours)
+                    ).replace(tzinfo=None),
+                }
+                await crud.user.update(obj_current=user, obj_new=updates, db_session=db_session)
+            break
+
+    asyncio.run(async_process_lockout(user_id, lock_duration_hours))
+
+
+@celery_app.task
+def cleanup_unverified_users_task() -> int:
+    """Sweep pending users past the verification window (#136).
+
+    Beat runs this hourly, in place of the in-process sleep registration used to
+    schedule — that sleep lost every pending user across a worker restart. This
+    sweep reads its work from the database, so a missed tick costs an hour of
+    latency rather than a row.
+
+    Returns:
+        How many users this pass deleted, for the Celery result and monitoring.
+    """
+    import asyncio
+
+    async def async_cleanup_unverified_users() -> int:
+        from app.db.session import get_async_session, get_redis_client
+        from app.utils.unverified_cleanup import sweep_unverified_users
+
+        deleted_count = 0
+        async for redis_client in get_redis_client():
+            async for db_session in get_async_session():
+                deleted = await sweep_unverified_users(
+                    db_session=db_session,
+                    redis_client=redis_client,
+                )
+                deleted_count = len(deleted)
+                break
+            break
+        return deleted_count
+
+    return asyncio.run(async_cleanup_unverified_users())

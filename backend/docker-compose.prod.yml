@@ -1,0 +1,254 @@
+# Backend Production Docker Compose
+# Modular, directory-scoped, and environment-variable-driven for production deployment
+
+services:
+  # Shared Infrastructure Services
+  prisma_db_prod:
+    image: postgres:15-alpine
+    container_name: prisma_db_prod
+    restart: always
+    environment:
+      - POSTGRES_USER=${DATABASE_USER:-postgres}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-postgres}
+      - POSTGRES_DB=${DATABASE_NAME:-fastapi_db}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    env_file:
+      - .env.production
+    volumes:
+      - ${BACKEND_DB_DATA:-./postgres-data}:/var/lib/postgresql/data
+      - ./init-scripts/prod:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5434:5432" # Only expose for prod-test, not in prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - prisma_prod_network
+
+  prisma_redis_prod:
+    image: redis:7.2-alpine
+    container_name: prisma_redis_prod
+    restart: always
+    command: >
+      redis-server
+      --tls-port 6379
+      --port 0
+      --tls-cert-file /certs/redis.crt
+      --tls-key-file /certs/redis.key
+      --tls-ca-cert-file /certs/ca.crt
+      --tls-auth-clients optional
+      --requirepass ${REDIS_PASSWORD:-redis}
+      --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./certs:/certs:ro
+      - ./redis-data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "-h",
+          "localhost",
+          "--tls",
+          "--cacert",
+          "/certs/ca.crt",
+          "-a",
+          "${REDIS_PASSWORD:-redis}",
+          "ping",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - prisma_prod_network
+
+  # FastAPI Backend Production Service
+  prisma_prod:
+    build:
+      context: ${BACKEND_SRC:-.}
+      dockerfile: Dockerfile.prod
+      args:
+        - NODE_ENV=production
+    image: prisma:prod
+    container_name: prisma_prod
+    environment:
+      - MODE=production
+      - ENVIRONMENT=production
+      - FASTAPI_ENV=production
+      - DATABASE_HOST=prisma_db_prod
+      - REDIS_HOST=prisma_redis_prod
+      - DATABASE_TYPE=postgresql
+      - DATABASE_PORT=${DATABASE_PORT:-5432}
+      - DATABASE_USER=${DATABASE_USER:-postgres}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-postgres}
+      - DATABASE_NAME=${DATABASE_NAME:-fastapi_db}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis}
+      - REDIS_URL=rediss://default:${REDIS_PASSWORD:-redis}@prisma_redis_prod:${REDIS_PORT:-6379}/0?ssl_cert_reqs=required&ssl_ca_certs=/app/certs/ca.crt&ssl_check_hostname=true
+      - CELERY_BROKER_URL=rediss://default:${REDIS_PASSWORD:-redis}@prisma_redis_prod:${REDIS_PORT:-6379}/0?ssl_cert_reqs=required&ssl_ca_certs=/app/certs/ca.crt&ssl_check_hostname=true
+      - CELERY_RESULT_BACKEND=rediss://default:${REDIS_PASSWORD:-redis}@prisma_redis_prod:${REDIS_PORT:-6379}/0?ssl_cert_reqs=required&ssl_ca_certs=/app/certs/ca.crt&ssl_check_hostname=true
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env.production
+    volumes:
+      - ${BACKEND_LOGS:-prisma_logs_prod_data}:/app/logs
+    ports:
+      - "8000:8000"
+    user: appuser
+    depends_on:
+      prisma_db_prod:
+        condition: service_healthy
+      prisma_redis_prod:
+        condition: service_healthy
+    restart: always
+    networks:
+      - prisma_prod_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Celery Worker Production Service
+  prisma_worker_prod:
+    build:
+      context: ${BACKEND_SRC:-.}
+      dockerfile: queue.dockerfile.prod
+      args:
+        - NODE_ENV=production
+    image: prisma_worker:prod
+    container_name: prisma_worker_prod
+    environment:
+      - MODE=production
+      - ENVIRONMENT=production
+      - DATABASE_HOST=prisma_db_prod
+      - REDIS_HOST=prisma_redis_prod
+      - DATABASE_TYPE=postgresql
+      - DATABASE_PORT=${DATABASE_PORT:-5432}
+      - DATABASE_USER=${DATABASE_USER:-postgres}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-postgres}
+      - DATABASE_NAME=${DATABASE_NAME:-fastapi_db}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis}
+      - REDIS_URL=rediss://default:${REDIS_PASSWORD:-redis}@prisma_redis_prod:${REDIS_PORT:-6379}/0?ssl_cert_reqs=required&ssl_ca_certs=/app/certs/ca.crt&ssl_check_hostname=true
+      - CELERY_BROKER_URL=rediss://default:${REDIS_PASSWORD:-redis}@prisma_redis_prod:${REDIS_PORT:-6379}/0?ssl_cert_reqs=required&ssl_ca_certs=/app/certs/ca.crt&ssl_check_hostname=true
+      - CELERY_RESULT_BACKEND=rediss://default:${REDIS_PASSWORD:-redis}@prisma_redis_prod:${REDIS_PORT:-6379}/0?ssl_cert_reqs=required&ssl_ca_certs=/app/certs/ca.crt&ssl_check_hostname=true
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - SQLALCHEMY_DATABASE_URI=postgresql://${DATABASE_USER:-postgres}:${DATABASE_PASSWORD:-postgres}@prisma_db_prod:${DATABASE_PORT:-5432}/${DATABASE_NAME:-fastapi_db}
+    env_file:
+      - .env.production
+    volumes:
+      - ${BACKEND_LOGS:-prisma_logs_prod_data}:/app/logs
+    command: ["/bin/bash", "/app/scripts/docker/start-worker.sh"]
+    user: appuser
+    restart: always
+    depends_on:
+      prisma_db_prod:
+        condition: service_healthy
+      prisma_redis_prod:
+        condition: service_healthy
+    networks:
+      - prisma_prod_network
+
+  # Celery Beat Production Service
+  prisma_beat_prod:
+    build:
+      context: ${BACKEND_SRC:-.}
+      dockerfile: queue.dockerfile.prod
+      args:
+        - NODE_ENV=production
+    image: prisma_worker:prod
+    container_name: prisma_beat_prod
+    environment:
+      - MODE=production
+      - ENVIRONMENT=production
+      - DATABASE_HOST=prisma_db_prod
+      - REDIS_HOST=prisma_redis_prod
+      - DATABASE_TYPE=postgresql
+      - DATABASE_PORT=${DATABASE_PORT:-5432}
+      - DATABASE_USER=${DATABASE_USER:-postgres}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-postgres}
+      - DATABASE_NAME=${DATABASE_NAME:-fastapi_db}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis}
+      - REDIS_URL=rediss://default:${REDIS_PASSWORD:-redis}@prisma_redis_prod:${REDIS_PORT:-6379}/1?ssl_cert_reqs=required&ssl_ca_certs=/app/certs/ca.crt&ssl_check_hostname=true
+      - CELERY_BROKER_URL=rediss://default:${REDIS_PASSWORD:-redis}@prisma_redis_prod:${REDIS_PORT:-6379}/1?ssl_cert_reqs=required&ssl_ca_certs=/app/certs/ca.crt&ssl_check_hostname=true
+      - CELERY_RESULT_BACKEND=rediss://default:${REDIS_PASSWORD:-redis}@prisma_redis_prod:${REDIS_PORT:-6379}/1?ssl_cert_reqs=required&ssl_ca_certs=/app/certs/ca.crt&ssl_check_hostname=true
+      - CELERY_BEAT_SCHEDULER=celery.beat:PersistentScheduler
+    env_file:
+      - .env.production
+    volumes:
+      - ${BACKEND_LOGS:-prisma_logs_prod_data}:/app/logs
+      - ${BACKEND_CELERY_BEAT_DATA:-./celerybeat-schedule}:/app/celerybeat-schedule
+    command: ["/bin/bash", "/app/scripts/docker/start-beat.sh"]
+    user: appuser
+    restart: always
+    depends_on:
+      prisma_db_prod:
+        condition: service_healthy
+      prisma_redis_prod:
+        condition: service_healthy
+      prisma_worker_prod:
+        condition: service_started
+    networks:
+      - prisma_prod_network
+
+  # PgAdmin Production Service
+  prisma_pgadmin_prod:
+    image: dpage/pgadmin4:8.7
+    container_name: prisma_pgadmin_prod
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD:-admin}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+      - PGADMIN_LISTEN_PORT=80
+      - DATABASE_HOST=prisma_db_prod
+      - DATABASE_USER=${DATABASE_USER:-postgres}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-postgres}
+      - DATABASE_PORT=${DATABASE_PORT:-5432}
+      - DATABASE_NAME=${DATABASE_NAME:-fastapi_db}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - ${BACKEND_PGADMIN_DATA:-./pgadmin-data}:/var/lib/pgadmin
+      - ../pgadmin/servers.json:/pgadmin4/servers.json:ro
+    entrypoint:
+      - "/bin/sh"
+      - "-c"
+      - "echo 'prisma_db_prod:5432:*:${DATABASE_USER:-postgres}:${DATABASE_PASSWORD:-postgres}' > /tmp/pgpassfile && chmod 600 /tmp/pgpassfile && /entrypoint.sh"
+    networks:
+      - prisma_prod_network
+    depends_on:
+      prisma_db_prod:
+        condition: service_healthy
+    env_file:
+      - .env.production
+
+volumes:
+  # All volumes are directory-scoped and can be overridden via env vars
+  prisma_postgres_prod_data:
+    name: ${BACKEND_DB_VOLUME:-prisma_postgres_prod_data}
+  prisma_logs_prod_data:
+    name: ${BACKEND_LOGS_VOLUME:-prisma_logs_prod_data}
+  prisma_celery_beat_prod_data:
+    name: ${BACKEND_CELERY_BEAT_VOLUME:-prisma_celery_beat_prod_data}
+  prisma_redis_prod_data:
+    name: ${BACKEND_REDIS_VOLUME:-prisma_redis_prod_data}
+  prisma_pgadmin_prod_data:
+    name: ${BACKEND_PGADMIN_VOLUME:-prisma_pgadmin_prod_data}
+
+networks:
+  prisma_prod_network:
+    name: ${BACKEND_NETWORK:-prisma_prod_network}
+    driver: bridge
+    external: true

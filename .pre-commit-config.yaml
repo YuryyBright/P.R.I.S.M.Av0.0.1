@@ -1,0 +1,114 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^react-frontend/
+      - id: end-of-file-fixer
+        exclude: ^react-frontend/
+      - id: check-yaml
+        exclude: ^react-frontend/
+      - id: check-added-large-files
+        exclude: ^react-frontend/
+  - repo: https://github.com/psf/black
+    rev: 25.12.0 # Keep in sync with backend/requirements.txt
+    hooks:
+      - id: black
+        files: ^backend/
+        exclude: >
+          (?x)(
+            ^react-frontend/|
+            ^.venv/|
+            ^venv/|
+            ^.env/|
+            ^__pycache__/|
+            ^.git/|
+            ^alembic/|
+            ^.pytest_cache/|
+            ^.mypy_cache/
+          )
+  - repo: https://github.com/pycqa/isort
+    rev: 6.1.0 # Keep in sync with backend/requirements.txt
+    hooks:
+      - id: isort
+        files: ^backend/
+        args: ["--settings-path=backend/pyproject.toml"] # Use pyproject.toml for settings
+        exclude: >
+          (?x)(
+            ^react-frontend/|
+            ^.venv/|
+            ^venv/|
+            ^.env/|
+            ^__pycache__/|
+            ^.git/|
+            ^alembic/|
+            ^.pytest_cache/|
+            ^.mypy_cache/
+          )
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0 # Keep in sync with backend/requirements.txt
+    hooks:
+      - id: flake8
+        files: ^backend/
+        args:
+          [
+            "--config=backend/.flake8",
+            "--extend-ignore=F403,F405,E402,F541,E203,W503",
+            "--per-file-ignores=backend/app/models/__init__.py:F401,F403 backend/alembic/env.py:F401,E402,F403 backend/app/api/v1/endpoints/login.py:E501 backend/app/crud/user_crud.py:E501 backend/app/db/session.py:E501 backend/app/main.py:E501 backend/app/utils/background_tasks.py:E501 backend/app/utils/email/email.py:E501 backend/app/core/service_config.py:E501 backend/app/api/deps.py:E501 backend/app/tests/test_email.py:E501",
+          ]
+        exclude: >
+          (?x)(
+            ^react-frontend/|
+            ^.venv/|
+            ^venv/|
+            ^.env/|
+            ^__pycache__/|
+            ^.git/|
+            ^backend/alembic/versions/|
+            ^.pytest_cache/|
+            ^.mypy_cache/
+          )
+  # Replace local mypy hook with the standard one
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.20.2 # Keep in sync with backend/requirements.txt
+    hooks:
+      - id: mypy
+        files: ^backend/ # Ensure it only runs on backend code
+        exclude: >
+          (?x)(
+            ^react-frontend/|
+            ^.venv/|
+            ^venv/|
+            ^.env/|
+            ^__pycache__/|
+            ^.git/|
+            ^backend/alembic/|
+            ^.pytest_cache/|
+            ^.mypy_cache/
+          )
+        args: # Keep your existing arguments
+          [
+            "--ignore-missing-imports",
+            "--disable-error-code=import-not-found",
+            "--disable-error-code=name-defined",
+            "--disable-error-code=attr-defined",
+            "--disable-error-code=assignment",
+            "--disable-error-code=valid-type",
+            "--disable-error-code=union-attr",
+            "--disable-error-code=arg-type",
+            "--disable-error-code=index",
+            "--disable-error-code=return-value",
+            "--disable-error-code=misc",
+            "--disable-error-code=call-arg",
+            "--disable-error-code=override",
+            "--disable-error-code=call-overload",
+            "--disable-error-code=unreachable",
+            "--no-warn-no-return",
+            "--no-warn-return-any",
+            "--no-strict-optional",
+            "--config-file=backend/mypy.ini", # Point to your mypy config
+          ]
+        # If mypy needs dependencies from your project, add them here:
+        additional_dependencies: ["types-bleach==6.2.0.20250514"]

@@ -1,0 +1,86 @@
+# Hub runtime SPLIT — Celery worker + Beat (no Postgres/Redis/API).
+# Usage (from this directory, after .env is ready):
+#   ./bootstrap-worker.sh
+#   # or: docker compose --env-file .env -f compose.worker.yml up -d
+#
+# Use the same .env values as the API VM for DATABASE_* / REDIS_* / CELERY_*.
+# Stop this VM in OCI when you are not testing.
+
+name: prisma-hub-worker
+
+services:
+  worker:
+    image: mnaimfaizy/prisma-worker:${IMAGE_TAG:-v1.2.3}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MODE: production
+      PYTHONPATH: /app
+    volumes:
+      - ${HOST_CA_BUNDLE:-/etc/ssl/certs/ca-certificates.crt}:/app/certs/ca.crt:ro
+    # 1 GB micro: lower concurrency than the image default (2).
+    command:
+      [
+        "/bin/bash",
+        "-c",
+        "export PYTHONPATH=/app && python ./app/backend_pre_start.py && exec celery -A app.worker:celery_app worker --loglevel=info -Q emails,maintenance,logging,user_management,default,periodic_tasks --concurrency=1",
+      ]
+    # Image HEALTHCHECK uses app.celery_app + short timeouts; override for Hub/Upstash.
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A app.worker:celery_app inspect ping -t 10 >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 120s
+    networks:
+      - hub_worker
+
+  beat:
+    image: mnaimfaizy/prisma-worker:${IMAGE_TAG:-v1.2.3}
+    restart: unless-stopped
+    # Named volumes are root-owned; image USER is appuser (uid 1000). Start as
+    # root only long enough to chown the schedule dir, then drop privileges.
+    user: "0:0"
+    env_file:
+      - .env
+    environment:
+      MODE: production
+      CELERY_BEAT_SCHEDULER: celery.beat:PersistentScheduler
+      PYTHONPATH: /app
+    volumes:
+      - ${HOST_CA_BUNDLE:-/etc/ssl/certs/ca-certificates.crt}:/app/certs/ca.crt:ro
+      - beat_schedule:/var/lib/celery
+    command:
+      [
+        "/bin/bash",
+        "-c",
+        "set -euo pipefail && mkdir -p /var/lib/celery && chown -R appuser:appuser /var/lib/celery && exec runuser -u appuser -- env PYTHONPATH=/app bash -c 'python ./app/backend_pre_start.py && exec celery -A app.worker:celery_app beat --loglevel=info --schedule=/var/lib/celery/celerybeat-schedule.db'",
+      ]
+    depends_on:
+      worker:
+        condition: service_started
+    # Same image as worker: inherited inspect-ping HEALTHCHECK is for workers, not beat.
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import pathlib; raise SystemExit(0 if any(b''beat'' in (pathlib.Path(''/proc'')/d/''cmdline'').read_bytes() for d in pathlib.Path(''/proc'').iterdir() if d.name.isdigit()) else 1)"',
+        ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    networks:
+      - hub_worker
+
+volumes:
+  beat_schedule:
+
+networks:
+  hub_worker:
+    driver: bridge

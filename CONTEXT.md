@@ -1,0 +1,95 @@
+# FastAPI RBAC
+
+Role-based access control API and admin UI: users, roles, permissions, and auth session controls.
+
+## Language
+
+**HTTP rate limit**:
+A coarse request quota enforced by the shared slowapi limiter on selected HTTP routes (keyed by authenticated user when the request has one, otherwise by client address).
+_Avoid_: Rate limiting (when referring only to this mechanism), fastapi-limiter, DoS middleware
+
+**Abuse counter**:
+A hand-rolled Redis incr/expire guard used for registration and resend-verification abuse (IP and/or email keys), independent of the HTTP rate limit library.
+_Avoid_: Rate limiting (when referring only to this mechanism), slowapi limit
+
+**User**:
+An account principal that authenticates and is assigned roles.
+_Avoid_: Account (when meaning the auth principal), client
+
+**Pending user**:
+A user that exists but has not completed email verification.
+_Avoid_: Unverified account, pending account, unconfirmed user
+
+**Verification window**:
+The bounded period after registration in which a pending user may verify. Once it lapses the user ceases to exist and the address is free to register again.
+_Avoid_: Cleanup window, grace period, unverified account cleanup, expiry
+
+**Established user**:
+A verified, active user.
+_Avoid_: Verified account, confirmed user
+
+**Disabled user**:
+A user an administrator has deactivated, regardless of verification state.
+_Avoid_: Inactive account, banned user, locked user (locking is the separate, temporary failed-attempt state)
+
+**Uniform registration response**:
+The invariant that registration and resend-verification return one fixed response for every email address, so neither confirms nor denies that a user exists.
+_Avoid_: Generic error, anti-enumeration
+
+**Uniform token-flow rejection**:
+The same invariant for verify-email and the password-reset endpoints: every failure that required looking an account up returns one fixed message per flow, so a disabled user is indistinguishable from an unknown address or a bad token. Which failure occurred is recorded as a security event instead.
+_Avoid_: Generic error, invalid token message
+
+**Session**:
+One refresh token and the access tokens derived from it. A user may hold several concurrent sessions, bounded by the concurrent session limit; revoking one leaves the others intact.
+_Avoid_: Login, token pair, connection
+
+**Allowlist**:
+The Redis record of tokens currently accepted, checked on every authenticated request. Removing an entry revokes it immediately, and this is the sole session revocation mechanism.
+_Avoid_: Blacklist, denylist, token blacklist, session store
+
+**Origin network**:
+The network a session was established from (IPv4 /24 or IPv6 /64), recorded alongside the session. A refresh presented from a different origin network is an anomaly that revokes that one session; it is not a hard block on the request.
+_Avoid_: Token IP, IP binding, IP validation
+
+**Client address**:
+The address a request is attributed to. Resolved once at the edge from the socket peer, or from that peer's forwarded headers when it is a trusted proxy. Rate limiting, security events, and origin network all read this one answer.
+_Avoid_: Remote address, IP, request IP (when they mean separate readings)
+
+**Trusted proxy**:
+A peer whose `X-Forwarded-For` and `X-Real-IP` headers the backend believes, named by address or network in configuration. Headers from any other peer are ignored; a wildcard cannot be configured, because trusting every peer lets a client forge its own client address.
+_Avoid_: Proxy allowlist, forwarded-for whitelist
+
+**Password policy**:
+The rules a password must satisfy before it is accepted for a user: complexity (length, character classes, no common, sequential or repeated runs), and, when replacing a password, reuse (not the current password nor one inside the history window). The thresholds are settings; `app/utils/password_policy.py` is the one module that applies them, and a refusal answers `400` with `detail = {"message", "errors"}` on every path.
+_Avoid_: Password validation, complexity check (when meaning the whole policy), password rules (when meaning reuse too)
+
+**Password change**:
+Replacing an existing user's password, for one of three reasons: self-service (the user knows the current password), reset (the user holds a live reset link) or admin set. Whatever the reason, it is one ordered operation: password policy, then stage the new hash and history row, then end every session in the allowlist, then commit, then audit. A partial failure leaves the user logged out with the old password intact, never the reverse. Admitting the first password of a new user (registration, admin create) is not a password change; only the complexity rules apply to it.
+_Avoid_: Password update, password reset (when meaning any change), set password
+
+**Role**:
+A named set of permissions assignable to users.
+_Avoid_: Group (when meaning a role)
+
+**Permission**:
+An authorization atom granted via roles (and related grouping constructs).
+_Avoid_: Entitlement, capability
+
+**Role group**:
+A grouping construct for roles in this product's RBAC model.
+
+**Permission group**:
+A grouping construct for permissions in this product's RBAC model.
+
+**Hub runtime**:
+The deployable API package: published Docker Hub backend and worker images (including the Beat scheduler process), plus Postgres, Redis, and external SMTP. Does not include the admin UI. Default topology is one Compose host; an optional split uses separate Always Free VMs and hobby managed Postgres/Redis.
+_Avoid_: Microservices (when meaning this package), full stack (when including the React frontend)
+
+**Hub runtime split**:
+Optional Hub runtime topology: Oracle Always Free AMD micro for Caddy+API, a second micro for Celery worker+Beat (stop when idle), and free hobby Neon Postgres + Upstash Redis via env. Alternative to single-VM Compose.
+_Avoid_: Microservices (when meaning this topology), full stack
+
+**Admin UI host**:
+The deployable admin UI package: a static SPA build served from a static host (maintainer dogfood: cPanel at `rbac.mnfprofile.com`), calling the Hub runtime API cross-origin. Does not include the Hub runtime.
+_Avoid_: Hub runtime (when meaning the UI), frontend container (when meaning the static host path), full stack

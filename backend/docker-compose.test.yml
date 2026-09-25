@@ -1,0 +1,284 @@
+# Backend Test Environment
+# This compose file contains backend services for testing
+
+services:
+  # PostgreSQL Database for testing
+  prisma_db_test:
+    image: postgres:15-alpine
+    container_name: prisma_db_test
+    restart: always
+    env_file:
+      - .env.test
+    environment:
+      - POSTGRES_USER=${DATABASE_USER:-postgres}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-postgres}
+      - POSTGRES_DB=${DATABASE_NAME:-prisma_test_db}
+    volumes:
+      - ${BACKEND_DB_DATA:-./postgres_test_data}:/var/lib/postgresql/data
+      - ./init-scripts/test:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5435:5432" # Different port for test environment
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DATABASE_USER:-postgres} -d ${DATABASE_NAME:-prisma_test_db}",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - prisma_test_network
+
+  # Redis Cache for testing
+  prisma_redis_test:
+    image: redis:7.2-alpine
+    restart: always
+    container_name: prisma_redis_test
+    ports:
+      - "6381:6379" # Different port for test environment
+    command: redis-server --appendonly yes
+    volumes:
+      - prisma_redis_test_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - prisma_test_network
+
+  # PgAdmin for database management in test environment
+  prisma_pgadmin_test:
+    image: dpage/pgadmin4:8.7
+    restart: always
+    container_name: prisma_pgadmin_test
+    ports:
+      - "8082:80" # Different port for test environment
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@example.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    volumes:
+      - prisma_pgadmin_test_data:/var/lib/pgadmin
+      - ../pgadmin/servers.json:/pgadmin4/servers.json
+    depends_on:
+      prisma_db_test:
+        condition: service_healthy
+    networks:
+      - prisma_test_network
+
+  # MailHog for email testing in test environment
+  prisma_mailhog_test:
+    image: mailhog/mailhog:latest
+    restart: always
+    container_name: prisma_mailhog_test
+    ports:
+      - "1026:1025" # SMTP port - Different for test
+      - "8027:8025" # Web UI port - Different for test
+    networks:
+      - prisma_test_network
+
+  # FastAPI Backend Application for testing
+  prisma_test:
+    build:
+      context: ${BACKEND_SRC:-.}
+      dockerfile: Dockerfile
+      target: testing
+      args:
+        - NODE_ENV=testing
+        - ENVIRONMENT=testing
+    image: prisma:test
+    restart: on-failure
+    container_name: prisma_test
+    environment:
+      - MODE=testing
+      - ENVIRONMENT=testing
+      - FASTAPI_ENV=testing
+      - DATABASE_HOST=prisma_db_test
+      - DATABASE_PORT=${DATABASE_PORT:-5432}
+      - REDIS_HOST=prisma_redis_test
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - CELERY_BROKER_URL=redis://prisma_redis_test:6379/0
+      - CELERY_RESULT_BACKEND=redis://prisma_redis_test:6379/0
+      - SMTP_HOST=prisma_mailhog_test
+    env_file:
+      - .env.test
+    volumes:
+      - ${BACKEND_SRC:-.}:/app
+      - ./logs:/app/logs
+    ports:
+      - "8002:8000" # Different port for test environment
+    command: ["bash", "/app/scripts/docker/entrypoint-test.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      prisma_db_test:
+        condition: service_healthy
+      prisma_redis_test:
+        condition: service_healthy
+    networks:
+      - prisma_test_network
+  # Celery Worker for background tasks in test environment
+  prisma_worker_test:
+    build:
+      context: ${BACKEND_SRC:-.}
+      dockerfile: queue.dockerfile
+      args:
+        - NODE_ENV=testing
+        - ENVIRONMENT=testing
+    image: prisma_worker:test
+    restart: on-failure
+    container_name: prisma_worker_test
+    environment:
+      - MODE=testing
+      - ENVIRONMENT=testing
+      - DATABASE_HOST=prisma_db_test
+      - DATABASE_PORT=5432
+      - REDIS_HOST=prisma_redis_test
+      - REDIS_PORT=6379
+      - CELERY_BROKER_URL=redis://prisma_redis_test:6379/0
+      - CELERY_RESULT_BACKEND=redis://prisma_redis_test:6379/0
+    env_file:
+      - .env.test
+    command: ["/bin/bash", "/app/scripts/docker/start-worker.sh"]
+    volumes:
+      - ${BACKEND_SRC:-.}:/app
+      - ./logs:/app/logs
+    depends_on:
+      prisma_db_test:
+        condition: service_healthy
+      prisma_redis_test:
+        condition: service_healthy
+    networks:
+      - prisma_test_network
+  # Celery Beat Scheduler for periodic tasks in test environment
+  prisma_beat_test:
+    build:
+      context: ${BACKEND_SRC:-.}
+      dockerfile: queue.dockerfile
+      args:
+        - NODE_ENV=testing
+        - ENVIRONMENT=testing
+    image: prisma_worker:test
+    restart: on-failure
+    container_name: prisma_beat_test
+    environment:
+      - MODE=testing
+      - DATABASE_HOST=prisma_db_test
+      - DATABASE_PORT=5432
+      - REDIS_HOST=prisma_redis_test
+      - REDIS_PORT=6379
+      - CELERY_BROKER_URL=redis://prisma_redis_test:6379/0
+      - CELERY_RESULT_BACKEND=redis://prisma_redis_test:6379/0
+    env_file:
+      - .env.test
+    volumes:
+      - ${BACKEND_SRC:-.}:/app
+      - ./logs:/app/logs
+      - prisma_celery_beat_test_schedule:/app
+    command: ["/bin/bash", "/app/scripts/docker/start-beat.sh"]
+    depends_on:
+      prisma_db_test:
+        condition: service_healthy
+      prisma_redis_test:
+        condition: service_healthy
+    networks:
+      - prisma_test_network
+  # Test Runner for integration tests (runs pytest and exits)
+  prisma_test_runner:
+    build:
+      context: ${BACKEND_SRC:-.}
+      dockerfile: Dockerfile
+      target: testing
+      args:
+        - NODE_ENV=testing
+        - ENVIRONMENT=testing
+    image: prisma:test
+    container_name: prisma_test_runner
+    env_file:
+      - .env.test
+    environment:
+      - MODE=testing
+      - DATABASE_HOST=prisma_db_test
+      - DATABASE_PORT=5432
+      - REDIS_HOST=prisma_redis_test
+      - REDIS_PORT=6379
+      - CELERY_BROKER_URL=redis://prisma_redis_test:6379/0
+      - CELERY_RESULT_BACKEND=redis://prisma_redis_test:6379/0
+      - TEST_PATH=${TEST_PATH:-test/integration}
+      # Run-mode contract for the integration suite: drive the live server over
+      # HTTP against Postgres. Without it the suite skips (see
+      # test/integration_stack.py).
+      - USE_HTTP_TEST_CLIENT=1
+      - TEST_API_BASE_URL=http://prisma_test:8000
+    volumes:
+      - ${BACKEND_SRC:-.}:/app
+      - ./logs:/app/logs
+    depends_on:
+      prisma_test:
+        condition: service_healthy
+      prisma_db_test:
+        condition: service_healthy
+      prisma_redis_test:
+        condition: service_healthy
+    networks:
+      - prisma_test_network
+    entrypoint: ["/bin/bash", "/app/scripts/docker/entrypoint-test.sh"]
+
+  # Flower for monitoring Celery tasks in test environment
+  prisma_flower_test:
+    build:
+      context: ${BACKEND_SRC:-.}
+      dockerfile: queue.dockerfile
+      args:
+        - NODE_ENV=testing
+        - ENVIRONMENT=testing
+    image: prisma_worker:test
+    restart: on-failure
+    container_name: prisma_flower_test
+    environment:
+      - MODE=testing
+      - DATABASE_HOST=prisma_db_test
+      - DATABASE_PORT=5432
+      - REDIS_HOST=prisma_redis_test
+      - REDIS_PORT=6379
+      - CELERY_BROKER_URL=redis://prisma_redis_test:6379/0
+      - CELERY_RESULT_BACKEND=redis://prisma_redis_test:6379/0
+    env_file:
+      - .env.test
+    ports:
+      - "5557:5555" # Different port for test environment
+    volumes:
+      - ${BACKEND_SRC:-.}:/app
+      - ./logs:/app/logs
+    command: ["/bin/bash", "/app/scripts/docker/start-flower.sh"]
+    depends_on:
+      prisma_redis_test:
+        condition: service_healthy
+    networks:
+      - prisma_test_network
+
+# Docker volumes for test environment
+volumes:
+  prisma_postgres_test_data:
+    name: prisma_postgres_test_data
+  prisma_redis_test_data:
+    name: prisma_redis_test_data
+  prisma_pgadmin_test_data:
+    name: prisma_pgadmin_test_data
+  prisma_celery_beat_test_schedule:
+    name: prisma_celery_beat_test_schedule
+
+# Docker network for test environment
+networks:
+  prisma_test_network:
+    name: prisma_test_network
+    driver: bridge
+    external: true

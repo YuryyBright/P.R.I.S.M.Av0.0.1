@@ -1,0 +1,275 @@
+# Quick Release Guide
+
+This is a quick reference for common release scenarios. For comprehensive documentation, see [RELEASE.md](../../RELEASE.md) (from repo root) or the deployment release docs.
+
+**Release history SSOT:** [`docs/release-notes.md`](../release-notes.md). There is no root `CHANGELOG.md`. Docker Hub descriptions come from `*.dockerhub.md` via `docker-publish.yml`, not from release notes.
+
+## 🚀 Quick Start
+
+### First-Time Setup
+
+1. **Ensure GitHub secrets are configured:**
+   - `DOCKERHUB_USERNAME`
+   - `DOCKERHUB_TOKEN`
+
+2. **Verify you have the latest main branch:**
+
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+
+3. **Test the release script (dry-run):**
+   ```bash
+   ./scripts/deployment/release/create-release.sh -v v1.0.0 --dry-run
+   ```
+
+## 📋 Common Release Scenarios
+
+### Scenario 1: Patch Release (Bug Fixes)
+
+**When:** Fix critical bugs, security patches
+
+**Example:** `v1.2.3` → `v1.2.4`
+
+```bash
+# Quick release
+cd scripts/deployment/release
+./create-release.sh -v v1.2.4
+
+# Or with immediate Docker build
+./create-release.sh -v v1.2.4 --build-docker
+```
+
+### Scenario 2: Minor Release (New Features)
+
+**When:** Add new features, backward-compatible changes
+
+**Example:** `v1.2.4` → `v1.3.0`
+
+```bash
+# Test first with dry-run
+./create-release.sh -v v1.3.0 --dry-run
+
+# Then create release
+./create-release.sh -v v1.3.0
+```
+
+### Scenario 3: Major Release (Breaking Changes)
+
+**When:** Breaking API changes, major architecture changes
+
+**Example:** `v1.3.0` → `v2.0.0`
+
+```bash
+# Always test major releases first
+./create-release.sh -v v2.0.0 --dry-run
+
+# Review carefully, then release
+./create-release.sh -v v2.0.0
+```
+
+### Scenario 4: Pre-Release (Beta/RC)
+
+**When:** Testing new features before stable release
+
+**Example:** `v1.3.0` → `v1.4.0-beta.1`
+
+```bash
+# Beta release
+./create-release.sh -v v1.4.0-beta.1
+
+# Release candidate
+./create-release.sh -v v1.4.0-rc.1
+```
+
+### Scenario 5: Hotfix for Production
+
+**When:** Critical bug in production needs immediate fix
+
+```bash
+# 1. Create hotfix branch from production tag
+git checkout -b hotfix/v1.2.4 v1.2.3
+
+# 2. Apply fix and commit
+git commit -m "fix: critical security vulnerability"
+
+# 3. Merge to main
+git checkout main
+git merge hotfix/v1.2.4
+git push origin main
+
+# 4. Release hotfix
+cd scripts/deployment/release
+./create-release.sh -v v1.2.4
+
+# 5. Clean up
+git branch -d hotfix/v1.2.4
+```
+
+### Scenario 6: Manual Workflow Trigger
+
+**When:** Need to rebuild/republish an existing version, or publish when the automatic dispatch after Release Tag on Merge did not run
+
+Docker Publish supports two triggers (both valid):
+
+- **Automatic after Release PR merge:** `release-tag-on-merge` creates the `v*` tag/Release, then dispatches **Docker Publish** and **Admin UI cPanel Deploy** (a tag push from `GITHUB_TOKEN` alone does not start other workflows).
+- **Manual:** push a `v*` tag yourself, or use **Actions → Docker Publish / Admin UI cPanel Deploy → Run workflow**.
+
+1. Go to GitHub Actions → Docker Publish workflow
+2. Click "Run workflow"
+3. Select branch (usually main; the workflow checks out the **tag** you enter next)
+4. Enter version tag (e.g., `v1.2.3`)
+5. Click "Run workflow"
+
+## 🔍 Verification Checklist
+
+After creating a release, verify:
+
+- [ ] GitHub Actions **Docker Publish** completes: Prepare + Build backend/frontend/worker + Promote latest
+- [ ] All three Docker images published to Docker Hub with the version tag:
+  - `mnaimfaizy/prisma-backend:vX.Y.Z`
+  - `mnaimfaizy/prisma-frontend:vX.Y.Z`
+  - `mnaimfaizy/prisma-worker:vX.Y.Z`
+- [ ] `:latest` advanced for all three only after Promote latest (not during individual builds)
+- [ ] Images support both architectures (linux/amd64, linux/arm64)
+- [ ] GitHub Actions **Admin UI cPanel Deploy** completes: Build Admin UI Assets → Upload Admin UI to cPanel → Smoke Admin UI HTTPS (needs `UI_FTP_*` secrets)
+- [ ] VERSION file updated to `X.Y.Z` (without 'v')
+- [ ] Release notes updated in `docs/release-notes.md` (release history SSOT)
+- [ ] Git tag created and pushed
+- [ ] Docker Hub repo descriptions reflect `*.dockerhub.md` sources (updated after promote; soft-fail OK)
+- [ ] Admin UI host reachable at `https://rbac.mnfprofile.com` (when dogfood host is configured)
+
+## 🐛 Quick Troubleshooting
+
+### Problem: "Tag already exists"
+
+**Solution:**
+
+```bash
+# Delete local tag
+git tag -d v1.2.3
+
+# Delete remote tag
+git push origin :refs/tags/v1.2.3
+
+# Recreate and push
+./create-release.sh -v v1.2.3
+```
+
+### Problem: "Docker build fails in CI"
+
+**Solutions:**
+
+1. Check GitHub Actions logs for specific error (which step failed: validation, login, backend/frontend/worker build)
+2. Verify Dockerfiles locally:
+   ```bash
+   docker build -f backend/Dockerfile.prod backend/
+   docker build -f backend/queue.dockerfile.prod backend/
+   docker build -f react-frontend/Dockerfile.prod react-frontend/
+   ```
+   The worker image must use `queue.dockerfile.prod` (compose does too). Do **not** use `--target worker` on `Dockerfile.prod` — that stage does not exist.
+3. Check Docker Hub credentials in GitHub secrets (`DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`)
+4. Verify all required files exist in context
+5. After fixing, re-run **Actions → Docker Publish → Run workflow** (or push a `v*` tag) so the README badge updates — the badge reflects the latest run, which may be an old failure
+
+### Problem: "Multi-arch build fails for ARM64"
+
+**Solutions:**
+
+1. Check if base images support ARM64
+2. Verify dependencies available for ARM64
+3. Review GitHub Actions logs for platform-specific errors
+4. Test locally with:
+   ```bash
+   docker buildx build --platform linux/arm64 ...
+   ```
+
+### Problem: "Release script fails to commit"
+
+**Solutions:**
+
+1. Check for uncommitted changes:
+   ```bash
+   git status
+   ```
+2. Ensure you're on main branch:
+   ```bash
+   git checkout main
+   ```
+3. Pull latest changes:
+   ```bash
+   git pull origin main
+   ```
+4. Check file permissions on VERSION and docs/release-notes.md
+
+## 🔄 Rollback Quick Guide
+
+If a release has critical issues:
+
+```bash
+# 1. Identify previous stable version
+git tag -l --sort=-v:refname | head -5
+
+# 2. Pull previous images
+docker pull mnaimfaizy/prisma-backend:v1.2.2
+docker pull mnaimfaizy/prisma-frontend:v1.2.2
+docker pull mnaimfaizy/prisma-worker:v1.2.2
+
+# 3. Update deployment to use previous version
+export IMAGE_TAG=v1.2.2
+docker-compose -f docker-compose.prod.yml up -d
+
+# 4. Delete problematic tag (optional)
+git tag -d v1.2.3
+git push origin :refs/tags/v1.2.3
+```
+
+## 📊 Version Bump Quick Reference
+
+| Change Type     | Current       | New Version   | Bump        |
+| --------------- | ------------- | ------------- | ----------- |
+| Bug fix         | v1.2.3        | v1.2.4        | Patch       |
+| New feature     | v1.2.4        | v1.3.0        | Minor       |
+| Breaking change | v1.3.0        | v2.0.0        | Major       |
+| Beta release    | v1.3.0        | v1.4.0-beta.1 | Pre-release |
+| RC release      | v1.4.0-beta.2 | v1.4.0-rc.1   | Pre-release |
+| GA from RC      | v1.4.0-rc.1   | v1.4.0        | Stable      |
+
+## 🎯 Best Practices
+
+### Before Every Release
+
+1. ✅ All tests passing
+2. ✅ Code review completed
+3. ✅ Documentation updated
+4. ✅ Staging environment tested
+5. ✅ Release notes prepared
+
+### During Release
+
+1. ✅ Use dry-run first for major versions
+2. ✅ Monitor GitHub Actions workflow
+3. ✅ Verify Docker Hub images
+4. ✅ Test images in staging
+
+### After Release
+
+1. ✅ Announce to team
+2. ✅ Monitor production metrics
+3. ✅ Update deployment environments
+4. ✅ Archive release artifacts
+
+## 📞 Getting Help
+
+- **Documentation**: [RELEASE.md](../../RELEASE.md)
+- **Process Changes**: [RELEASE_IMPROVEMENTS.md](docs/deployment/RELEASE_IMPROVEMENTS.md)
+- **Original Process**: [RELEASE_PROCESS.md](docs/deployment/RELEASE_PROCESS.md)
+- **Issues**: [GitHub Issues](https://github.com/mnaimfaizy/prisma/issues)
+
+## 🔗 Quick Links
+
+- **GitHub Actions**: https://github.com/mnaimfaizy/prisma/actions
+- **Docker Hub**: https://hub.docker.com/u/mnaimfaizy
+- **Release Notes**: https://github.com/mnaimfaizy/prisma/blob/main/docs/release-notes.md
+- **Repository**: https://github.com/mnaimfaizy/prisma

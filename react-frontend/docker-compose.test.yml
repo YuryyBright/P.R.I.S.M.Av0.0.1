@@ -1,0 +1,42 @@
+# React Frontend Test Environment
+# This compose file contains the frontend service for testing
+
+services:
+  # React Frontend Application for testing
+  react_frontend_test:
+    build:
+      context: ${REACT_FRONTEND_SRC:-.}
+      dockerfile: Dockerfile
+      target: testing
+      args:
+        - NODE_ENV=testing
+        - VITE_MODE=testing
+    image: react_frontend:test
+    restart: always
+    container_name: react_frontend_test
+    ports:
+      - '3001:3000' # Different port for test environment
+    env_file:
+      - .env.test
+    environment:
+      - NODE_ENV=test
+      - VITE_API_BASE_URL=http://localhost:8002
+      - VITE_MODE=testing
+    volumes:
+      - ${REACT_FRONTEND_SRC:-.}:/app
+      - /app/node_modules
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - prisma_test_network
+
+# External network defined in main compose file
+networks:
+  prisma_test_network:
+    name: prisma_test_network
+    driver: bridge
+    external: true

@@ -1,0 +1,15 @@
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+CN = prisma_redis_prod
+
+[v3_req]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = prisma_redis_prod
+DNS.2 = prisma_redis
+DNS.3 = localhost

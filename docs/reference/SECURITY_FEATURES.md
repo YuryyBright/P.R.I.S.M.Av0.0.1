@@ -1,0 +1,336 @@
+# Security Features Documentation
+
+This document provides comprehensive information about the security features implemented in the FastAPI RBAC project.
+
+## 🔒 Security Overview
+
+The FastAPI RBAC system implements enterprise-grade security with multiple layers of protection against common web vulnerabilities and attacks.
+
+**Security Rating**: ⭐⭐⭐⭐⭐ (Enterprise-Grade)
+
+## 🛡️ Implemented Security Features
+
+### 1. CSRF Protection
+
+**Implementation**: `fastapi-csrf-protect==1.0.3`
+
+- **Endpoint**: `GET /api/v1/auth/csrf-token`
+- **Protection**: All state-changing operations (POST, PUT, DELETE)
+- **Token Management**: Secure cookie handling with signed/unsigned token support
+- **Validation**: 403 responses for invalid or missing CSRF tokens
+
+**Usage Example**:
+
+```javascript
+// Frontend CSRF token handling
+const csrfToken = await csrfService.getCsrfToken();
+// Token automatically included in subsequent requests
+```
+
+### 2. Input Sanitization
+
+**Implementation**: Custom `InputSanitizer` class with `bleach==6.2.0`
+
+- **XSS Prevention**: HTML tag removal and content cleaning
+- **Field-Type Sanitization**: Text, email, HTML, URL, and search field sanitization
+- **SQL Injection Protection**: Parameter sanitization and validation
+- **Path Traversal Protection**: File path validation and cleaning
+- **DoS Protection**: Input length validation and rate limiting
+
+**Sanitization Types**:
+
+- `sanitize_text()`: Basic text cleaning
+- `sanitize_email()`: Email format validation and cleaning
+- `sanitize_html()`: HTML content sanitization with allowed tags
+- `sanitize_url()`: URL validation and cleaning
+- `sanitize_search()`: Search query cleaning
+
+### 3. HTTP Rate Limiting
+
+**Implementation**: `slowapi` (sole HTTP rate limit library; see [ADR 0008](../adr/0008-slowapi-sole-http-rate-limit.md))
+
+**Protected Endpoints** (HTTP rate limits, all currently anonymous and therefore address-keyed):
+
+- **Login**: 5 attempts per minute
+- **Registration**: 3 attempts per hour
+- **Password Reset request**: 3 attempts per hour
+- **Access token**: 5 attempts per minute
+
+**Configuration**: shared `Limiter` in `app/core/rate_limit.py` (`rate_limit_key`; Redis `storage_uri` outside testing).
+
+The key is `user:{id}` when `get_current_user` has already established the caller, and `ip:{client address}` otherwise. Prefixes keep those two from colliding. The key function does not decode tokens. The four endpoints above never call `get_current_user`, so they stay address-keyed at the thresholds listed. A later authenticated route that takes `@limiter.limit` gets a per-user bucket instead of sharing one address quota.
+
+The address used for the IP key is the *real* client address: `ProxyHeadersMiddleware` corrects `request.client` from `X-Forwarded-For` / `X-Real-IP` when the peer is a `TRUSTED_PROXIES` member, and ignores those headers otherwise ([ADR 0011](../adr/0011-session-security-model.md) decision 8). Behind a proxy that is not configured as trusted, every anonymous client shares one bucket.
+
+Registration / resend-verification also use separate Redis **abuse counters** (not slowapi).
+
+### 4. Enhanced Security Headers
+
+**Implementation**: Custom middleware and Nginx configuration
+
+**Headers Applied**:
+
+```nginx
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; ...
+```
+
+**Protection Against**:
+
+- Clickjacking (X-Frame-Options)
+- MIME sniffing (X-Content-Type-Options)
+- XSS attacks (CSP and X-XSS-Protection)
+- Information leakage (Referrer-Policy)
+
+### 5. JWT Token Security
+
+**Implementation**: PyJWT signing/verification plus Redis **allowlist** session invalidation (`app/utils/token.py`). See [System Architecture](./architecture.md#authentication-flow) and [ADR 0001](../adr/0001-pyjwt-sole-jwt-library.md).
+
+**Features**:
+
+- **Access Tokens**: Short-lived, stored in memory (Redux state)
+- **Refresh Tokens**: Long-lived, HttpOnly Secure cookies (see [ADR 0006](../adr/0006-httponly-refresh-token-cookies.md))
+- **Token Allowlisting**: Only tokens recorded at login/refresh are accepted
+- **Automatic Refresh**: Transparent token renewal via cookie + CSRF
+- **Secure Logout**: `POST /logout` revokes the calling session only; `POST /logout/all` revokes every session. The refresh cookie is cleared on both. See [ADR 0011](../adr/0011-session-security-model.md) decision 9
+- **Origin-Network Anomaly Detection**: when `VALIDATE_TOKEN_IP` is on, the address a
+  session was established from is recorded with its refresh allowlist entry. A refresh
+  presented from a different IPv4 /24 or IPv6 /64 revokes that one session and answers
+  with the ordinary refresh failure. Access tokens are never checked this way, the
+  user's other sessions survive, and a session with no recorded origin refreshes
+  normally. This is detection, not IP binding -- see
+  [ADR 0011](../adr/0011-session-security-model.md) decision 5
+
+**Security Measures**:
+
+```python
+# Record tokens on the allowlist at login (simplified)
+await add_session_tokens_to_redis(
+    redis_client, user, access_token, refresh_token,
+    access_expire_minutes=..., refresh_expire_minutes=...,
+)
+
+# Reject tokens missing from the live allowlist
+valid = await get_valid_tokens(redis_client, user.id, TokenType.ACCESS)
+if not token_is_allowlisted(valid, access_token):
+    raise HTTPException(status_code=401, detail="Token has been revoked")
+```
+
+### 6. Password Security
+
+**Implementation**: Advanced password validation and history
+
+**Features**:
+
+- **Password Strength**: Integration with `zxcvbn` for strength validation
+- **Password History**: Prevents reuse of last 5 passwords
+- **Account Locking**: 5 failed attempts trigger 15-minute lockout
+- **Secure Hashing**: bcrypt with salt for password storage
+
+**Password Policy**:
+
+- Minimum 12 characters (`PASSWORD_MIN_LENGTH`), maximum 128
+- Upper case, lower case, digit and special character required
+- Rejects common passwords, sequential runs (`abc`, `123`) and repeated runs
+- Strength score validation
+- History tracking for compliance
+- Automatic lockout protection
+
+The thresholds above are settings, not constants in code. Every path that sets
+a password goes through `app/utils/password_policy.py`, so none of them can
+drift into a looser rule of its own. Registration and admin create call
+`accept_initial_password` (rules only). Change password, both reset-confirm
+endpoints and admin update of a single user call `change_password`, which
+applies the rules, then the reuse policy, then ends every session, then
+commits, then writes the success audit event. A refusal is answered as `400`
+with `detail = {"message", "errors"}` on every path. Bulk user update refuses
+a `password` key rather than applying one password to many accounts.
+
+### 7. Audit Logging
+
+**Implementation**: Comprehensive security event logging
+
+**Logged Events**:
+
+- Authentication attempts (success/failure)
+- Account lockouts and unlocks
+- Password changes
+- Permission changes
+- Administrative actions
+- Security violations
+
+**Log Format**:
+
+```python
+audit_log = AuditLog(
+    actor_id=user_id,  # null when the event has no known user
+    action="successful_login",
+    resource_type="security_event",
+    resource_id=str(user_id) if user_id else "",
+    details={"ip_address": client_ip, "email": email},
+    timestamp=datetime.utcnow(),
+)
+```
+
+`log_security_event` writes this row in-process and is awaited, including on paths that then raise `HTTPException`. A failed audit write is logged and does not change the endpoint's status code.
+
+## 🔍 Security Testing
+
+### Backend Security Tests
+
+**Files**:
+
+- `backend/test/test_csrf_implementation.py`: CSRF protection validation
+- `backend/test/test_sanitization.py`: Input sanitization testing
+- Backend test suite includes security-focused test cases
+
+### Frontend Security Tests
+
+**Coverage**: 17 CSRF-related tests in the frontend test suite
+
+**Test Areas**:
+
+- CSRF token retrieval and storage
+- Token inclusion in requests
+- Error handling for invalid tokens
+- Token refresh mechanisms
+
+## 🚨 Security Monitoring
+
+### Rate Limiting Monitoring
+
+```python
+# Rate limit exceeded logging
+logger.warning(f"Rate limit exceeded for {client_ip} on {endpoint}")
+```
+
+### Security Event Monitoring
+
+```python
+# Security violation logging
+logger.error(f"Security violation: {violation_type} from {client_ip}")
+```
+
+### Failed Authentication Monitoring
+
+```python
+# Failed login attempt tracking
+user.failed_attempts += 1
+if user.failed_attempts >= 5:
+    user.locked_until = datetime.utcnow() + timedelta(minutes=15)
+```
+
+## 🔧 Security Configuration
+
+### Environment Variables
+
+```bash
+# CSRF Protection
+CSRF_SECRET_KEY=your-csrf-secret-key
+
+# Rate Limiting
+RATE_LIMIT_STORAGE_URL=redis://localhost:6379
+
+# JWT Security
+JWT_SECRET_KEY=your-jwt-secret-key
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# Password Security
+PASSWORD_MIN_LENGTH=8
+PASSWORD_HISTORY_COUNT=5
+ACCOUNT_LOCKOUT_ATTEMPTS=5
+ACCOUNT_LOCKOUT_DURATION=15
+```
+
+### Docker Security
+
+```yaml
+# Non-root user containers
+USER 1000:1000
+
+# Security options
+security_opt:
+  - no-new-privileges:true
+
+# Read-only root filesystem
+read_only: true
+```
+
+## 📋 Security Checklist
+
+### Pre-Deployment Security Validation
+
+- [ ] **CSRF Protection**: Verify all state-changing endpoints are protected
+- [ ] **Input Sanitization**: Test XSS prevention on all form inputs
+- [ ] **Rate Limiting**: Validate rate limits are working on auth endpoints
+- [ ] **Security Headers**: Confirm all security headers are present
+- [ ] **JWT Security**: Test token generation, validation, and allowlist invalidation
+- [ ] **Password Security**: Verify password policies and account locking
+- [ ] **Audit Logging**: Confirm security events are being logged
+- [ ] **HTTPS**: Ensure all communications are encrypted in production
+
+### Security Testing Commands
+
+```powershell
+# Test CSRF protection
+python backend/test/test_csrf_implementation.py
+
+# Test input sanitization
+python backend/test/test_sanitization.py
+
+# Run security-focused backend tests
+pytest test/ -k "security or auth or csrf" -v
+
+# Run frontend security tests
+cd react-frontend
+npm test -- --run csrfService.test.ts
+```
+
+## 🔒 Production Security Recommendations
+
+### 1. Infrastructure Security
+
+- Use HTTPS/TLS certificates
+- Configure firewall rules
+- Implement network segmentation
+- Regular security updates
+
+### 2. Database Security
+
+- Use encrypted connections
+- Implement database user permissions
+- Regular backup encryption
+- Access logging
+
+### 3. Monitoring & Alerting
+
+- Security event monitoring
+- Failed authentication alerting
+- Rate limiting breach notifications
+- Unusual activity detection
+
+### 4. Regular Security Reviews
+
+- Monthly security audits
+- Dependency vulnerability scanning
+- Code security reviews
+- Penetration testing
+
+## 📚 Additional Resources
+
+- [OWASP Security Guidelines](https://owasp.org/)
+- [FastAPI Security Documentation](https://fastapi.tiangolo.com/tutorial/security/)
+- [JWT Security Best Practices](https://tools.ietf.org/html/rfc8725)
+- [CSRF Protection Guide](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
+
+---
+
+**Last Updated**: June 11, 2025
+**Security Review**: All features verified and operational
+**Compliance**: Enterprise-grade security standards met

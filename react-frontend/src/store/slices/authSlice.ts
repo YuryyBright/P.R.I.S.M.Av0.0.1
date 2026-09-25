@@ -1,0 +1,377 @@
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { AuthState, LoginCredentials } from '../../models/auth';
+import authService from '../../services/auth.service';
+import authTokenManager from '../../services/authTokenManager';
+import {
+  setStoredAccessToken,
+  setAuthSessionHint,
+  clearAuthTokens,
+} from '../../lib/tokenStorage';
+import { normalizeApiError } from '../../lib/apiError';
+
+// Initial state
+const initialState: AuthState = {
+  user: null,
+  accessToken: null,
+  refreshToken: null,
+  isAuthenticated: false,
+  isLoading: false,
+  error: null,
+  passwordChangeSuccess: false,
+  passwordResetRequested: false,
+  passwordResetSuccess: false,
+};
+
+// Async thunks for authentication actions
+export const loginUser = createAsyncThunk(
+  'auth/login',
+  async (credentials: LoginCredentials, { rejectWithValue }) => {
+    try {
+      const response = await authService.login(credentials);
+      return response;
+    } catch (error) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as {
+          response?: {
+            data?: { errors?: Array<{ message: string }>; message?: string };
+          };
+        };
+        if (err.response?.data?.errors?.[0]) {
+          return rejectWithValue(err.response.data.errors[0].message);
+        }
+        return rejectWithValue(err.response?.data?.message || 'Login failed');
+      }
+      return rejectWithValue('Login failed');
+    }
+  }
+);
+
+export const refreshAccessToken = createAsyncThunk(
+  'auth/refreshToken',
+  async (_, { rejectWithValue, dispatch }) => {
+    try {
+      // Refresh token is sent automatically via HttpOnly cookie
+      const response = await authService.refreshToken();
+      return response;
+    } catch (error) {
+      // Log the user out whenever token refresh fails
+      // This ensures users with expired/invalid refresh tokens don't get stuck
+      dispatch(logout());
+
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as {
+          response?: {
+            status?: number;
+            data?: { errors?: Array<{ message: string }>; message?: string };
+          };
+        };
+
+        // Handle specific error cases
+        if (err.response?.status === 403) {
+          return rejectWithValue('Session expired. Please log in again.');
+        }
+
+        if (err.response?.data?.errors?.[0]) {
+          return rejectWithValue(err.response.data.errors[0].message);
+        }
+
+        return rejectWithValue(
+          err.response?.data?.message ||
+            'Failed to refresh token. Please log in again.'
+        );
+      }
+      return rejectWithValue('Authentication failed. Please log in again.');
+    }
+  }
+);
+
+export const getCurrentUser = createAsyncThunk(
+  'auth/getCurrentUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const user = await authService.getCurrentUser();
+      return user;
+    } catch (error) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as {
+          response?: {
+            data?: { errors?: Array<{ message: string }>; message?: string };
+          };
+        };
+        if (err.response?.data?.errors?.[0]) {
+          return rejectWithValue(err.response.data.errors[0].message);
+        }
+        return rejectWithValue(
+          err.response?.data?.message || 'Failed to fetch user data'
+        );
+      }
+      return rejectWithValue('Failed to fetch user data');
+    }
+  }
+);
+
+export const changePassword = createAsyncThunk(
+  'auth/changePassword',
+  async (
+    {
+      currentPassword,
+      newPassword,
+    }: { currentPassword: string; newPassword: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await authService.changePassword(
+        currentPassword,
+        newPassword
+      );
+      return response;
+    } catch (error) {
+      // normalizeApiError keeps every failed policy rule; the previous unpack
+      // collapsed them to errors[0] and the UI showed one rule out of five.
+      const { message, details } = normalizeApiError(
+        error,
+        'Failed to change password'
+      );
+      return rejectWithValue({ message, errors: details });
+    }
+  }
+);
+
+// New thunks for password reset functionality
+export const requestPasswordReset = createAsyncThunk(
+  'auth/requestPasswordReset',
+  async (email: string, { rejectWithValue }) => {
+    try {
+      await authService.requestPasswordReset(email);
+      return true;
+    } catch (error) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as {
+          response?: {
+            data?: { errors?: Array<{ message: string }>; message?: string };
+          };
+        };
+        if (err.response?.data?.errors?.[0]) {
+          return rejectWithValue(err.response.data.errors[0].message);
+        }
+        return rejectWithValue(
+          err.response?.data?.message || 'Failed to request password reset'
+        );
+      }
+      return rejectWithValue('Failed to request password reset');
+    }
+  }
+);
+
+export const confirmPasswordReset = createAsyncThunk(
+  'auth/confirmPasswordReset',
+  async (
+    { token, newPassword }: { token: string; newPassword: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      await authService.confirmPasswordReset(token, newPassword);
+      return true;
+    } catch (error) {
+      const { message, details } = normalizeApiError(
+        error,
+        'Failed to reset password'
+      );
+      return rejectWithValue({ message, errors: details });
+    }
+  }
+);
+
+// Updated logout thunk to call the backend logout endpoint
+export const logoutUser = createAsyncThunk(
+  'auth/logout',
+  async (_, { dispatch }) => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      // Even if the API call fails, we still want to clear local state
+      dispatch(logout());
+    }
+  }
+);
+
+export const logoutAllUser = createAsyncThunk(
+  'auth/logoutAll',
+  async (_, { dispatch }) => {
+    try {
+      await authService.logoutAll();
+    } catch (error) {
+      console.error('Error during logout everywhere:', error);
+    } finally {
+      dispatch(logout());
+    }
+  }
+);
+
+// Create the auth slice
+const authSlice = createSlice({
+  name: 'auth',
+  initialState,
+  reducers: {
+    // Logout user by clearing state and tokens
+    logout: () => {
+      // Clear any token expiry timers
+      authTokenManager.clearExpiryTimer();
+      clearAuthTokens();
+      return { ...initialState };
+    },
+    // Clear error state
+    clearError: (state) => {
+      state.error = null;
+    },
+    // Reset password change success state
+    resetPasswordChangeSuccess: (state) => {
+      state.passwordChangeSuccess = false;
+    },
+    // Reset password reset request state
+    resetPasswordResetRequested: (state) => {
+      state.passwordResetRequested = false;
+    },
+    // Reset password reset success state
+    resetPasswordResetSuccess: (state) => {
+      state.passwordResetSuccess = false;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Handle login action
+      .addCase(loginUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        state.accessToken = action.payload.access_token;
+        state.refreshToken = null; // HttpOnly cookie; not available to JS
+
+        try {
+          setStoredAccessToken(action.payload.access_token);
+          setAuthSessionHint();
+          authTokenManager.setupTokenExpiryTimer(action.payload.access_token);
+        } catch (error) {
+          console.error('Error storing auth tokens:', error);
+        }
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Handle token refresh
+      .addCase(refreshAccessToken.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(refreshAccessToken.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.accessToken = action.payload.access_token;
+        state.refreshToken = null;
+
+        try {
+          setStoredAccessToken(action.payload.access_token);
+          setAuthSessionHint();
+          authTokenManager.setupTokenExpiryTimer(action.payload.access_token);
+        } catch (error) {
+          console.error('Error storing refreshed access token:', error);
+        }
+      })
+      .addCase(refreshAccessToken.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.error = action.payload as string;
+        clearAuthTokens();
+      })
+
+      // Handle get current user
+      .addCase(getCurrentUser.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getCurrentUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+      })
+      .addCase(getCurrentUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Handle password change
+      .addCase(changePassword.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.passwordChangeSuccess = false;
+      })
+      .addCase(changePassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.passwordChangeSuccess = true;
+
+        // Access token in memory; refresh cookie set by backend
+        if (action.payload.access_token) {
+          state.accessToken = action.payload.access_token;
+          state.refreshToken = null;
+          setStoredAccessToken(action.payload.access_token);
+          setAuthSessionHint();
+          authTokenManager.setupTokenExpiryTimer(action.payload.access_token);
+        }
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+        state.passwordChangeSuccess = false;
+      })
+
+      // Handle password reset request
+      .addCase(requestPasswordReset.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.passwordResetRequested = false;
+      })
+      .addCase(requestPasswordReset.fulfilled, (state) => {
+        state.isLoading = false;
+        state.passwordResetRequested = true;
+      })
+      .addCase(requestPasswordReset.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+        state.passwordResetRequested = false;
+      })
+
+      // Handle password reset confirmation
+      .addCase(confirmPasswordReset.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.passwordResetSuccess = false;
+      })
+      .addCase(confirmPasswordReset.fulfilled, (state) => {
+        state.isLoading = false;
+        state.passwordResetSuccess = true;
+      })
+      .addCase(confirmPasswordReset.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+        state.passwordResetSuccess = false;
+      });
+  },
+});
+
+// Export actions and reducer
+export const {
+  logout,
+  clearError,
+  resetPasswordChangeSuccess,
+  resetPasswordResetRequested,
+  resetPasswordResetSuccess,
+} = authSlice.actions;
+export default authSlice.reducer;

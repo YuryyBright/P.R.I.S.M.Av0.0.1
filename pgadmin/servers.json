@@ -1,0 +1,34 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "prisma-dev",
+      "Group": "Servers",
+      "Host": "prisma_db_dev",
+      "Port": 5432,
+      "MaintenanceDB": "fastapi_dev_db",
+      "Username": "postgres",
+      "SSLMode": "prefer",
+      "PassFile": "/tmp/pgpassfile"
+    },
+    "2": {
+      "Name": "prisma-test",
+      "Group": "Servers",
+      "Host": "prisma_db_test",
+      "Port": 5432,
+      "MaintenanceDB": "prisma_test_db",
+      "Username": "postgres",
+      "SSLMode": "prefer",
+      "PassFile": "/tmp/pgpassfile"
+    },
+    "3": {
+      "Name": "prisma-prod",
+      "Group": "Servers",
+      "Host": "prisma_db_prod",
+      "Port": 5432,
+      "MaintenanceDB": "fastapi_db",
+      "Username": "postgres",
+      "SSLMode": "prefer",
+      "PassFile": "/tmp/pgpassfile"
+    }
+  }
+}

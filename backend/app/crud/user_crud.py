@@ -1,0 +1,612 @@
+from datetime import datetime, timedelta, timezone
+from typing import Any
+from uuid import UUID  # Removed Coroutine
+
+from fastapi import HTTPException
+from pydantic import EmailStr
+from sqlalchemy import delete as sa_delete
+from sqlalchemy import desc, exc  # Keep this import
+from sqlalchemy import update as sa_update
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession  # Keep this import
+
+from app.core.config import settings
+from app.core.security import PasswordValidator
+from app.crud.base_crud import CRUDBase
+from app.models.audit_log_model import AuditLog
+from app.models.password_history_model import UserPasswordHistory
+from app.models.permission_group_model import PermissionGroup
+from app.models.permission_model import Permission
+from app.models.role_group_model import RoleGroup
+from app.models.role_model import Role
+from app.models.user_model import User
+from app.models.user_role_model import UserRole
+from app.schemas.user_schema import IUserCreate, IUserUpdate
+
+
+class PasswordReuseError(ValueError):
+    """The submitted password is one the reuse policy refuses.
+
+    Typed so an endpoint can answer 400 with this message without also
+    forwarding an unrelated ``ValueError`` -- a misuse of the CRUD contract is
+    a server fault, not a password the caller can fix.
+    """
+
+
+def password_reuse_window() -> int:
+    """How many stored passwords the reuse policy refuses.
+
+    ``PASSWORD_HISTORY_SIZE`` is how many old passwords are kept;
+    ``PREVENT_PASSWORD_REUSE`` is how many of them may not be set again. Refusing
+    more than are retained is not possible, so the effective window is the
+    smaller of the two, and setting either to 0 disables the history check.
+    """
+    return min(settings.PASSWORD_HISTORY_SIZE, settings.PREVENT_PASSWORD_REUSE)
+
+
+async def clear_user_delete_references(db_session: AsyncSession, user_id: UUID) -> None:
+    """Clear rows that must not block or outlive a user deletion as orphans (#238).
+
+    Password history is the user's own and is deleted. Creator attribution on
+    RBAC artifacts and audit rows is nulled so those rows survive without a
+    dangling FK. Assigned roles and audit ``actor_id`` are not touched here.
+    """
+    await db_session.exec(  # type: ignore[call-overload]
+        sa_delete(UserPasswordHistory).where(UserPasswordHistory.user_id == user_id)
+    )
+    for model in (Permission, PermissionGroup, Role, RoleGroup, AuditLog):
+        await db_session.exec(  # type: ignore[call-overload]
+            sa_update(model).where(model.created_by_id == user_id).values(created_by_id=None)
+        )
+
+
+class CRUDUser(CRUDBase[User, IUserCreate, IUserUpdate]):
+    async def get_by_email(self, *, email: str, db_session: AsyncSession | None = None) -> User | None:
+        """
+        Retrieve a user by email. Requires db_session to be provided explicitly.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        stmt = (
+            select(self.model)
+            .where(self.model.email == email)  # type: ignore[attr-defined]
+            .options(
+                selectinload(self.model.roles).selectinload(  # type: ignore[attr-defined]
+                    Role.permissions  # type: ignore[arg-type]
+                )
+            )
+        )
+        result = await db_session.exec(stmt)
+        unique_result = result.unique()
+        return unique_result.one_or_none()
+
+    async def get_multi_by_email(self, *, email: str, db_session: AsyncSession | None = None) -> list[User]:
+        """
+        Retrieve all users matching the given email (case-insensitive, exact match).
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        stmt = (
+            select(self.model)
+            .where(self.model.email == email)  # type: ignore[attr-defined]
+            .options(
+                selectinload(self.model.roles).selectinload(  # type: ignore[attr-defined]
+                    Role.permissions  # type: ignore[arg-type]
+                )
+            )
+        )
+        result = await db_session.exec(stmt)
+        return list(result.unique().all())
+
+    async def get_by_id_active(self, *, id: UUID, db_session: AsyncSession | None = None) -> User | None:
+        """
+        Retrieve an active user by ID. Requires db_session to be provided explicitly.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        user = await super().get(id=id, db_session=db_session)
+        if not user:
+            return None
+        if user.is_active is False:
+            return None
+        return user
+
+    async def create_with_role(self, *, obj_in: IUserCreate, db_session: AsyncSession | None = None) -> User:
+        """
+        Create a user with roles. Requires db_session to be provided explicitly.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        user_data = obj_in.model_dump(exclude={"role_id", "password"})
+        user_data["roles"] = []
+        db_obj = User(**user_data)
+        db_obj.password = PasswordValidator.get_password_hash(obj_in.password)
+        try:
+            db_session.add(db_obj)
+            role_ids = obj_in.role_id if obj_in.role_id is not None else []
+            if role_ids:
+                result = await db_session.exec(
+                    select(Role).where(Role.id.in_(role_ids))  # type: ignore[attr-defined]
+                )
+                roles_to_assign = list(result.all())
+                if len(roles_to_assign) != len(role_ids):
+                    await db_session.rollback()
+                    found_role_ids = {r.id for r in roles_to_assign}
+                    missing_ids = [rid for rid in role_ids if rid not in found_role_ids]
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"One or more roles not found for IDs: {missing_ids}",
+                    )
+                db_obj.roles = roles_to_assign
+            await db_session.commit()
+            await db_session.refresh(db_obj)
+            if role_ids:
+                await db_session.refresh(db_obj, attribute_names=["roles"])
+        except exc.IntegrityError as e:
+            await db_session.rollback()
+            is_unique_constraint_violation = "UNIQUE constraint failed" in str(
+                e
+            ) or "duplicate key value violates unique constraint" in str(e)
+            if is_unique_constraint_violation:
+                raise HTTPException(
+                    status_code=409,
+                    detail="User with this email already exists",
+                )
+            else:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Database integrity error: {e}",
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            await db_session.rollback()
+            raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+        return db_obj
+
+    async def create(
+        self,
+        *,
+        obj_in: IUserCreate | User,
+        created_by_id: UUID | str | None = None,
+        db_session: AsyncSession | None = None,
+    ) -> User:
+        """
+        Create a user. Requires db_session to be provided explicitly.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        role_ids: list[UUID] = []
+        if isinstance(obj_in, IUserCreate):
+            role_ids = obj_in.role_id if obj_in.role_id is not None else []
+            obj_in_data = obj_in.model_dump(exclude={"password", "role_id"})
+            obj_in_data["roles"] = []
+            db_obj = User(**obj_in_data)
+            db_obj.password = PasswordValidator.get_password_hash(obj_in.password)
+        else:
+            db_obj = obj_in
+            if db_obj.roles is None:
+                db_obj.roles = []
+        if created_by_id:
+            db_obj.created_by_id = created_by_id
+        try:
+            db_session.add(db_obj)
+            if role_ids:
+                result = await db_session.exec(
+                    select(Role).where(Role.id.in_(role_ids))  # type: ignore[attr-defined]
+                )
+                roles = list(result.all())
+                if len(roles) != len(role_ids):
+                    await db_session.rollback()
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"One or more roles not found for IDs: {role_ids}",
+                    )
+                db_obj.roles = roles
+            await db_session.commit()
+            await db_session.refresh(db_obj)
+            if role_ids or (isinstance(obj_in, User) and obj_in.roles is not None and len(obj_in.roles) > 0):
+                await db_session.refresh(db_obj, attribute_names=["roles"])
+        except exc.IntegrityError as e:
+            await db_session.rollback()
+            is_unique_constraint_violation = "UNIQUE constraint failed" in str(
+                e
+            ) or "duplicate key value violates unique constraint" in str(e)
+            if is_unique_constraint_violation:
+                raise HTTPException(
+                    status_code=409,
+                    detail="User with this email already exists",
+                )
+            else:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Database integrity error: {e}",
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            await db_session.rollback()
+            raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+        return db_obj
+
+    async def update(
+        self,
+        *,
+        obj_current: User,
+        obj_new: IUserUpdate | dict[str, Any] | User,
+        db_session: AsyncSession | None = None,
+    ) -> User:
+        """
+        Update a user. Requires db_session to be provided explicitly.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        if isinstance(obj_new, dict):
+            update_data = obj_new
+        else:
+            update_data = obj_new.model_dump(exclude_unset=True)
+        if "password" in update_data:
+            # A password is accepted only through
+            # app.utils.password_policy.change_password, which applies the
+            # rules, the reuse policy and session revocation in order (#271).
+            # Taking one here would let a caller skip all three.
+            raise ValueError("crud.user.update does not set passwords; use password_policy.change_password")
+        if "role_id" in update_data:
+            role_ids = update_data.pop("role_id", [])
+            if role_ids:
+                result = await db_session.exec(
+                    select(Role).where(Role.id.in_(role_ids))  # type: ignore[attr-defined]
+                )
+                roles = list(result.all())
+                if len(roles) != len(role_ids):
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"One or more roles not found for IDs: {role_ids}",
+                    )
+                obj_current.roles = roles
+            else:
+                obj_current.roles = []
+        for field, value in update_data.items():
+            setattr(obj_current, field, value)
+        try:
+            db_session.add(obj_current)
+            await db_session.commit()
+        except exc.IntegrityError as e:
+            await db_session.rollback()
+            is_unique_constraint_violation = "UNIQUE constraint failed" in str(
+                e
+            ) or "duplicate key value violates unique constraint" in str(e)
+            if is_unique_constraint_violation:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Email already exists for another user.",
+                )
+            else:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Database integrity error during update: {e}",
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            await db_session.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail=f"An unexpected error occurred during update: {e}",
+            )
+        await db_session.refresh(obj_current)
+        await db_session.refresh(obj_current, attribute_names=["roles"])
+        return obj_current
+
+    def has_verified(self, user: User) -> bool:
+        return bool(user.verified)
+
+    async def update_is_active(
+        self, *, db_obj: list[User], obj_in: IUserUpdate, db_session: AsyncSession | None = None
+    ) -> list[User] | None:
+        """
+        Update is_active for a list of users. Requires db_session to be provided explicitly.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        for x in db_obj:
+            if hasattr(obj_in, "is_active") and obj_in.is_active is not None:
+                x.is_active = obj_in.is_active
+            db_session.add(x)
+        await db_session.commit()
+        for x in db_obj:
+            await db_session.refresh(x)
+        return db_obj
+
+    async def authenticate(
+        self, *, email: EmailStr, password: str, db_session: AsyncSession | None = None
+    ) -> User | None:
+        """
+        Authenticate a user by email and password. Requires db_session to be provided explicitly.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        user = await self.get_by_email(email=email, db_session=db_session)
+        if not user:
+            return None
+        if user.password is None:
+            return None
+        if user.is_locked and user.locked_until and user.locked_until > datetime.now(timezone.utc):
+            return None
+        if user.is_locked and user.locked_until and user.locked_until <= datetime.now(timezone.utc):
+            await self.unlock_account(user=user, db_session=db_session)
+        # Removed is_active check here; let endpoint handle it
+        from app.core.security import PasswordValidator
+
+        verify_result = PasswordValidator.verify_password(password, user.password)
+        if not verify_result:
+            await self.increment_failed_attempts(user=user, db_session=db_session)
+            return None
+        await self.reset_failed_attempts(user=user, db_session=db_session)
+        return user
+
+    async def remove(self, *, id: UUID | str, db_session: AsyncSession | None = None) -> User:
+        """
+        Remove a user by ID. Requires db_session to be provided explicitly.
+
+        Owned rows (password history) are deleted and creator attribution on
+        surviving RBAC artifacts is nulled so a leftover FK cannot 500 the
+        caller. Assigned roles are refused with 409, matching the endpoint
+        contract (#238).
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        result = await db_session.exec(
+            select(self.model).where(self.model.id == id)  # type: ignore[attr-defined]
+        )
+        obj = result.one_or_none()
+        if obj is None:
+            raise HTTPException(status_code=404, detail=f"User with id {id} not found")
+        assert isinstance(obj, User), f"Expected User instance, got {type(obj)}"
+        assigned = await db_session.exec(select(UserRole).where(UserRole.user_id == obj.id))
+        assigned_roles = assigned.all()
+        if assigned_roles:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"User has {len(assigned_roles)} role(s) assigned and cannot be deleted. "
+                    "Please remove all roles first."
+                ),
+            )
+        await clear_user_delete_references(db_session, obj.id)
+        try:
+            await db_session.delete(obj)
+            await db_session.commit()
+        except exc.IntegrityError:
+            await db_session.rollback()
+            raise HTTPException(
+                status_code=409,
+                detail="User cannot be deleted because related records still reference them.",
+            )
+        return obj
+
+    async def add_roles_by_ids(
+        self,
+        *,
+        user_id: UUID,
+        role_ids: list[UUID],
+        db_session: AsyncSession | None = None,
+    ) -> User:
+        """
+        Add roles to a user by IDs. Requires db_session to be provided explicitly.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        user = await self.get(id=user_id, db_session=db_session)  # type: ignore[arg-type]
+        if not user:
+            raise HTTPException(status_code=404, detail=f"User with id {user_id} not found")
+        roles_result = await db_session.exec(
+            select(Role).where(Role.id.in_(role_ids))  # type: ignore[attr-defined]
+        )
+        roles_to_add = list(roles_result.all())
+        for r in roles_to_add:
+            assert isinstance(r, Role), f"Expected Role instance, got {type(r)}"
+        if len(roles_to_add) != len(role_ids):
+            found_role_ids = {role.id for role in roles_to_add}
+            missing_role_ids = [rid for rid in role_ids if rid not in found_role_ids]
+            raise HTTPException(
+                status_code=404,
+                detail=f"One or more roles not found for IDs: {missing_role_ids}",
+            )
+        if user.roles is None:
+            user.roles = []
+        for role in roles_to_add:
+            if role not in user.roles:
+                user.roles.append(role)
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user, attribute_names=["roles"])
+        return user
+
+    @staticmethod
+    def matches_current_password(*, user: User, new_password: str) -> bool:
+        """Whether ``new_password`` is the password the account already has.
+
+        History rows alone cannot answer this: registration writes none, so a
+        brand new account could "reset" straight back to its sign-up password
+        (#193).
+        """
+        if not user.password:
+            return False
+        return PasswordValidator.verify_password(new_password, user.password)
+
+    async def is_password_in_history(
+        self,
+        *,
+        user_id: UUID,
+        new_password: str,
+        db_session: AsyncSession | None = None,
+    ) -> bool:
+        """
+        Check if a password is inside the user's reuse window. Requires db_session
+        to be provided explicitly.
+
+        Comparison goes through ``verify_password``. bcrypt salts every hash
+        independently, so hashing the candidate and testing the digest against
+        stored digests can never match -- a check written that way is dead code.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        limit = password_reuse_window()
+        if limit <= 0:
+            return False
+        result = await db_session.exec(
+            select(UserPasswordHistory)
+            .where(UserPasswordHistory.user_id == user_id)
+            .order_by(desc(UserPasswordHistory.created_at))
+            .limit(limit)
+        )
+        history_entries = list(result.all())
+        for entry in history_entries:
+            assert isinstance(
+                entry, UserPasswordHistory
+            ), f"Expected UserPasswordHistory instance, got {type(entry)}"
+        return any(
+            PasswordValidator.verify_password(new_password, entry.password_hash) for entry in history_entries
+        )
+
+    async def update_password(
+        self,
+        *,
+        user: User,
+        new_password: str,
+        db_session: AsyncSession | None = None,
+        created_by_ip: str | None = None,
+    ) -> User:
+        """
+        Stage a new password for ``user``. Requires db_session to be provided explicitly.
+
+        This is the single place the reuse policy is applied and the single place
+        the password side effects happen (history append,
+        ``last_changed_password_date``) (#193). It does not commit:
+        ``app.utils.password_policy.change_password`` is its caller and owns the
+        commit, so it can end the user's sessions first (#271).
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        if self.matches_current_password(user=user, new_password=new_password):
+            raise PasswordReuseError("New password must be different from your current password.")
+        window = password_reuse_window()
+        if window > 0 and await self.is_password_in_history(
+            user_id=user.id, new_password=new_password, db_session=db_session
+        ):
+            raise PasswordReuseError(f"Cannot reuse any of your last {window} passwords.")
+        new_password_hash = PasswordValidator.get_password_hash(new_password)
+        if user.password:
+            await self.add_password_to_history(
+                user_id=user.id,
+                hashed_password=user.password,
+                created_by_ip=created_by_ip,
+                db_session=db_session,
+            )
+        user.password = new_password_hash
+        user.last_changed_password_date = datetime.now(timezone.utc).replace(tzinfo=None)
+        db_session.add(user)
+        return user
+
+    async def increment_failed_attempts(self, *, user: User, db_session: AsyncSession | None = None) -> User:
+        """
+        Increment failed login attempts for a user. Requires db_session to be provided explicitly.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        if user.number_of_failed_attempts is None:
+            user.number_of_failed_attempts = 1
+        else:
+            user.number_of_failed_attempts += 1
+        if user.number_of_failed_attempts >= settings.MAX_LOGIN_ATTEMPTS:
+            user.is_locked = True
+            user.locked_until = (
+                datetime.now(timezone.utc) + timedelta(minutes=settings.ACCOUNT_LOCKOUT_MINUTES)
+            ).replace(tzinfo=None)
+        try:
+            db_session.add(user)
+            await db_session.commit()
+            await db_session.refresh(user)
+        except Exception as e:
+            await db_session.rollback()
+            raise HTTPException(status_code=500, detail=f"Error updating failed attempts: {str(e)}")
+        return user
+
+    async def reset_failed_attempts(self, *, user: User, db_session: AsyncSession | None = None) -> User:
+        """
+        Reset failed login attempts for a user. Requires db_session to be provided explicitly.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        user.number_of_failed_attempts = 0
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+        return user
+
+    async def unlock_account(self, *, user: User, db_session: AsyncSession | None = None) -> User:
+        """
+        Unlock a user's account. Requires db_session to be provided explicitly.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        user.is_locked = False
+        user.locked_until = None
+        user.number_of_failed_attempts = 0
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+        return user
+
+    async def add_password_to_history(
+        self,
+        *,
+        user_id: UUID,
+        hashed_password: str,
+        created_by_ip: str | None = None,
+        reset_token_id: UUID | None = None,
+        db_session: AsyncSession | None = None,
+    ) -> None:
+        """
+        Stage a password history row. Requires db_session to be provided explicitly.
+
+        Does not commit; the row lands with the password change it records.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided")
+        password_history = UserPasswordHistory(
+            user_id=user_id,
+            password_hash=hashed_password,
+            created_by_ip=created_by_ip,
+            reset_token_id=reset_token_id,
+        )
+        db_session.add(password_history)
+        return None
+
+    async def get_with_roles_permissions(
+        self, *, id: UUID | str, db_session: AsyncSession | None = None
+    ) -> User | None:
+        """
+        Retrieve a user by ID, eagerly loading roles and permissions. Ensures relationships are loaded fresh.
+        """
+        if db_session is None:
+            raise ValueError("db_session must be provided to CRUD methods")
+        stmt = (
+            select(self.model)
+            .where(self.model.id == id)
+            .options(selectinload(self.model.roles).selectinload(Role.permissions))  # type: ignore[arg-type]
+        )
+        result = await db_session.exec(stmt)
+        user = result.unique().first()
+        if user:
+            await db_session.refresh(user, attribute_names=["roles"])
+            # Also refresh permissions for each role
+            for role in getattr(user, "roles", []):
+                await db_session.refresh(role, attribute_names=["permissions"])
+        return user
+
+
+user_crud = CRUDUser(User)
+user = user_crud

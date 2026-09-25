@@ -1,0 +1,104 @@
+# FastAPI RBAC Backend Production Dockerfile
+# Multi-stage build for a production-ready FastAPI application
+
+# BUILD STAGE
+FROM python:3.10-slim-bookworm AS builder
+
+# Set work directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install build dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+
+# FINAL STAGE
+FROM python:3.10-slim-bookworm
+
+# Create a non-root user
+RUN useradd -m -u 1000 appuser
+
+# Set work directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    ENVIRONMENT=prod \
+    TESTING=0 \
+    FASTAPI_ENV=production \
+    PYTHONPATH=/app
+
+# Install runtime dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    dos2unix \
+    tzdata \
+    postgresql-client
+
+# Copy wheels from builder stage
+COPY --from=builder /app/wheels /wheels
+COPY --from=builder /app/requirements.txt .
+
+# Install Python packages
+RUN pip install --no-cache-dir /wheels/* && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy environment file first (if it exists)
+RUN if [ -f /app/.env.production ]; then \
+        cp /app/.env.production /app/.env.production; \
+    elif [ -f /app/production.env.example ]; then \
+        cp /app/production.env.example /app/.env.production; \
+    else \
+        echo "Warning: No .env file found to create .env.production" >&2; \
+        # Optionally, create an empty file or exit, depending on requirements
+        # touch /app/.env.production; \
+    fi
+
+# Copy source code
+COPY app/ ./app/
+COPY alembic/ ./alembic/
+COPY alembic.ini ./alembic.ini
+COPY logging.ini ./logging.ini
+COPY scripts/ ./scripts/
+COPY init_data.py ./init_data.py
+COPY requirements.txt ./requirements.txt
+COPY certs/ ./certs/
+
+# Fix line endings & execute permissions
+RUN find /app -name '*.sh' -exec dos2unix {} \; && \
+    find /app -name '*.sh' -exec chmod +x {} \;
+
+# Set correct permissions
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Create the log directory with proper permissions
+RUN mkdir -p /tmp/app_logs && touch /tmp/app_logs/app.log
+
+# Expose application port
+EXPOSE 8000
+
+# Health check for the API
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+
+# Use the production entrypoint script
+CMD ["bash", "/app/scripts/docker/entrypoint-prod.sh"]
