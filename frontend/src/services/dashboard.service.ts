@@ -1,4 +1,4 @@
-// frontend/src/services/dashboard.service.ts
+// admin_frontend/src/services/dashboard.service.ts
 import api from './api';
 import { DashboardData } from '../models/dashboard';
 

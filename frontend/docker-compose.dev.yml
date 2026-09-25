@@ -4,7 +4,7 @@
 services:
   react_frontend_dev:
     build:
-      context: ${REACT_FRONTEND_SRC:-.}
+      context: ${ADMIN_FRONTEND_SRC:-.}
       dockerfile: Dockerfile
       target: development
       args:
@@ -23,7 +23,7 @@ services:
     ports:
       - '3000:5173' # Vite dev server default port
     volumes:
-      - ${REACT_FRONTEND_SRC:-.}:/app
+      - ${ADMIN_FRONTEND_SRC:-.}:/app
       - /app/node_modules # Exclude node_modules from bind mount
     command: ['npm', 'run', 'dev', '--', '--host', '0.0.0.0']
     networks:

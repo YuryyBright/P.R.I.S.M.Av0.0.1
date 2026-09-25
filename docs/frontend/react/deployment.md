@@ -4,12 +4,12 @@ Build and run the React SPA for Docker and production.
 
 Related: [Setup](./setup.md), [Deployment overview](../../deployment/index.md), [Admin UI host (cPanel)](../../deployment/admin-ui/index.md), [Production setup](../../deployment/PRODUCTION_SETUP.md).
 
-For maintainer dogfood and the adopter static-host path, prefer **[Admin UI host](../../deployment/admin-ui/index.md)** over running the Hub frontend container.
+For maintainer dogfood and the adopter static-host path, prefer **[Admin UI host](../../deployment/admin-ui/index.md)** over running the Hub admin_frontend container.
 
 ## Production build
 
 ```bash
-cd frontend
+cd admin_frontend
 npm run build
 ```
 
@@ -28,14 +28,14 @@ Modular Compose files:
 | Scope         | Files                                                                                           |
 | ------------- | ----------------------------------------------------------------------------------------------- |
 | Root stack    | `docker-compose.dev.yml`, `docker-compose.test.yml`, `docker-compose.prod-test.yml` (repo root) |
-| Frontend-only | `frontend/docker-compose.dev.yml`, `docker-compose.test.yml`, `docker-compose.prod.yml`         |
+| Frontend-only | `admin_frontend/docker-compose.dev.yml`, `docker-compose.test.yml`, `docker-compose.prod.yml`   |
 
 Frontend images use `Dockerfile` / `Dockerfile.prod` and serve static assets with **Nginx** (`nginx.conf`).
 
 ### Frontend only
 
 ```bash
-cd frontend
+cd admin_frontend
 docker compose -f docker-compose.dev.yml up -d
 # or the prod compose file for a production-like image
 ```
@@ -48,12 +48,12 @@ From the repository root, use the root Compose files documented under [Deploymen
 
 - Configure fallback to `index.html` so client-side routes work on refresh.
 - Keep CORS / proxy headers consistent with the backend.
-- See [Frontend Issues — Build / Docker / Nginx](../../troubleshooting/frontend-issues.md#build--docker--nginx).
+- See [Frontend Issues — Build / Docker / Nginx](../../troubleshooting/admin_frontend-issues.md#build--docker--nginx).
 
 ## Checklist before release
 
 - [ ] `npm run build` succeeds
 - [ ] `VITE_API_BASE_URL` targets the correct API
-- [ ] CORS allows the deployed frontend origin
+- [ ] CORS allows the deployed admin_frontend origin
 - [ ] Container health / static asset paths verified
 - [ ] Smoke-test login + token refresh against the deployed API

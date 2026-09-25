@@ -1,4 +1,4 @@
-// frontend/src/store/slices/dashboardSlice.ts
+// admin_frontend/src/store/slices/dashboardSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { dashboardService } from '../../services/dashboard.service';
 import { DashboardData } from '../../models/dashboard';

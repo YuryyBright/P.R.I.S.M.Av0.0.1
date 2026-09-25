@@ -74,7 +74,7 @@ The same rules apply at sign-up as on password reset and change password.
 
 **Issue:** Docker Compose services fail to start due to port conflicts.
 
-**Solution:** Check if the required ports (8000 for backend, 5173 for frontend, 5432 for PostgreSQL) are already in use by other applications. Modify the port mappings in `docker-compose.yml` if needed.
+**Solution:** Check if the required ports (8000 for backend, 5173 for admin_frontend, 5432 for PostgreSQL) are already in use by other applications. Modify the port mappings in `docker-compose.yml` if needed.
 
 ### Volume Mounting Issues
 
@@ -96,7 +96,7 @@ volumes:
 **Solution:**
 
 - For the backend, ensure you're running with the `--reload` flag: `uvicorn app.main:app --reload`
-- For the frontend, check that the development server is properly configured in `vite.config.ts`
+- For the admin_frontend, check that the development server is properly configured in `vite.config.ts`
 
 ### Database Connection Issues
 

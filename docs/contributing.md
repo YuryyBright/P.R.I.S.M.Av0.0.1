@@ -19,7 +19,7 @@ Thank you for your interest in contributing to the FastAPI PRISMA project! We're
 
 ## Welcome
 
-FastAPI PRISMA is a comprehensive Role-Based Access Control system with a FastAPI backend and React frontend, designed to handle authentication and authorization for microservices. Our mission is to provide a secure, scalable, and developer-friendly PRISMA solution that follows enterprise security standards.
+FastAPI PRISMA is a comprehensive Role-Based Access Control system with a FastAPI backend and React admin_frontend, designed to handle authentication and authorization for microservices. Our mission is to provide a secure, scalable, and developer-friendly PRISMA solution that follows enterprise security standards.
 
 ### What We Accept
 
@@ -70,7 +70,7 @@ At this time, we do not accept the following:
 ```
 prisma/
 ├── 📁 backend/              # FastAPI application
-├── 📁 frontend/       # React TypeScript app
+├── 📁 admin_frontend/       # React TypeScript app
 ├── 📁 docs/                # Documentation
 ├── 📁 scripts/             # Utility scripts
 └── 📄 docker-compose*.yml  # Container configurations
@@ -122,7 +122,7 @@ Documentation improvements are always welcome! You can:
 
 - **Git** for version control
 - **Docker & Docker Compose** for containerized development
-- **Node.js 18+** for frontend development
+- **Node.js 18+** for admin_frontend development
 - **Python 3.10+** for backend development
 - **VS Code** (recommended) with our workspace extensions
 
@@ -155,8 +155,8 @@ Documentation improvements are always welcome! You can:
 
 ### Project Organization
 
-- **Feature-based development**: Each feature should include backend API, frontend UI, tests, and documentation
-- **API-first approach**: Design API endpoints before implementing frontend
+- **Feature-based development**: Each feature should include backend API, admin_frontend UI, tests, and documentation
+- **API-first approach**: Design API endpoints before implementing admin_frontend
 - **Documentation-driven**: Update docs alongside code changes
 - **Test-driven development**: Write tests for new features
 
@@ -225,7 +225,7 @@ mypy . --exclude alembic
 **Run quality checks**:
 
 ```bash
-cd frontend
+cd admin_frontend
 npx prettier --write .
 npx eslint . --fix
 ```
@@ -288,7 +288,7 @@ python backend/test_runner.py specific --path backend/test/unit/test_crud_user.p
 **Running Tests**:
 
 ```bash
-cd frontend
+cd admin_frontend
 npm test          # Run all tests
 npm run test:ui   # Run with UI
 npm run coverage  # Generate coverage report
@@ -512,13 +512,13 @@ By contributing to this project, you agree that your contributions will be licen
 
 ## Quick Reference
 
-| Task                   | Command                             | Documentation                                              |
-| ---------------------- | ----------------------------------- | ---------------------------------------------------------- |
-| **Setup development**  | `docker-compose up -d`              | [Getting Started](docs/getting-started/GETTING_STARTED.md) |
-| **Run backend tests**  | `python backend/test_runner.py all` | [Testing Guide](docs/development/TESTING.md)               |
-| **Run frontend tests** | `cd frontend && npm test`           | [Frontend Testing](frontend/README.md#testing)             |
-| **Format code**        | `black . && prettier --write .`     | [Code Standards](#code-standards)                          |
-| **Check quality**      | `flake8 . && eslint .`              | [Development Guidelines](#development-guidelines)          |
+| Task                         | Command                             | Documentation                                              |
+| ---------------------------- | ----------------------------------- | ---------------------------------------------------------- |
+| **Setup development**        | `docker-compose up -d`              | [Getting Started](docs/getting-started/GETTING_STARTED.md) |
+| **Run backend tests**        | `python backend/test_runner.py all` | [Testing Guide](docs/development/TESTING.md)               |
+| **Run admin_frontend tests** | `cd admin_frontend && npm test`     | [Frontend Testing](admin_frontend/README.md#testing)       |
+| **Format code**              | `black . && prettier --write .`     | [Code Standards](#code-standards)                          |
+| **Check quality**            | `flake8 . && eslint .`              | [Development Guidelines](#development-guidelines)          |
 
 ---
 

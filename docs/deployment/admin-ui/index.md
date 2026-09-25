@@ -16,7 +16,7 @@ Deploy the **admin UI** as a static SPA on a static host. This package is **not*
 | ------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | [cPanel setup](./cpanel-setup.md)                                                                       | Subdomain, docroot, secrets, first deploy  |
 | [`.github/workflows/admin-ui-cpanel-deploy.yml`](../../../.github/workflows/admin-ui-cpanel-deploy.yml) | Named jobs: build → upload → smoke         |
-| `frontend/public/.htaccess`                                                                             | Copied into `dist/` for SPA route fallback |
+| `admin_frontend/public/.htaccess`                                                                       | Copied into `dist/` for SPA route fallback |
 
 ## Quick mental model
 
@@ -45,10 +45,10 @@ Then recreate/restart the API container so CORS and email links pick up the new 
 ## Adopter options (secondary)
 
 1. **Any static host** (Vercel, Cloudflare Pages, Netlify, other cPanel): same build env + CORS/FRONTEND_URL on your API.
-2. **Hub image** `mnaimfaizy/prisma-frontend`: nginx container with same-origin `/api` proxy — use when you want UI next to the API in Compose/k8s, not the default Admin UI host path.
+2. **Hub image** `mnaimfaizy/prisma-admin_frontend`: nginx container with same-origin `/api` proxy — use when you want UI next to the API in Compose/k8s, not the default Admin UI host path.
 
 ## Related
 
 - ADR: [0004 — Admin UI host on cPanel](../../adr/0004-admin-ui-host-cpanel.md)
 - Hub runtime: [index](../hub-runtime/index.md) · [env.example](../hub-runtime/env.example)
-- React deployment notes: [frontend/react/deployment.md](../../frontend/react/deployment.md)
+- React deployment notes: [admin_frontend/react/deployment.md](../../admin_frontend/react/deployment.md)

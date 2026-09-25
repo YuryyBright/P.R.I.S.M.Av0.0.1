@@ -12,8 +12,8 @@ async function globalSetup(config: FullConfig) {
 
   console.log('\n🔍 Verifying E2E test environment...\n');
 
-  // Check frontend
-  console.log(`Checking frontend at ${baseURL}...`);
+  // Check admin_frontend
+  console.log(`Checking admin_frontend at ${baseURL}...`);
   const browser = await chromium.launch();
   const page = await browser.newPage();
 

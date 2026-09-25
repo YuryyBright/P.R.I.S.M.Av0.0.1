@@ -55,9 +55,9 @@ if ($Help) {
 
 # Compose file selection
 switch ($Environment) {
-    "dev"  { $composeFiles = @("backend/docker-compose.dev.yml", "frontend/docker-compose.dev.yml"); $projectName = "prisma_dev"; $networkName = "prisma_dev_network" }
-    "test" { $composeFiles = @("backend/docker-compose.test.yml", "frontend/docker-compose.test.yml"); $projectName = "prisma_test"; $networkName = "prisma_test_network" }
-    "prod" { $composeFiles = @("backend/docker-compose.prod.yml", "frontend/docker-compose.prod.yml"); $projectName = "prisma_production"; $networkName = "prisma_prod_network" }
+    "dev"  { $composeFiles = @("backend/docker-compose.dev.yml", "admin_frontend/docker-compose.dev.yml"); $projectName = "prisma_dev"; $networkName = "prisma_dev_network" }
+    "test" { $composeFiles = @("backend/docker-compose.test.yml", "admin_frontend/docker-compose.test.yml"); $projectName = "prisma_test"; $networkName = "prisma_test_network" }
+    "prod" { $composeFiles = @("backend/docker-compose.prod.yml", "admin_frontend/docker-compose.prod.yml"); $projectName = "prisma_production"; $networkName = "prisma_prod_network" }
     default { Write-ColorOutput "Unknown environment: $Environment" "Red"; exit 1 }
 }
 
@@ -72,9 +72,9 @@ switch ($Action) {
             Write-ColorOutput "Creating external Docker network: $networkName" "Green"
             docker network create $networkName | Out-Null
         }
-        # Set REACT_FRONTEND_SRC and BACKEND_SRC for dev, prod, and test environments
+        # Set ADMIN_FRONTEND_SRC and BACKEND_SRC for dev, prod, and test environments
         if ($Environment -eq "dev" -or $Environment -eq "prod" -or $Environment -eq "test") {
-            $env:REACT_FRONTEND_SRC = "../frontend"
+            $env:ADMIN_FRONTEND_SRC = "../admin_frontend"
             $env:BACKEND_SRC = "../backend"
         }
         $cmd = "docker compose $composeArgs $projectArg up -d --build"
@@ -89,22 +89,22 @@ switch ($Action) {
             Write-ColorOutput "Removing external Docker network: $networkName" "Green"
             docker network rm $networkName | Out-Null
         }
-        # Unset REACT_FRONTEND_SRC and BACKEND_SRC after down for dev, prod, and test
+        # Unset ADMIN_FRONTEND_SRC and BACKEND_SRC after down for dev, prod, and test
         if ($Environment -eq "dev" -or $Environment -eq "prod" -or $Environment -eq "test") {
-            Remove-Item Env:REACT_FRONTEND_SRC -ErrorAction SilentlyContinue
+            Remove-Item Env:ADMIN_FRONTEND_SRC -ErrorAction SilentlyContinue
             Remove-Item Env:BACKEND_SRC -ErrorAction SilentlyContinue
         }
     }
     "build" {
         Write-ColorOutput "🔨 Building images for $Environment..." "Cyan"
         if ($Environment -eq "dev" -or $Environment -eq "prod" -or $Environment -eq "test") {
-            $env:REACT_FRONTEND_SRC = "../frontend"
+            $env:ADMIN_FRONTEND_SRC = "../admin_frontend"
             $env:BACKEND_SRC = "../backend"
         }
         $cmd = "docker compose $composeArgs $projectArg build --no-cache"
         Invoke-Expression $cmd
         if ($Environment -eq "dev" -or $Environment -eq "prod" -or $Environment -eq "test") {
-            Remove-Item Env:REACT_FRONTEND_SRC -ErrorAction SilentlyContinue
+            Remove-Item Env:ADMIN_FRONTEND_SRC -ErrorAction SilentlyContinue
             Remove-Item Env:BACKEND_SRC -ErrorAction SilentlyContinue
         }
     }

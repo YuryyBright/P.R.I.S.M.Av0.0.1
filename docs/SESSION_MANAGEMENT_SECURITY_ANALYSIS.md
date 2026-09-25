@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive security analysis of the current session management implementation in the FastAPI PRISMA project. The analysis covers both backend (FastAPI/Python) and frontend (React/TypeScript) components, evaluating the current approach against modern security best practices and industry standards.
+This document provides a comprehensive security analysis of the current session management implementation in the FastAPI PRISMA project. The analysis covers both backend (FastAPI/Python) and admin_frontend (React/TypeScript) components, evaluating the current approach against modern security best practices and industry standards.
 
 ### Key Findings
 
@@ -20,7 +20,7 @@ The current implementation demonstrates strong security foundations with:
 - ✅ JWT-based authentication with separate access and refresh tokens
 - ✅ Redis-backed token allowlist (revocation by deleting membership)
 - ✅ Comprehensive token validation with standard claims
-- ✅ Secure frontend token storage (memory for access, localStorage for refresh)
+- ✅ Secure admin_frontend token storage (memory for access, localStorage for refresh)
 - ✅ Automatic token refresh mechanism
 - ✅ Enhanced security features (IP validation, password history, rate limiting)
 
@@ -37,7 +37,7 @@ The current implementation demonstrates strong security foundations with:
 
 1. [Current Implementation Overview](#current-implementation-overview)
 2. [Backend Security Analysis](#backend-security-analysis)
-3. [Frontend Security Analysis](#frontend-security-analysis)
+3. [Frontend Security Analysis](#admin_frontend-security-analysis)
 4. [Security Strengths](#security-strengths)
 5. [Identified Weaknesses and Risks](#identified-weaknesses-and-risks)
 6. [Industry Best Practices Comparison](#industry-best-practices-comparison)
@@ -122,6 +122,7 @@ The project implements a dual-token JWT authentication system:
    - **Analysis:** Strong separation of concerns reduces attack surface
 
 3. **Comprehensive Token Validation**
+
    ```python
    def decode_token(token: str, token_type: Literal["access", "refresh", "reset", "verification"]):
        payload = jwt.decode(
@@ -366,6 +367,7 @@ the response is written (#206).
 #### Strengths
 
 1. **Proactive Expiry Handling**
+
    ```typescript
    const timeUntilExpiry = expiryTime - currentTime - 10000; // 10 second buffer
    this.tokenExpiryTimer = window.setTimeout(() => {

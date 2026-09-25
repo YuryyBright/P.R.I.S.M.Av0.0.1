@@ -7,7 +7,7 @@
 
 # FastAPI PRISMA - User Management Microservice
 
-A comprehensive Role-Based Access Control (PRISMA) system with FastAPI backend and React frontend, designed to handle Authentication and Authorization for other services.
+A comprehensive Role-Based Access Control (PRISMA) system with FastAPI backend and React admin_frontend, designed to handle Authentication and Authorization for other services.
 
 ## 🚀 Quick Start
 
@@ -64,7 +64,7 @@ Utility scripts are organized by purpose in the [`scripts/`](scripts/) directory
 
 ### 🧪 **Quality & Testing**
 
-- **🧪 Comprehensive Testing**: 90+ backend tests + 354 frontend tests across 16 files
+- **🧪 Comprehensive Testing**: 90+ backend tests + 354 admin_frontend tests across 16 files
 - **All async DB queries in backend and tests use SQLModel’s `.exec()` idiom with `AsyncSession` (not `.execute()`).**
 - **See [`backend/test/README.md`](backend/test/README.md) for full test/factory/fixture/optimization details.**
 - **⚡ Frontend Testing**: Complete coverage with Vitest, React Testing Library
@@ -85,7 +85,7 @@ prisma/
 │   ├── app/                 # Main application code
 │   ├── alembic/            # Database migrations
 │   └── tests/              # Backend tests
-├── 📁 frontend/       # React TypeScript app
+├── 📁 admin_frontend/       # React TypeScript app
 │   ├── src/                # Frontend source code
 │   └── public/             # Static assets
 ├── 📁 docs/                # 📚 Organized documentation
@@ -123,8 +123,8 @@ docker-compose up -d
 # Run backend tests
 .\scripts\dev\run-tests.ps1
 
-# Run frontend tests
-cd frontend
+# Run admin_frontend tests
+cd admin_frontend
 npm test
 
 # Access services:
@@ -145,15 +145,15 @@ npm test
 
 ## 🔧 Common Operations
 
-| Task                     | Command                                           | Documentation                                              |
-| ------------------------ | ------------------------------------------------- | ---------------------------------------------------------- |
-| **Start development**    | `docker-compose up -d`                            | [Getting Started](docs/getting-started/GETTING_STARTED.md) |
-| **Run backend tests**    | `.\scripts\dev\run-tests.ps1`                     | [Testing Guide](docs/development/TESTING.md)               |
-| **Run frontend tests**   | `cd frontend && npm test`                         | [Frontend Testing](frontend/README.md#testing)             |
-| **Security validation**  | `python backend/test/test_csrf_implementation.py` | [Security Features](#-enterprise-security)                 |
-| **Deploy to production** | `.\scripts\deployment\push-to-dockerhub.ps1`      | [Deployment](docs/deployment/PRODUCTION_SETUP.md)          |
-| **Troubleshoot CORS**    | `.\scripts\docker\diagnose-cors.ps1`              | [CORS Guide](docs/troubleshooting/CORS_TROUBLESHOOTING.md) |
-| **Database migration**   | `.\scripts\database\migrate-db.ps1`               | [DB Reference](docs/reference/DATABASE_SCHEMA.md)          |
+| Task                         | Command                                           | Documentation                                              |
+| ---------------------------- | ------------------------------------------------- | ---------------------------------------------------------- |
+| **Start development**        | `docker-compose up -d`                            | [Getting Started](docs/getting-started/GETTING_STARTED.md) |
+| **Run backend tests**        | `.\scripts\dev\run-tests.ps1`                     | [Testing Guide](docs/development/TESTING.md)               |
+| **Run admin_frontend tests** | `cd admin_frontend && npm test`                   | [Frontend Testing](admin_frontend/README.md#testing)       |
+| **Security validation**      | `python backend/test/test_csrf_implementation.py` | [Security Features](#-enterprise-security)                 |
+| **Deploy to production**     | `.\scripts\deployment\push-to-dockerhub.ps1`      | [Deployment](docs/deployment/PRODUCTION_SETUP.md)          |
+| **Troubleshoot CORS**        | `.\scripts\docker\diagnose-cors.ps1`              | [CORS Guide](docs/troubleshooting/CORS_TROUBLESHOOTING.md) |
+| **Database migration**       | `.\scripts\database\migrate-db.ps1`               | [DB Reference](docs/reference/DATABASE_SCHEMA.md)          |
 
 ## 🧪 Integration Testing Environments
 
@@ -244,8 +244,8 @@ uvicorn app.main:app --port 8001 --reload
 ### Frontend
 
 ```bash
-# Navigate to frontend directory
-cd frontend
+# Navigate to admin_frontend directory
+cd admin_frontend
 
 # Install dependencies
 npm install
@@ -270,15 +270,15 @@ Run only specific components:
 cd backend
 docker-compose up -d
 
-# Just the frontend
-cd frontend
+# Just the admin_frontend
+cd admin_frontend
 docker-compose up -d
 ```
 
 ## Documentation
 
 - [Backend Documentation](backend/backend.md)
-- [Frontend Documentation](frontend/README.md)
+- [Frontend Documentation](admin_frontend/README.md)
 - [API Documentation](http://localhost:8001/docs) (when backend is running)
 
 ## License

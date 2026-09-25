@@ -17,7 +17,7 @@ Related: [Setup](./setup.md), [Architecture](./architecture.md), backend testing
 
 ### Commands
 
-Run from `frontend/`:
+Run from `admin_frontend/`:
 
 ```bash
 npm test                 # Vitest (interactive / watch-oriented)
@@ -35,7 +35,7 @@ npm test -- UsersList.test.tsx
 - Coverage: `@vitest/coverage-v8`
 - Environment: jsdom
 
-Wrap components/hooks that need Redux with a `Provider` and realistic preloaded auth state. See [Frontend Issues — Tests](../../troubleshooting/frontend-issues.md#tests).
+Wrap components/hooks that need Redux with a `Provider` and realistic preloaded auth state. See [Frontend Issues — Tests](../../troubleshooting/admin_frontend-issues.md#tests).
 
 ## End-to-end (Playwright)
 
@@ -48,14 +48,14 @@ npm run test:e2e:report
 npm run test:e2e:codegen
 ```
 
-Specs and helpers live under `frontend/e2e/`. Deeper runbooks remain in the package:
+Specs and helpers live under `admin_frontend/e2e/`. Deeper runbooks remain in the package:
 
-- [`frontend/E2E_TESTING.md`](../../../frontend/E2E_TESTING.md)
-- [`frontend/e2e/README.md`](../../../frontend/e2e/README.md)
-- [`frontend/e2e/QUICK_START.md`](../../../frontend/e2e/QUICK_START.md)
+- [`admin_frontend/E2E_TESTING.md`](../../../admin_frontend/E2E_TESTING.md)
+- [`admin_frontend/e2e/README.md`](../../../admin_frontend/e2e/README.md)
+- [`admin_frontend/e2e/QUICK_START.md`](../../../admin_frontend/e2e/QUICK_START.md)
 
 Ensure the app (and usually the API) are available for e2e as described in those guides.
 
 ## Coverage expectations
 
-Treat the counts in `frontend/README.md` / CI as snapshots — they drift. Prefer green CI and meaningful assertions over chasing a fixed number in this page.
+Treat the counts in `admin_frontend/README.md` / CI as snapshots — they drift. Prefer green CI and meaningful assertions over chasing a fixed number in this page.

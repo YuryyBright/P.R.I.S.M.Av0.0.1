@@ -204,7 +204,7 @@ docker-compose -f docker-compose.prod-test.yml logs -f
 
 ```bash
 # Start production environment (individual service compose files)
-docker-compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml up -d
+docker-compose -f backend/docker-compose.prod.yml -f admin_frontend/docker-compose.prod.yml up -d
 ```
 
 ## Key Configuration Differences

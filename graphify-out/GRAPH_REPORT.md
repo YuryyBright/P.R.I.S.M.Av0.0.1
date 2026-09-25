@@ -239,14 +239,14 @@
 
 ## Import Cycles
 
-- 3-file cycle: `frontend/src/services/api.ts -> frontend/src/store/slices/authSlice.ts -> frontend/src/services/auth.service.ts -> frontend/src/services/api.ts`
-- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/permissionGroupSlice.ts -> frontend/src/services/permission.service.ts -> frontend/src/services/api.ts`
-- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/dashboardSlice.ts -> frontend/src/services/dashboard.service.ts -> frontend/src/services/api.ts`
-- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/userSlice.ts -> frontend/src/services/user.service.ts -> frontend/src/services/api.ts`
-- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/authSlice.ts -> frontend/src/services/auth.service.ts -> frontend/src/services/api.ts`
-- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/permissionSlice.ts -> frontend/src/services/permission.service.ts -> frontend/src/services/api.ts`
-- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/roleSlice.ts -> frontend/src/services/role.service.ts -> frontend/src/services/api.ts`
-- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/roleGroupSlice.ts -> frontend/src/services/roleGroup.service.ts -> frontend/src/services/api.ts`
+- 3-file cycle: `admin_frontend/src/services/api.ts -> admin_frontend/src/store/slices/authSlice.ts -> admin_frontend/src/services/auth.service.ts -> admin_frontend/src/services/api.ts`
+- 4-file cycle: `admin_frontend/src/services/api.ts -> admin_frontend/src/store/index.ts -> admin_frontend/src/store/slices/permissionGroupSlice.ts -> admin_frontend/src/services/permission.service.ts -> admin_frontend/src/services/api.ts`
+- 4-file cycle: `admin_frontend/src/services/api.ts -> admin_frontend/src/store/index.ts -> admin_frontend/src/store/slices/dashboardSlice.ts -> admin_frontend/src/services/dashboard.service.ts -> admin_frontend/src/services/api.ts`
+- 4-file cycle: `admin_frontend/src/services/api.ts -> admin_frontend/src/store/index.ts -> admin_frontend/src/store/slices/userSlice.ts -> admin_frontend/src/services/user.service.ts -> admin_frontend/src/services/api.ts`
+- 4-file cycle: `admin_frontend/src/services/api.ts -> admin_frontend/src/store/index.ts -> admin_frontend/src/store/slices/authSlice.ts -> admin_frontend/src/services/auth.service.ts -> admin_frontend/src/services/api.ts`
+- 4-file cycle: `admin_frontend/src/services/api.ts -> admin_frontend/src/store/index.ts -> admin_frontend/src/store/slices/permissionSlice.ts -> admin_frontend/src/services/permission.service.ts -> admin_frontend/src/services/api.ts`
+- 4-file cycle: `admin_frontend/src/services/api.ts -> admin_frontend/src/store/index.ts -> admin_frontend/src/store/slices/roleSlice.ts -> admin_frontend/src/services/role.service.ts -> admin_frontend/src/services/api.ts`
+- 4-file cycle: `admin_frontend/src/services/api.ts -> admin_frontend/src/store/index.ts -> admin_frontend/src/store/slices/roleGroupSlice.ts -> admin_frontend/src/services/roleGroup.service.ts -> admin_frontend/src/services/api.ts`
 
 ## Communities (238 total, 42 thin omitted)
 
@@ -553,7 +553,7 @@ Nodes (28): get_current_user(), current_user(), Any, token_is_allowlisted(), \_a
 ### Community 60 - "Community 60"
 
 Cohesion: 0.12
-Nodes (15): get_settings_dependency(), Any, field_validator, model_validator, Accept both env forms: a JSON list, and a bare comma-separated list. The field…, Fail at startup on a wildcard or a typo rather than per request. Parsing lives…, Build Redis URL for Celery broker and backend, Point the emailed links at wherever the frontend actually is.… (+7 more)
+Nodes (15): get_settings_dependency(), Any, field_validator, model_validator, Accept both env forms: a JSON list, and a bare comma-separated list. The field…, Fail at startup on a wildcard or a typo rather than per request. Parsing lives…, Build Redis URL for Celery broker and backend, Point the emailed links at wherever the admin_frontend actually is.… (+7 more)
 
 ### Community 61 - "Community 61"
 

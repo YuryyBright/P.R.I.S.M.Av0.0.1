@@ -6,7 +6,7 @@ This guide helps you resolve CORS (Cross-Origin Resource Sharing) issues in the 
 
 CORS errors typically occur when:
 
-1. The frontend container makes requests to the backend container
+1. The admin_frontend container makes requests to the backend container
 2. The backend's CORS configuration doesn't match the origin of the requests
 3. Docker networking issues prevent proper communication between containers
 
@@ -19,10 +19,10 @@ CORS errors typically occur when:
      BACKEND_CORS_ORIGINS=["http://localhost:80", "http://react_frontend:80", "http://react_frontend", "http://prisma:8000"]
      ```
 
-2. **Configure correct API URL in your frontend**:
+2. **Configure correct API URL in your admin_frontend**:
    - Inside Docker network: Use `http://prisma:8000`
    - From host browser: Use `http://localhost:8000`
-   - In frontend's docker-compose.prod.yml:
+   - In admin_frontend's docker-compose.prod.yml:
      ```yaml
      environment:
        - VITE_API_BASE_URL=http://prisma:8000
@@ -46,7 +46,7 @@ CORS errors typically occur when:
 
 ## Debugging Tools
 
-- `docker-compose.prod-test.yml`: Runs frontend and backend together
+- `docker-compose.prod-test.yml`: Runs admin_frontend and backend together
 - `scripts\docker\test-cors-setup.ps1`: Sets up and tests the containers
 - `scripts\docker\diagnose-cors.ps1`: Provides detailed diagnostic information
 

@@ -8,7 +8,7 @@ param(
     [string]$Action = "all",
 
     [Parameter(Mandatory=$false)]
-    [ValidateSet("backend", "frontend", "all")]
+    [ValidateSet("backend", "admin_frontend", "all")]
     [string]$Target = "all",
 
     [switch]$Check,  # For format checking without modification
@@ -36,7 +36,7 @@ function Show-Help {
 
     Write-ColorOutput "`n📋 Parameters:" "Yellow"
     Write-ColorOutput "  -Action        : Action to perform (format, lint, fix-imports, all)" "White"
-    Write-ColorOutput "  -Target        : Target to process (backend, frontend, all)" "White"
+    Write-ColorOutput "  -Target        : Target to process (backend, admin_frontend, all)" "White"
     Write-ColorOutput "  -Check         : Check format without making changes" "White"
     Write-ColorOutput "  -ShowDetails   : Show detailed output" "White"
 
@@ -45,7 +45,7 @@ function Show-Help {
     Write-ColorOutput "  .\manage-code-quality.ps1 -Action format                     # Format all code" "White"
     Write-ColorOutput "  .\manage-code-quality.ps1 -Action lint -Target backend       # Lint only backend code" "White"
     Write-ColorOutput "  .\manage-code-quality.ps1 -Action format -Check              # Check formatting without changes" "White"
-    Write-ColorOutput "  .\manage-code-quality.ps1 -Action fix-imports -Target frontend # Fix only frontend imports" "White"
+    Write-ColorOutput "  .\manage-code-quality.ps1 -Action fix-imports -Target admin_frontend # Fix only admin_frontend imports" "White"
 
     Write-ColorOutput "`n🎯 Actions:" "Yellow"
     Write-ColorOutput "  format      : Format code (Black for Python, Prettier for TypeScript)" "White"
@@ -55,8 +55,8 @@ function Show-Help {
 
     Write-ColorOutput "`n🎯 Targets:" "Yellow"
     Write-ColorOutput "  backend     : Process only backend Python code" "White"
-    Write-ColorOutput "  frontend    : Process only frontend TypeScript/React code" "White"
-    Write-ColorOutput "  all         : Process both backend and frontend code" "White"
+    Write-ColorOutput "  admin_frontend    : Process only admin_frontend TypeScript/React code" "White"
+    Write-ColorOutput "  all         : Process both backend and admin_frontend code" "White"
 
     Write-ColorOutput "`n🔧 Requirements:" "Yellow"
     Write-ColorOutput "  Backend: Python, black, isort, flake8" "White"
@@ -136,7 +136,7 @@ function Invoke-BackendFixImports {
 function Invoke-FrontendFormat {
     Write-ColorOutput "🎨 Formatting Frontend Code..." "Cyan"
 
-    Push-Location "$PSScriptRoot\..\..\..\frontend"
+    Push-Location "$PSScriptRoot\..\..\..\admin_frontend"
 
     try {
         if ($Check) {
@@ -159,7 +159,7 @@ function Invoke-FrontendFormat {
 function Invoke-FrontendLint {
     Write-ColorOutput "🔍 Linting Frontend Code..." "Cyan"
 
-    Push-Location "$PSScriptRoot\..\..\..\frontend"
+    Push-Location "$PSScriptRoot\..\..\..\admin_frontend"
 
     try {
         Write-ColorOutput "Running ESLint..." "Blue"
@@ -180,7 +180,7 @@ function Invoke-FrontendLint {
 function Invoke-FrontendFixImports {
     Write-ColorOutput "📦 Fixing Frontend Imports..." "Cyan"
 
-    Push-Location "$PSScriptRoot\..\..\..\frontend"
+    Push-Location "$PSScriptRoot\..\..\..\admin_frontend"
 
     try {
         Write-ColorOutput "Organizing imports..." "Blue"
@@ -217,7 +217,7 @@ try {
             if ($Target -eq "backend" -or $Target -eq "all") {
                 Invoke-BackendFormat
             }
-            if ($Target -eq "frontend" -or $Target -eq "all") {
+            if ($Target -eq "admin_frontend" -or $Target -eq "all") {
                 Invoke-FrontendFormat
             }
         }
@@ -225,7 +225,7 @@ try {
             if ($Target -eq "backend" -or $Target -eq "all") {
                 Invoke-BackendLint
             }
-            if ($Target -eq "frontend" -or $Target -eq "all") {
+            if ($Target -eq "admin_frontend" -or $Target -eq "all") {
                 Invoke-FrontendLint
             }
         }
@@ -233,7 +233,7 @@ try {
             if ($Target -eq "backend" -or $Target -eq "all") {
                 Invoke-BackendFixImports
             }
-            if ($Target -eq "frontend" -or $Target -eq "all") {
+            if ($Target -eq "admin_frontend" -or $Target -eq "all") {
                 Invoke-FrontendFixImports
             }
         }
@@ -243,7 +243,7 @@ try {
                 Invoke-BackendFormat
                 Invoke-BackendLint
             }
-            if ($Target -eq "frontend" -or $Target -eq "all") {
+            if ($Target -eq "admin_frontend" -or $Target -eq "all") {
                 Invoke-FrontendFixImports
                 Invoke-FrontendFormat
                 Invoke-FrontendLint

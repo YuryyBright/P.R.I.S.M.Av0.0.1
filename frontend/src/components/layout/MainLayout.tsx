@@ -48,7 +48,7 @@ const MainLayout = () => {
           >
             <div className="flex h-16 items-center justify-between border-b px-4">
               {!isCollapsed && (
-                <h2 className="text-lg font-semibold">RBAC Admin</h2>
+                <h2 className="text-lg font-semibold">PRISMA</h2>
               )}
               <Button
                 variant="ghost"

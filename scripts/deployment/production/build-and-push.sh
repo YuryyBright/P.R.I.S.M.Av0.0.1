@@ -19,7 +19,7 @@ DOCKERHUB_USERNAME="mnaimfaizy"
 
 # Set your image names
 BACKEND_IMAGE="$DOCKERHUB_USERNAME/prisma-backend"
-FRONTEND_IMAGE="$DOCKERHUB_USERNAME/prisma-frontend"
+FRONTEND_IMAGE="$DOCKERHUB_USERNAME/prisma-admin_frontend"
 WORKER_IMAGE="$DOCKERHUB_USERNAME/prisma-worker"
 
 # Determine the tag
@@ -54,11 +54,11 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Build frontend image
-echo "Building frontend production image..."
-docker build -f frontend/Dockerfile.prod -t react_frontend:prod frontend
+# Build admin_frontend image
+echo "Building admin_frontend production image..."
+docker build -f admin_frontend/Dockerfile.prod -t react_frontend:prod admin_frontend
 if [ $? -ne 0 ]; then
-  echo "Failed to build frontend image" >&2
+  echo "Failed to build admin_frontend image" >&2
   exit 1
 fi
 
@@ -77,8 +77,8 @@ echo "Tagging and pushing backend image..."
 docker tag prisma:prod "${BACKEND_IMAGE}:${TAG}"
 docker push "${BACKEND_IMAGE}:${TAG}"
 
-# Tag and push frontend image
-echo "Tagging and pushing frontend image..."
+# Tag and push admin_frontend image
+echo "Tagging and pushing admin_frontend image..."
 docker tag react_frontend:prod "${FRONTEND_IMAGE}:${TAG}"
 docker push "${FRONTEND_IMAGE}:${TAG}"
 

@@ -1,11 +1,11 @@
 # Research: Splitting the Docker Publish workflow into a job DAG
 
 **Date:** 2026-07-24
-**Question:** What is the best way to restructure `.github/workflows/docker-publish.yml` so three multi-arch images (backend, frontend, worker) build in parallel, `:latest` advances only after all succeed, and Docker Hub README updates sit correctly in the DAG — using primary GitHub Actions / Docker docs only?
+**Question:** What is the best way to restructure `.github/workflows/docker-publish.yml` so three multi-arch images (backend, admin_frontend, worker) build in parallel, `:latest` advances only after all succeed, and Docker Hub README updates sit correctly in the DAG — using primary GitHub Actions / Docker docs only?
 
 ## Purpose
 
-The current workflow builds and pushes three multi-arch images **serially in one job**, tagging each with both `:${IMAGE_TAG}` and `:latest` in the same `docker/build-push-action` step, then updates three Hub READMEs. That creates a **partial-publish hazard**: if backend succeeds and frontend fails, Hub already has a new `backend:latest` while the release set is incomplete. This note evaluates a prepare → matrix build → promote-latest → hub-descriptions shape against first-party docs, and settles the open `fail-fast` question.
+The current workflow builds and pushes three multi-arch images **serially in one job**, tagging each with both `:${IMAGE_TAG}` and `:latest` in the same `docker/build-push-action` step, then updates three Hub READMEs. That creates a **partial-publish hazard**: if backend succeeds and admin_frontend fails, Hub already has a new `backend:latest` while the release set is incomplete. This note evaluates a prepare → matrix build → promote-latest → hub-descriptions shape against first-party docs, and settles the open `fail-fast` question.
 
 ---
 
@@ -22,7 +22,7 @@ The current workflow builds and pushes three multi-arch images **serially in one
 
 **Minor challenges / refinements (not rejections):**
 
-1. **Version-tag atomicity ≠ `:latest` atomicity.** Pushing `:${IMAGE_TAG}` from matrix shards can still leave a partial version set (e.g. backend+frontend tagged `v1.2.3`, worker missing) if one shard fails. That is acceptable if consumers treat `:latest` as the coordinated “current release” pointer and version tags as per-image artifacts. Full tag-set atomicity would require candidate tags + promote of both `:${IMAGE_TAG}` and `:latest` — stronger than decision B, optional later.
+1. **Version-tag atomicity ≠ `:latest` atomicity.** Pushing `:${IMAGE_TAG}` from matrix shards can still leave a partial version set (e.g. backend+admin_frontend tagged `v1.2.3`, worker missing) if one shard fails. That is acceptable if consumers treat `:latest` as the coordinated “current release” pointer and version tags as per-image artifacts. Full tag-set atomicity would require candidate tags + promote of both `:${IMAGE_TAG}` and `:latest` — stronger than decision B, optional later.
 2. **Hub README should sit after promote, and should not hard-gate image delivery.** Official Docker docs sequence `peter-evans/dockerhub-description` after push ([update Hub description](https://docs.docker.com/build/ci/github-actions/update-dockerhub-desc/)) but do not require it to fail the release. Prefer `needs: promote-latest` plus `continue-on-error: true` on the descriptions job (or soft-fail steps) so Hub API flake does not force a rebuild.
 3. **Concurrency must not cancel in-progress publishes.** Use a per-tag concurrency group with `cancel-in-progress: false` (or omit cancel). Cancelling mid-push is worse than queuing ([concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)).
 
@@ -35,7 +35,7 @@ flowchart TD
   T[Trigger: push tags v* OR workflow_dispatch tag] --> P[prepare]
   P -->|outputs: IMAGE_TAG VERSION BUILD_DATE VCS_REF| B[build matrix]
   B --> B1[backend :IMAGE_TAG]
-  B --> B2[frontend :IMAGE_TAG]
+  B --> B2[admin_frontend :IMAGE_TAG]
   B --> B3[worker :IMAGE_TAG]
   B1 --> PL[promote-latest]
   B2 --> PL
@@ -51,7 +51,7 @@ ASCII equivalent:
 prepare
    |
    v
-build (matrix: backend | frontend | worker)
+build (matrix: backend | admin_frontend | worker)
    |  push only :${IMAGE_TAG}  (+ registry buildcache)
    |  fail-fast: false
    v
@@ -105,7 +105,7 @@ summary / notify
 
 **Reusable workflows:** useful when multiple callers need the same build. Secrets must be passed or `secrets: inherit` ([reuse workflows](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)). Matrix can call a reusable workflow. For a single publish workflow with three images, an **inline matrix** is simpler and sufficient.
 
-**Fit for this repo:** matrix over `image: [backend, frontend, worker]` with `include` rows for `context`, `file`, `image_name`, Hub README path — one definition, three parallel builds.
+**Fit for this repo:** matrix over `image: [backend, admin_frontend, worker]` with `include` rows for `context`, `file`, `image_name`, Hub README path — one definition, three parallel builds.
 
 ### 2. `fail-fast` behavior and recommendation
 
@@ -159,7 +159,7 @@ Illustrative promote step (design only):
     docker buildx imagetools create \
       --tag "${USER}/prisma-backend:latest" \
       "${USER}/prisma-backend:${IMAGE_TAG}"
-  # repeat for frontend + worker
+  # repeat for admin_frontend + worker
 ```
 
 Prefer digest form when available: `"${USER}/prisma-backend@${DIGEST}"` as source.
@@ -255,16 +255,16 @@ Rationale:
 
 ### 9. Concrete DAG for this repo’s constraints
 
-| Constraint                                 | Design choice                                                                 |
-| ------------------------------------------ | ----------------------------------------------------------------------------- |
-| Triggers: `v*` + `workflow_dispatch`       | Unchanged; compute `IMAGE_TAG` in prepare                                     |
-| Images: `prisma-{backend,frontend,worker}` | Matrix `include` rows                                                         |
-| Platforms: `linux/amd64,linux/arm64`       | Per-shard `platforms` + QEMU + Buildx                                         |
-| Registry: Docker Hub                       | `docker/login-action` each build + promote (+ descriptions)                   |
-| Cache: `*:buildcache`                      | Keep per-image `cache-from` / `cache-to` `mode=max`                           |
-| No double-trigger with GitHub Release      | Keep tag-push-only (no `release:` event)                                      |
-| Atomic release                             | `promote-latest` and summary `needs: build`; no `continue-on-error` on builds |
-| Atomic `:latest`                           | Build tags **only** `:${IMAGE_TAG}`; promote with `imagetools create`         |
+| Constraint                                       | Design choice                                                                 |
+| ------------------------------------------------ | ----------------------------------------------------------------------------- |
+| Triggers: `v*` + `workflow_dispatch`             | Unchanged; compute `IMAGE_TAG` in prepare                                     |
+| Images: `prisma-{backend,admin_frontend,worker}` | Matrix `include` rows                                                         |
+| Platforms: `linux/amd64,linux/arm64`             | Per-shard `platforms` + QEMU + Buildx                                         |
+| Registry: Docker Hub                             | `docker/login-action` each build + promote (+ descriptions)                   |
+| Cache: `*:buildcache`                            | Keep per-image `cache-from` / `cache-to` `mode=max`                           |
+| No double-trigger with GitHub Release            | Keep tag-push-only (no `release:` event)                                      |
+| Atomic release                                   | `promote-latest` and summary `needs: build`; no `continue-on-error` on builds |
+| Atomic `:latest`                                 | Build tags **only** `:${IMAGE_TAG}`; promote with `imagetools create`         |
 
 Matrix sketch (not full workflow):
 
@@ -277,10 +277,10 @@ strategy:
         context: ./backend
         file: ./backend/Dockerfile.prod
         name: prisma-backend
-      - image: frontend
-        context: ./frontend
-        file: ./frontend/Dockerfile.prod
-        name: prisma-frontend
+      - image: admin_frontend
+        context: ./admin_frontend
+        file: ./admin_frontend/Dockerfile.prod
+        name: prisma-admin_frontend
       - image: worker
         context: ./backend
         file: ./backend/queue.dockerfile.prod

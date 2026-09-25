@@ -174,7 +174,7 @@ For the FastAPI PRISMA React Frontend, we needed:
 
 - ✅ Cross-browser testing (Chromium primarily, with Firefox/WebKit as options)
 - ✅ Fast test execution for CI/CD pipeline
-- ✅ Strong TypeScript support (our frontend is TypeScript)
+- ✅ Strong TypeScript support (our admin_frontend is TypeScript)
 - ✅ Easy integration with GitHub Actions
 - ✅ Free parallel execution
 - ✅ Comprehensive debugging tools for development

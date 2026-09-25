@@ -4,7 +4,7 @@
 
 > **Canonical architecture:** [docs/reference/architecture.md](../reference/architecture.md) — layers, directory layout, domain model, and Redis allowlist auth flow. This page keeps a product-oriented summary.
 
-The FastAPI PRISMA project is designed as a modern, scalable user management microservice with a clear separation of concerns between backend API services and frontend user interface.
+The FastAPI PRISMA project is designed as a modern, scalable user management microservice with a clear separation of concerns between backend API services and admin_frontend user interface.
 
 ### High-Level Architecture
 
@@ -231,7 +231,7 @@ interface AuthState {
 
 1. **Setup**: Environment variables, dependencies
 2. **Database**: Migrations, seed data
-3. **Development Server**: Hot reload for both frontend/backend
+3. **Development Server**: Hot reload for both admin_frontend/backend
 4. **Testing**: Unit tests, integration tests
 5. **Code Quality**: Linting, formatting, type checking
 

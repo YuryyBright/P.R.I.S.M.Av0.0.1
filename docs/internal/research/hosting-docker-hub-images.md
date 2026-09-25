@@ -14,7 +14,7 @@
 
 - Easiest and free/cheapest ways (mid/late 2026) to run the three **published** Docker Hub production images:
   - [`mnaimfaizy/prisma-backend`](https://hub.docker.com/r/mnaimfaizy/prisma-backend)
-  - [`mnaimfaizy/prisma-frontend`](https://hub.docker.com/r/mnaimfaizy/prisma-frontend)
+  - [`mnaimfaizy/prisma-admin_frontend`](https://hub.docker.com/r/mnaimfaizy/prisma-admin_frontend)
   - [`mnaimfaizy/prisma-worker`](https://hub.docker.com/r/mnaimfaizy/prisma-worker)
 - Two audiences: **maintainer staging** (public/staging dogfood) and **adopter “start here”** (cheap or preferred host).
 - Score platforms on Hub-image pull/run, Postgres/Redis/email supply, HTTPS/domain, free/cheap cost, ops complexity, staging vs adopter fit.
@@ -35,17 +35,17 @@
 
 ## Runtime dependency model
 
-| Layer    | Source                      | Role                                                                                                                                                              |
-| -------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend  | Hub `prisma-backend`        | FastAPI API (~port **8000**); needs `DATABASE_*`, `REDIS_*`, `SECRET_KEY`, CORS, optional SMTP ([Hub README](https://hub.docker.com/r/mnaimfaizy/prisma-backend)) |
-| Frontend | Hub `prisma-frontend`       | React SPA served by **Nginx on port 80**; `VITE_API_BASE_URL` is typically **bake-time** ([Hub README](https://hub.docker.com/r/mnaimfaizy/prisma-frontend))      |
-| Worker   | Hub `prisma-worker`         | Celery; Redis broker/backend; same DB/Redis/SMTP access as backend ([Hub README](https://hub.docker.com/r/mnaimfaizy/prisma-worker))                              |
-| Postgres | **Not** a project Hub image | Postgres **12+** (managed or compose sidecar)                                                                                                                     |
-| Redis    | **Not** a project Hub image | Redis **5+** — Celery + token allowlist ([backend Hub README](https://hub.docker.com/r/mnaimfaizy/prisma-backend))                                                |
-| SMTP     | External or sidecar         | Optional but required for password-reset email flows (`EMAILS_ENABLED`, `SMTP_*`)                                                                                 |
+| Layer    | Source                      | Role                                                                                                                                                               |
+| -------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Backend  | Hub `prisma-backend`        | FastAPI API (~port **8000**); needs `DATABASE_*`, `REDIS_*`, `SECRET_KEY`, CORS, optional SMTP ([Hub README](https://hub.docker.com/r/mnaimfaizy/prisma-backend))  |
+| Frontend | Hub `prisma-admin_frontend` | React SPA served by **Nginx on port 80**; `VITE_API_BASE_URL` is typically **bake-time** ([Hub README](https://hub.docker.com/r/mnaimfaizy/prisma-admin_frontend)) |
+| Worker   | Hub `prisma-worker`         | Celery; Redis broker/backend; same DB/Redis/SMTP access as backend ([Hub README](https://hub.docker.com/r/mnaimfaizy/prisma-worker))                               |
+| Postgres | **Not** a project Hub image | Postgres **12+** (managed or compose sidecar)                                                                                                                      |
+| Redis    | **Not** a project Hub image | Redis **5+** — Celery + token allowlist ([backend Hub README](https://hub.docker.com/r/mnaimfaizy/prisma-backend))                                                 |
+| SMTP     | External or sidecar         | Optional but required for password-reset email flows (`EMAILS_ENABLED`, `SMTP_*`)                                                                                  |
 
 ```text
-[browser] --> frontend:80 (Nginx)
+[browser] --> admin_frontend:80 (Nginx)
                  |
                  | API URL baked or proxied
                  v
@@ -117,7 +117,7 @@ Lead adopters with a short runbook:
 2. Install Docker Engine + Compose plugin.
 3. Copy a project-provided `compose` (future artifact) that references:
    - `mnaimfaizy/prisma-backend:latest` (or pinned `vX.Y.Z`)
-   - `mnaimfaizy/prisma-frontend:…` (**rebuild or pin a tag baked for their API URL** — see constraints)
+   - `mnaimfaizy/prisma-admin_frontend:…` (**rebuild or pin a tag baked for their API URL** — see constraints)
    - `mnaimfaizy/prisma-worker:…`
    - `postgres:16` (or 12+) and `redis:7` (or 5+)
 4. Set env from Hub / `backend/.env.example` placeholders.
@@ -145,11 +145,11 @@ Lead adopters with a short runbook:
 
 ### 1. Frontend bake-time API URL
 
-Hub frontend README states `VITE_API_BASE_URL` is used at **docker build** for Nginx/app config; runtime override may need “a more complex setup or a custom entrypoint,” otherwise **rebuild** with the correct build-arg ([frontend Hub](https://hub.docker.com/r/mnaimfaizy/prisma-frontend)).
+Hub admin_frontend README states `VITE_API_BASE_URL` is used at **docker build** for Nginx/app config; runtime override may need “a more complex setup or a custom entrypoint,” otherwise **rebuild** with the correct build-arg ([admin_frontend Hub](https://hub.docker.com/r/mnaimfaizy/prisma-admin_frontend)).
 
 **Hosting implication:** platforms that only inject runtime env vars do **not** fix a published `latest` image built for `localhost` or a wrong API host. Staging/adopter docs must either:
 
-- pin/rebuild frontend per environment API URL, or
+- pin/rebuild admin_frontend per environment API URL, or
 - document a reverse-proxy same-origin layout (`/api` → backend) and an image built for that, or
 - ship a future runtime-config entrypoint (open product decision — not in this research).
 
@@ -167,11 +167,11 @@ Password reset and similar flows need `EMAILS_ENABLED` + `SMTP_*` ([backend Hub]
 
 ### 5. CORS + dual public hostnames
 
-If frontend and API are on different origins, `BACKEND_CORS_ORIGINS` must list the frontend origin ([backend Hub](https://hub.docker.com/r/mnaimfaizy/prisma-backend)). Same-origin proxy reduces CORS pain and can simplify frontend API URL.
+If admin_frontend and API are on different origins, `BACKEND_CORS_ORIGINS` must list the admin_frontend origin ([backend Hub](https://hub.docker.com/r/mnaimfaizy/prisma-backend)). Same-origin proxy reduces CORS pain and can simplify admin_frontend API URL.
 
 ### 6. Image platform / size
 
-Render requires `linux/amd64` and compressed image ≤ **10 GB** ([deploying an image](https://render.com/docs/deploying-an-image)). Railway Free/Trial image size cap **4 GB** ([plans](https://docs.railway.com/pricing/plans)). All three published Hub `:latest` tags expose **`linux/amd64` and `linux/arm64`** (verified 2026-07-25 with `docker manifest inspect` for backend, frontend, and worker) — Oracle Ampere and Hetzner CAX are image-compatible; still confirm digest/tag at deploy time.
+Render requires `linux/amd64` and compressed image ≤ **10 GB** ([deploying an image](https://render.com/docs/deploying-an-image)). Railway Free/Trial image size cap **4 GB** ([plans](https://docs.railway.com/pricing/plans)). All three published Hub `:latest` tags expose **`linux/amd64` and `linux/arm64`** (verified 2026-07-25 with `docker manifest inspect` for backend, admin_frontend, and worker) — Oracle Ampere and Hetzner CAX are image-compatible; still confirm digest/tag at deploy time.
 
 ---
 
@@ -196,7 +196,7 @@ Render requires `linux/amd64` and compressed image ≤ **10 GB** ([deploying an 
 
 - Issue #96: https://github.com/mnaimfaizy/prisma/issues/96
 - Backend image: https://hub.docker.com/r/mnaimfaizy/prisma-backend
-- Frontend image: https://hub.docker.com/r/mnaimfaizy/prisma-frontend
+- Frontend image: https://hub.docker.com/r/mnaimfaizy/prisma-admin_frontend
 - Worker image: https://hub.docker.com/r/mnaimfaizy/prisma-worker
 
 ### Hetzner / DigitalOcean / Oracle (VPS)
@@ -251,6 +251,6 @@ Render requires `linux/amd64` and compressed image ≤ **10 GB** ([deploying an 
 | Linode/Akamai pricing page blocked from this research environment                                                                                                                                          | Omitted from table; treat as DO-class VPS alternative             |
 | Hub `:latest` **multi-arch** verified (`amd64` + `arm64`) for all three images on 2026-07-25                                                                                                               | Oracle Ampere / Hetzner CAX are image-OK; pin digests in runbooks |
 | Coolify “deploy Docker Hub image” wizard specifics not deeply fetched (intro confirms Docker-compatible deploy)                                                                                            | Coolify steps should be validated hands-on before docs            |
-| Product may later add runtime frontend config — would change PaaS friction                                                                                                                                 | Track as open decision #5                                         |
+| Product may later add runtime admin_frontend config — would change PaaS friction                                                                                                                           | Track as open decision #5                                         |
 
 **Do not implement hosting from this note until open decisions are grilled and a doc/script entrypoint is chosen.**

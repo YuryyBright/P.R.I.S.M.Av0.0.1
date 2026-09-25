@@ -6,7 +6,7 @@
 
 - [x] **Root orchestration file**: `docker-compose.prod-test.yml` properly configured
 - [x] **Backend services**: All backend services defined in `backend/docker-compose.prod.yml`
-- [x] **Frontend service**: Frontend service defined in `frontend/docker-compose.prod.yml`
+- [x] **Frontend service**: Frontend service defined in `admin_frontend/docker-compose.prod.yml`
 - [x] **PgAdmin service**: Database management interface configured
 - [x] **Network configuration**: Consistent network setup across all compose files
 - [x] **Volume management**: Persistent volumes for data storage
@@ -32,9 +32,9 @@
 - [x] **FastAPI backend**: Production-ready with proper environment variables
 - [x] **Celery worker**: Background task processing configured
 - [x] **Celery beat**: Scheduled task management configured
-- [x] **React frontend**: Production build with nginx serving
+- [x] **React admin_frontend**: Production build with nginx serving
 - [x] **PgAdmin**: Database administration interface
-- [x] **Testing infrastructure**: Comprehensive test suites verified (90+ backend, 354 frontend)
+- [x] **Testing infrastructure**: Comprehensive test suites verified (90+ backend, 354 admin_frontend)
 - [x] **Security validation**: All security features tested and operational
 
 ## 📋 Pre-Deployment Tasks
@@ -75,7 +75,7 @@ cd backend && ./certs/generate-certs.sh
 
 # 4. Update environment files with production values
 # Edit backend/.env.production
-# Edit frontend/.env.production
+# Edit admin_frontend/.env.production
 
 # 5. Deploy the stack
 docker-compose -f docker-compose.prod-test.yml up -d
@@ -208,7 +208,7 @@ python backend/test/test_sanitization.py
 
 # Run comprehensive test suites
 cd backend && python run_tests.py --coverage
-cd frontend && npm test
+cd admin_frontend && npm test
 ```
 
 ## 🎯 Success Criteria

@@ -3,7 +3,7 @@
 # `patch` gates, `project` does not. The question worth blocking a merge on is
 # "is the code in this diff tested?", which is answerable and is the author's to
 # fix. A project-level gate fails for reasons unrelated to the change: #223 moved
-# the combined figure from 63.82% to 51.51% purely by adding frontend files to
+# the combined figure from 63.82% to 51.51% purely by adding admin_frontend files to
 # the report, and a gate would have blocked that for measuring more code.
 #
 # Backend coverage is a real measurement since #227 collected the integration
@@ -23,7 +23,7 @@
 # see `.github/workflows/backend-ci.yml` job `coverage`, which also archives
 # both XMLs and compares auth.py's executable line set. `codecov/patch/backend`
 # stays blocking because it now reads that single combined report, not a
-# Codecov merge of two Cobertura files. `codecov/patch/frontend` is unchanged.
+# Codecov merge of two Cobertura files. `codecov/patch/admin_frontend` is unchanged.
 
 coverage:
   status:
@@ -56,25 +56,25 @@ coverage:
         threshold: 5%
       # Lower than the backend on purpose. Frontend coverage sits at ~32.55% and
       # is still a floor: the Playwright E2E job is skipped pending #30, so what
-      # it covers is not counted. Holding new frontend code to 80% would partly
+      # it covers is not counted. Holding new admin_frontend code to 80% would partly
       # penalise authors for a measurement gap that is not theirs. 60% is a real
       # ratchet above the current baseline; raise it when #30 lands.
-      frontend:
+      admin_frontend:
         flags:
-          - frontend
+          - admin_frontend
         target: 60%
         threshold: 5%
 
 # Two independent suites, kept as separate numbers. Blending a TypeScript
-# frontend and a Python backend into one percentage produces a figure that
+# admin_frontend and a Python backend into one percentage produces a figure that
 # describes neither. Both workflows run on every PR, so no carryforward.
 flags:
   backend:
     paths:
       - backend/app/
-  frontend:
+  admin_frontend:
     paths:
-      - frontend/src/
+      - admin_frontend/src/
 
 comment:
   layout: "reach, diff, flags, files"

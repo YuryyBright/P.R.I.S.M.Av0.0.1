@@ -126,10 +126,10 @@ Docker Publish supports two triggers (both valid):
 
 After creating a release, verify:
 
-- [ ] GitHub Actions **Docker Publish** completes: Prepare + Build backend/frontend/worker + Promote latest
+- [ ] GitHub Actions **Docker Publish** completes: Prepare + Build backend/admin_frontend/worker + Promote latest
 - [ ] All three Docker images published to Docker Hub with the version tag:
   - `mnaimfaizy/prisma-backend:vX.Y.Z`
-  - `mnaimfaizy/prisma-frontend:vX.Y.Z`
+  - `mnaimfaizy/prisma-admin_frontend:vX.Y.Z`
   - `mnaimfaizy/prisma-worker:vX.Y.Z`
 - [ ] `:latest` advanced for all three only after Promote latest (not during individual builds)
 - [ ] Images support both architectures (linux/amd64, linux/arm64)
@@ -161,12 +161,12 @@ git push origin :refs/tags/v1.2.3
 
 **Solutions:**
 
-1. Check GitHub Actions logs for specific error (which step failed: validation, login, backend/frontend/worker build)
+1. Check GitHub Actions logs for specific error (which step failed: validation, login, backend/admin_frontend/worker build)
 2. Verify Dockerfiles locally:
    ```bash
    docker build -f backend/Dockerfile.prod backend/
    docker build -f backend/queue.dockerfile.prod backend/
-   docker build -f frontend/Dockerfile.prod frontend/
+   docker build -f admin_frontend/Dockerfile.prod admin_frontend/
    ```
    The worker image must use `queue.dockerfile.prod` (compose does too). Do **not** use `--target worker` on `Dockerfile.prod` — that stage does not exist.
 3. Check Docker Hub credentials in GitHub secrets (`DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`)
@@ -213,7 +213,7 @@ git tag -l --sort=-v:refname | head -5
 
 # 2. Pull previous images
 docker pull mnaimfaizy/prisma-backend:v1.2.2
-docker pull mnaimfaizy/prisma-frontend:v1.2.2
+docker pull mnaimfaizy/prisma-admin_frontend:v1.2.2
 docker pull mnaimfaizy/prisma-worker:v1.2.2
 
 # 3. Update deployment to use previous version

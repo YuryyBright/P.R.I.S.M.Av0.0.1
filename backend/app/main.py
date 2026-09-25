@@ -320,7 +320,7 @@ async def custom_swagger_ui_html() -> HTMLResponse:
 @fastapi_app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     """
-    Handle validation errors with standardized format for frontend consumption
+    Handle validation errors with standardized format for admin_frontend consumption
     """
     errors = []
     for error in exc.errors():
@@ -385,7 +385,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 @fastapi_app.exception_handler(CustomException)
 async def custom_exception_handler(request: Request, exc: CustomException) -> JSONResponse:
     """
-    Handle custom exceptions with standardized format for frontend consumption
+    Handle custom exceptions with standardized format for admin_frontend consumption
     """
     return JSONResponse(
         status_code=exc.http_code,
@@ -423,7 +423,7 @@ async def user_self_delete_exception_handler(request: Request, exc: UserSelfDele
 @fastapi_app.exception_handler(SQLAlchemyError)
 async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:
     """
-    Handle database errors with standardized format for frontend consumption.
+    Handle database errors with standardized format for admin_frontend consumption.
     Logs the full error internally but returns a generic message to the client.
     """
     # Log the full exception for internal debugging
@@ -449,7 +449,7 @@ async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError) -
 @fastapi_app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """
-    Handle general exceptions with standardized format for frontend consumption
+    Handle general exceptions with standardized format for admin_frontend consumption
     """
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

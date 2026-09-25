@@ -39,7 +39,7 @@ function Show-Help {
     Write-ColorOutput "  -WithRedis     : Include Redis setup" "White"
     Write-ColorOutput "  -WithPostgres  : Include PostgreSQL setup" "White"
     Write-ColorOutput "  -WithCelery    : Include Celery worker setup" "White"
-    Write-ColorOutput "  -SkipFrontend  : Skip frontend setup" "White"
+    Write-ColorOutput "  -SkipFrontend  : Skip admin_frontend setup" "White"
     Write-ColorOutput "  -ShowDetails   : Show detailed output" "White"
 
     Write-ColorOutput "`n💡 Examples:" "Yellow"
@@ -113,7 +113,7 @@ function Install-Dependencies {
 
     if (-not $SkipFrontend) {
         Write-ColorOutput "Installing Frontend Dependencies..." "Blue"
-        Push-Location "$PSScriptRoot\\..\\..\\frontend"
+        Push-Location "$PSScriptRoot\\..\\..\\admin_frontend"
         & npm install
         Pop-Location
     }
@@ -268,7 +268,7 @@ function Clean-DevelopmentEnvironment {
     # Clean Node.js cache
     if (-not $SkipFrontend) {
         Write-ColorOutput "Cleaning Node.js cache..." "Blue"
-        Push-Location "$PSScriptRoot\..\..\..\frontend"
+        Push-Location "$PSScriptRoot\..\..\..\admin_frontend"
         & npm run clean 2>$null
         Pop-Location
     }
@@ -297,7 +297,7 @@ switch ($Action) {
         Write-ColorOutput "`n🎉 Development environment setup completed!" "Green"
         Write-ColorOutput "You can now start the backend with: python -m uvicorn app.main:app --reload" "Cyan"
         if (-not $SkipFrontend) {
-            Write-ColorOutput "You can start the frontend with: npm run dev" "Cyan"
+            Write-ColorOutput "You can start the admin_frontend with: npm run dev" "Cyan"
         }
     }
     "start" {

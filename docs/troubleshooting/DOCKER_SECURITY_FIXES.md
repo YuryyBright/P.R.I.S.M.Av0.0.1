@@ -47,7 +47,7 @@ ports:
 **Files to review**:
 
 - `backend/.env.production`
-- `frontend/.env.production`
+- `admin_frontend/.env.production`
 
 **Action needed**:
 

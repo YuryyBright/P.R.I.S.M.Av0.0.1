@@ -14,7 +14,7 @@
 
 - **Root Orchestration**: `docker-compose.prod-test.yml` - Complete with all services
 - **Backend Services**: `backend/docker-compose.prod.yml` - All 6 services configured
-- **Frontend Service**: `frontend/docker-compose.prod.yml` - Nginx + React production build
+- **Frontend Service**: `admin_frontend/docker-compose.prod.yml` - Nginx + React production build
 - **Network Configuration**: Consistent `prisma_network` across all compose files
 - **Volume Management**: Persistent volumes for PostgreSQL, Redis, PgAdmin, and Celery beat
 

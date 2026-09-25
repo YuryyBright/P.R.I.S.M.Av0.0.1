@@ -33,7 +33,7 @@ function Show-Help {
 
     Write-Host "`n📦 Images Built:" -ForegroundColor Yellow
     Write-Host "  • mnaimfaizy/prisma-backend" -ForegroundColor White
-    Write-Host "  • mnaimfaizy/prisma-frontend" -ForegroundColor White
+    Write-Host "  • mnaimfaizy/prisma-admin_frontend" -ForegroundColor White
     Write-Host "  • mnaimfaizy/prisma-worker" -ForegroundColor White
     Write-Host ""
 }
@@ -52,7 +52,7 @@ $DOCKERHUB_USERNAME = "mnaimfaizy"
 
 # Set your image names
 $BACKEND_IMAGE = "$DOCKERHUB_USERNAME/prisma-backend"
-$FRONTEND_IMAGE = "$DOCKERHUB_USERNAME/prisma-frontend"
+$FRONTEND_IMAGE = "$DOCKERHUB_USERNAME/prisma-admin_frontend"
 $WORKER_IMAGE = "$DOCKERHUB_USERNAME/prisma-worker"
 
 # Determine the tag
@@ -100,22 +100,22 @@ if (-not (Test-Path "backend\docker-compose.prod.yml")) {
     exit 1
 }
 
-if (-not (Test-Path "frontend\docker-compose.prod.yml")) {
-    Write-Error "frontend\docker-compose.prod.yml not found"
+if (-not (Test-Path "admin_frontend\docker-compose.prod.yml")) {
+    Write-Error "admin_frontend\docker-compose.prod.yml not found"
     exit 1
 }
 
-if (-not (Test-Path "frontend\Dockerfile.prod")) {
-    Write-Error "frontend\Dockerfile.prod not found"
+if (-not (Test-Path "admin_frontend\Dockerfile.prod")) {
+    Write-Error "admin_frontend\Dockerfile.prod not found"
     exit 1
 }
 
-if (-not (Test-Path "frontend\.env.production")) {
-    Write-Warning "frontend\.env.production not found - creating from example"
-    if (Test-Path "frontend\.env.example") {
-        Copy-Item "frontend\.env.example" "frontend\.env.production"
+if (-not (Test-Path "admin_frontend\.env.production")) {
+    Write-Warning "admin_frontend\.env.production not found - creating from example"
+    if (Test-Path "admin_frontend\.env.example") {
+        Copy-Item "admin_frontend\.env.example" "admin_frontend\.env.production"
     } else {
-        Write-Error "frontend\.env.example not found - cannot create production env file"
+        Write-Error "admin_frontend\.env.example not found - cannot create production env file"
         exit 1
     }
 }
@@ -132,9 +132,9 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-Write-Host "Building frontend production image..." -ForegroundColor Green
+Write-Host "Building admin_frontend production image..." -ForegroundColor Green
 # Build directly with docker build to avoid depends_on issues
-Set-Location -Path "frontend"
+Set-Location -Path "admin_frontend"
 docker build -f Dockerfile.prod -t react_frontend:prod .
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to build React Frontend image"
@@ -165,7 +165,7 @@ if ($LASTEXITCODE -ne 0) {
 
 docker tag react_frontend:prod "$FRONTEND_IMAGE`:$TAG"
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "Failed to tag frontend image"
+    Write-Error "Failed to tag admin_frontend image"
     exit 1
 }
 
@@ -185,10 +185,10 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-Write-Host "Pushing frontend image..." -ForegroundColor Yellow
+Write-Host "Pushing admin_frontend image..." -ForegroundColor Yellow
 docker push "$FRONTEND_IMAGE`:$TAG"
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "Failed to push frontend image to DockerHub"
+    Write-Error "Failed to push admin_frontend image to DockerHub"
     exit 1
 }
 

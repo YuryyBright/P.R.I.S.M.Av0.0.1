@@ -1,6 +1,6 @@
 # FastAPI PRISMA Frontend
 
-This Docker image contains the React frontend for the FastAPI PRISMA (Role-Based Access Control) project. It provides the user interface for interacting with the backend API. The production build is served using Nginx.
+This Docker image contains the React admin_frontend for the FastAPI PRISMA (Role-Based Access Control) project. It provides the user interface for interacting with the backend API. The production build is served using Nginx.
 
 **Project Source Code:** [https://github.com/mnaimfaizy/prisma](https://github.com/mnaimfaizy/prisma)
 
@@ -24,11 +24,11 @@ Refer to the [GitHub repository tags](https://github.com/mnaimfaizy/prisma/tags)
 
 ### Prerequisites
 
-- The FastAPI PRISMA Backend service must be running and accessible to the frontend.
+- The FastAPI PRISMA Backend service must be running and accessible to the admin_frontend.
 
 ### Running the Container
 
-The frontend needs to know the URL of the backend API. This is typically configured at runtime or build time. The provided Dockerfile for production (`frontend/Dockerfile.prod`) bakes in the API URL during the build process using an Nginx configuration.
+The admin_frontend needs to know the URL of the backend API. This is typically configured at runtime or build time. The provided Dockerfile for production (`admin_frontend/Dockerfile.prod`) bakes in the API URL during the build process using an Nginx configuration.
 
 **To run with a backend accessible at `http://localhost:8000` (default if backend is on same Docker network):**
 
@@ -40,16 +40,16 @@ docker run -d \
   # The VITE_API_BASE_URL is usually set during the build stage for the Nginx config.
   # If you need to override Nginx config for a different API URL at runtime,
   # you might need a more complex setup or a custom entrypoint script.
-  mnaimfaizy/prisma-frontend:latest # Or a specific version tag like :v1.0.0
+  mnaimfaizy/prisma-admin_frontend:latest # Or a specific version tag like :v1.0.0
 ```
 
 ### Environment Variables (Build-time for Nginx)
 
-The primary configuration for the frontend is the backend API URL.
+The primary configuration for the admin_frontend is the backend API URL.
 
-- `VITE_API_BASE_URL`: This environment variable is used during the `docker build` process (see `frontend/Dockerfile.prod`) to configure the Nginx reverse proxy and ensure the frontend application knows where to send API requests.
+- `VITE_API_BASE_URL`: This environment variable is used during the `docker build` process (see `admin_frontend/Dockerfile.prod`) to configure the Nginx reverse proxy and ensure the admin_frontend application knows where to send API requests.
   - When building the image, this variable is typically passed as a build argument. The GitHub Actions workflow handles this by using the default value in the `.env` or by allowing overrides.
-  - The default in `frontend/.env.example` is usually `http://localhost:8000/api/v1`.
+  - The default in `admin_frontend/.env.example` is usually `http://localhost:8000/api/v1`.
 
 If you are running the backend on a different host or port, you would need to rebuild the image with the correct `VITE_API_BASE_URL` build argument, or use a more dynamic Nginx configuration.
 

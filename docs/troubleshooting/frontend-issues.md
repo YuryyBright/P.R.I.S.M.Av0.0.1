@@ -2,13 +2,13 @@
 
 Common React / Vite / auth client problems and fixes.
 
-Related: [Frontend overview](../frontend/index.md), [React architecture](../frontend/react/architecture.md), [CORS Troubleshooting](./CORS_TROUBLESHOOTING.md), [Common Issues](./common-issues.md).
+Related: [Frontend overview](../admin_frontend/index.md), [React architecture](../admin_frontend/react/architecture.md), [CORS Troubleshooting](./CORS_TROUBLESHOOTING.md), [Common Issues](./common-issues.md).
 
 ## CORS errors
 
 Symptoms: browser blocks `localhost:8000` calls from the Vite origin.
 
-- Ensure `BACKEND_CORS_ORIGINS` includes the frontend origin.
+- Ensure `BACKEND_CORS_ORIGINS` includes the admin_frontend origin.
 - Confirm the API is up and `VITE_API_BASE_URL` is correct.
 - Inspect preflight `OPTIONS` in DevTools.
 

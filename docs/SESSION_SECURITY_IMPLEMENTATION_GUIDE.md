@@ -302,7 +302,7 @@ async def get_new_access_token(
 
 #### Step 3: Update Frontend Token Refresh Handler
 
-**File:** `frontend/src/services/api.ts`
+**File:** `admin_frontend/src/services/api.ts`
 
 Update the response interceptor to handle the new refresh token:
 
@@ -365,7 +365,7 @@ api.interceptors.response.use(
 
 #### Step 4: Update Redux Auth Slice
 
-**File:** `frontend/src/store/slices/authSlice.ts`
+**File:** `admin_frontend/src/store/slices/authSlice.ts`
 
 Update the `refreshAccessToken` fulfilled case:
 
@@ -508,7 +508,7 @@ If issues occur after deployment:
 
 2. **Full Rollback:**
    - Revert `auth.py` endpoint changes
-   - Revert frontend `api.ts` changes
+   - Revert admin_frontend `api.ts` changes
    - Restart services
 
 ### Security Considerations
@@ -752,7 +752,7 @@ COOKIE_SAMESITE: str = "lax"  # "strict", "lax", or "none"
 
 #### Step 5: Update Frontend
 
-**File:** `frontend/src/lib/tokenStorage.ts`
+**File:** `admin_frontend/src/lib/tokenStorage.ts`
 
 ```typescript
 // Remove refresh token storage functions (no longer needed)
@@ -790,7 +790,7 @@ export const clearAuthTokens = (): void => {
 };
 ```
 
-**File:** `frontend/src/services/api.ts`
+**File:** `admin_frontend/src/services/api.ts`
 
 ```typescript
 // Update to not send refresh token in body
@@ -831,7 +831,7 @@ api.interceptors.response.use(
 );
 ```
 
-**File:** `frontend/src/store/slices/authSlice.ts`
+**File:** `admin_frontend/src/store/slices/authSlice.ts`
 
 ```typescript
 // Update refreshAccessToken thunk
@@ -880,7 +880,7 @@ export const refreshAccessToken = createAsyncThunk(
    - Verify cookie is automatically sent with requests
 
 3. **Cross-Origin:**
-   - Test with frontend on different port/domain
+   - Test with admin_frontend on different port/domain
    - Verify CORS settings allow credentials
 
 4. **Security:**
@@ -903,7 +903,7 @@ Prevent race conditions when multiple simultaneous requests trigger token refres
 
 **Implementation:**
 
-**File:** `frontend/src/services/authTokenManager.ts`
+**File:** `admin_frontend/src/services/authTokenManager.ts`
 
 ```typescript
 class AuthTokenManager {
@@ -1007,7 +1007,7 @@ Test complete authentication flows:
 
 1. **Deploy backend first** (backward compatible)
 2. **Monitor for errors** (token refresh failures)
-3. **Deploy frontend** (new token handling)
+3. **Deploy admin_frontend** (new token handling)
 4. **Monitor authentication metrics**
 5. **Verify no user complaints**
 

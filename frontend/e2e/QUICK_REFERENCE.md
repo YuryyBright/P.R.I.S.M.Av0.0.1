@@ -5,7 +5,7 @@ One-page quick reference for Playwright E2E testing in this project.
 ## Installation
 
 ```bash
-cd frontend
+cd admin_frontend
 npm install
 npx playwright install chromium
 ```

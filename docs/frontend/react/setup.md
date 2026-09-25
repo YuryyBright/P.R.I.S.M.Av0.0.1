@@ -1,19 +1,19 @@
 # React setup
 
-Local development for the Vite React app in `frontend/`.
+Local development for the Vite React app in `admin_frontend/`.
 
 Related: [Architecture](./architecture.md), [Deployment](./deployment.md), [Developer Setup](../../development/DEVELOPER_SETUP.md).
 
 ## Prerequisites
 
-- Node.js **20+** (see `engines` in `frontend/package.json`)
+- Node.js **20+** (see `engines` in `admin_frontend/package.json`)
 - npm (or a compatible package manager)
 - Backend API reachable (default `http://localhost:8000`) for authenticated flows
 
 ## Install
 
 ```bash
-cd frontend
+cd admin_frontend
 npm install
 ```
 
@@ -45,13 +45,13 @@ Vite only exposes variables prefixed with `VITE_`. Restart the dev server after 
 ## Run locally
 
 ```bash
-cd frontend
+cd admin_frontend
 npm run dev
 ```
 
 Default Vite URL: `http://localhost:5173` (confirm in the terminal output).
 
-Ensure the FastAPI backend is running and `BACKEND_CORS_ORIGINS` includes the frontend origin. See [CORS troubleshooting](../../troubleshooting/CORS_TROUBLESHOOTING.md).
+Ensure the FastAPI backend is running and `BACKEND_CORS_ORIGINS` includes the admin_frontend origin. See [CORS troubleshooting](../../troubleshooting/CORS_TROUBLESHOOTING.md).
 
 ## Common commands
 
@@ -71,4 +71,4 @@ Full testing detail: [Testing](./testing.md).
 
 ## Code location
 
-All frontend source lives under `frontend/`. Prefer editing there; do not invent a second app root unless you are adding a new framework under `docs/frontend/` as described in the [Frontend overview](../index.md).
+All admin_frontend source lives under `admin_frontend/`. Prefer editing there; do not invent a second app root unless you are adding a new framework under `docs/admin_frontend/` as described in the [Frontend overview](../index.md).

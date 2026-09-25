@@ -9,19 +9,19 @@ This directory contains all project documentation organized by purpose and audie
 - [`GETTING_STARTED.md`](./getting-started/GETTING_STARTED.md) - Start here for your first setup
 - [`DEVELOPER_SETUP.md`](./development/DEVELOPER_SETUP.md) - Complete development environment setup
 - [`PROJECT_OVERVIEW.md`](./getting-started/PROJECT_OVERVIEW.md) - Architecture and project structure
-- [`frontend/`](./frontend/) - **Frontend** MkDocs section (React setup through deployment)
+- [`admin_frontend/`](./admin_frontend/) - **Frontend** MkDocs section (React setup through deployment)
 
 ### Development
 
 - [`development/`](./development/) - Development guides and workflows
   - `DEVELOPER_SETUP.md` - IDE setup, dependencies, common workflows
   - `TESTING.md` - How to run tests and write new ones
-  - `FRONTEND_ARCHITECTURE.md` - Redirect to `frontend/react/architecture.md`
+  - `FRONTEND_ARCHITECTURE.md` - Redirect to `admin_frontend/react/architecture.md`
   - `DEPENDENCY_UPGRADES.md` - Dependency upgrade lanes and audit practice
 
 ### Frontend
 
-- [`frontend/`](./frontend/) - UI documentation (extensible for future frameworks)
+- [`admin_frontend/`](./admin_frontend/) - UI documentation (extensible for future frameworks)
   - `index.md` - Overview and multi-framework placeholder
   - `react/setup.md` - Install, env, commands
   - `react/architecture.md` - Layout and patterns
@@ -47,7 +47,7 @@ This directory contains all project documentation organized by purpose and audie
   - `DOCKER_ISSUES.md` - Common Docker problems and solutions
   - `DATABASE_ISSUES.md` - Database connection and migration problems
   - `DOCKER_SECURITY_FIXES.md` - Security configuration issues
-  - `frontend-issues.md` - React / Vite / auth-client troubleshooting
+  - `admin_frontend-issues.md` - React / Vite / auth-client troubleshooting
 
 ### Reference
 

@@ -1,4 +1,4 @@
-// frontend/src/models/dashboard.ts
+// admin_frontend/src/models/dashboard.ts
 export interface DashboardStats {
   total_users?: number;
   total_roles?: number;

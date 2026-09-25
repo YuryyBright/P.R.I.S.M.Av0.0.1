@@ -8,14 +8,14 @@ How engineering skills should consume domain documentation in this repository.
 - `DOCUMENTATION.md`
 - `docs/index.md`
 - `docs/reference/architecture.md` (canonical system architecture / auth-flow narrative)
-- `docs/frontend/` (React UI docs; extensible for future frameworks)
+- `docs/admin_frontend/` (React UI docs; extensible for future frameworks)
 - `docs/internal/` (historical implementation notes; architecture stub points at the canonical page)
 - If `graphify-out/graph.json` exists, prefer `graphify query` for architecture questions — see `docs/agents/graphify.md`
 
 ## File structure guidance
 
 - Backend domain and PRISMA behavior: `backend/app/`
-- Frontend domain and UI behavior: `frontend/src/`
+- Frontend domain and UI behavior: `admin_frontend/src/`
 - Published docs and references: `docs/`
 
 ## Vocabulary rules

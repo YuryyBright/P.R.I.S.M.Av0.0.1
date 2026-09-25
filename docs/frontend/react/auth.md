@@ -19,7 +19,7 @@ Backend session invalidation uses a Redis **allowlist** (`app/utils/token.py`), 
 
 ## CSRF
 
-State-changing auth calls (login, refresh, logout, logout everywhere, password change, etc.) require CSRF. Obtain/attach tokens via the auth/CSRF service layer; see [Security Features](../../reference/SECURITY_FEATURES.md) and `frontend` CSRF-related services/tests.
+State-changing auth calls (login, refresh, logout, logout everywhere, password change, etc.) require CSRF. Obtain/attach tokens via the auth/CSRF service layer; see [Security Features](../../reference/SECURITY_FEATURES.md) and `admin_frontend` CSRF-related services/tests.
 
 ## Route and UI guards
 
@@ -28,7 +28,7 @@ State-changing auth calls (login, refresh, logout, logout everywhere, password c
 
 Keep permission **names** aligned with backend permission records.
 
-## Security checklist (frontend)
+## Security checklist (admin_frontend)
 
 - Do not persist access or refresh tokens in `localStorage`.
 - Rely on backend logout to clear the HttpOnly refresh cookie; clear the session hint on logout / failed refresh.

@@ -29,9 +29,9 @@ The project now supports four distinct environments with complete isolation:
 
 #### Frontend Directory
 
-- **`frontend/docker-compose.dev.yml`** - Frontend development service
-- **`frontend/docker-compose.test.yml`** - Frontend testing environment
-- **`frontend/docker-compose.prod.yml`** - Frontend production service
+- **`admin_frontend/docker-compose.dev.yml`** - Frontend development service
+- **`admin_frontend/docker-compose.test.yml`** - Frontend testing environment
+- **`admin_frontend/docker-compose.prod.yml`** - Frontend production service
 
 ### 2. Environment Files
 
@@ -43,9 +43,9 @@ The project now supports four distinct environments with complete isolation:
 
 #### Frontend Environment Files
 
-- **`frontend/.env.development`** - New development environment settings
-- **`frontend/.env.test`** - Updated testing environment settings
-- **`frontend/.env.production`** - Updated production environment settings
+- **`admin_frontend/.env.development`** - New development environment settings
+- **`admin_frontend/.env.test`** - Updated testing environment settings
+- **`admin_frontend/.env.production`** - Updated production environment settings
 
 ### 3. Management Scripts
 
@@ -131,7 +131,7 @@ Each environment has isolated Redis instances:
 
 ### Development Environment Features
 
-- Hot-reload enabled for both backend and frontend
+- Hot-reload enabled for both backend and admin_frontend
 - Debug mode activated
 - Longer token expiration times
 - More permissive CORS settings
@@ -268,7 +268,7 @@ To migrate from the old setup:
    .\scripts\docker\manage-environments.ps1 -Environment dev -Action up -Detached
    ```
 
-   - Access frontend: http://localhost:3000
+   - Access admin_frontend: http://localhost:3000
    - Access backend: http://localhost:8000
    - Check hot-reload functionality
 
@@ -278,7 +278,7 @@ To migrate from the old setup:
    .\scripts\docker\manage-environments.ps1 -Environment test -Action up -Detached
    ```
 
-   - Access frontend: http://localhost:3001
+   - Access admin_frontend: http://localhost:3001
    - Access backend: http://localhost:8002
    - Run tests: `docker exec -it prisma_test pytest`
 
@@ -288,7 +288,7 @@ To migrate from the old setup:
    .\scripts\docker\manage-environments.ps1 -Environment prod-test -Action up -Detached
    ```
 
-   - Access frontend: http://localhost:81
+   - Access admin_frontend: http://localhost:81
    - Access backend: http://localhost:8001
    - Verify production-like settings
 

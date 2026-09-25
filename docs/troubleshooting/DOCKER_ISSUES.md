@@ -163,7 +163,7 @@ This guide covers common Docker-related issues and their solutions for the FastA
    Get-Content backend/requirements.txt
 
    # Verify Node package.json
-   Get-Content frontend/package.json
+   Get-Content admin_frontend/package.json
    ```
 
 2. **Update Base Images**
@@ -208,7 +208,7 @@ This guide covers common Docker-related issues and their solutions for the FastA
 3. **Test Inter-Service Communication**
 
    ```powershell
-   # Test from frontend to backend
+   # Test from admin_frontend to backend
    docker exec react_frontend curl http://prisma:8000/api/v1/health
 
    # Test from backend to database

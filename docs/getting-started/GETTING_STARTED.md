@@ -77,7 +77,7 @@ prisma/
 │   ├── app/          # Main application code
 │   ├── alembic/      # Database migrations
 │   └── tests/        # Backend tests
-├── frontend/   # React TypeScript application
+├── admin_frontend/   # React TypeScript application
 │   ├── src/          # Frontend source code
 │   └── public/       # Static assets
 ├── docs/             # All documentation
@@ -141,7 +141,7 @@ prisma/
 ### 4. Explore the Code (1+ hours)
 
 - Browse the backend API structure in `backend/app/`
-- Explore the React components in `frontend/src/`
+- Explore the React components in `admin_frontend/src/`
 - Read the [API Documentation](../development/API_DOCUMENTATION.md)
 
 ### 5. Make Your First Change

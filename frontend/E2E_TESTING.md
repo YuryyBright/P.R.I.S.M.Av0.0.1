@@ -1,6 +1,6 @@
 # End-to-End Testing with Playwright
 
-This guide covers end-to-end (E2E) testing for the React frontend using Playwright.
+This guide covers end-to-end (E2E) testing for the React admin_frontend using Playwright.
 
 ## Table of Contents
 
@@ -360,22 +360,22 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        working-directory: ./frontend
+        working-directory: ./admin_frontend
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-        working-directory: ./frontend
+        working-directory: ./admin_frontend
 
       - name: Run E2E tests
         run: npm run test:e2e
-        working-directory: ./frontend
+        working-directory: ./admin_frontend
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: frontend/playwright-report/
+          path: admin_frontend/playwright-report/
           retention-days: 30
 ```
 

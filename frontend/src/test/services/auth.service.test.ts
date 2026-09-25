@@ -263,7 +263,7 @@ describe('AuthService', () => {
         last_name: 'User',
       };
 
-      // This would typically be validated on the frontend or backend
+      // This would typically be validated on the admin_frontend or backend
       expect(userData.password.length).toBeLessThan(8);
     });
   });

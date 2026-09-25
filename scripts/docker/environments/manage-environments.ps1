@@ -38,7 +38,7 @@ $environments = @{
         "description" = "Development Environment (Hot-reload, Debug mode)"
         "ports" = @{
             "backend" = "8000"
-            "frontend" = "3000"
+            "admin_frontend" = "3000"
             "db" = "5433"
             "redis" = "6379"
             "pgadmin" = "8080"
@@ -52,7 +52,7 @@ $environments = @{
         "description" = "Testing Environment (CI/CD, Integration tests)"
         "ports" = @{
             "backend" = "8002"
-            "frontend" = "3001"
+            "admin_frontend" = "3001"
             "db" = "5435"
             "redis" = "6381"
             "pgadmin" = "8082"
@@ -66,7 +66,7 @@ $environments = @{
         "description" = "Production Testing Environment (Production-like settings)"
         "ports" = @{
             "backend" = "8001"
-            "frontend" = "81"
+            "admin_frontend" = "81"
             "db" = "5434"
             "redis" = "6380"
             "pgadmin" = "8081"
@@ -74,12 +74,12 @@ $environments = @{
         }
     }
     "prod" = @{
-        "compose_files" = @("backend/docker-compose.prod.yml", "frontend/docker-compose.prod.yml")
+        "compose_files" = @("backend/docker-compose.prod.yml", "admin_frontend/docker-compose.prod.yml")
         "network" = "prisma_network"
         "description" = "Production Environment (Secure, Optimized)"
         "ports" = @{
             "backend" = "8000"
-            "frontend" = "80"
+            "admin_frontend" = "80"
             "db" = "5432"
             "redis" = "6379"
             "pgadmin" = "5050"
@@ -216,8 +216,8 @@ switch ($Action) {
         if ($LASTEXITCODE -eq 0) {
             Write-ColorOutput "Environment started successfully!" "Green"
             Write-ColorOutput "Access the application at:" "Blue"
-            if ($envConfig.ports.frontend) {
-                Write-ColorOutput "  Frontend: http://localhost:$($envConfig.ports.frontend)" "White"
+            if ($envConfig.ports.admin_frontend) {
+                Write-ColorOutput "  Frontend: http://localhost:$($envConfig.ports.admin_frontend)" "White"
             }
             if ($envConfig.ports.backend) {
                 Write-ColorOutput "  Backend API: http://localhost:$($envConfig.ports.backend)" "White"

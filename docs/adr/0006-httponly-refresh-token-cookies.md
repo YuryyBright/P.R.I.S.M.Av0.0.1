@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-Refresh tokens were persisted in the SPA `localStorage` (`tokenStorage.ts`), which makes them readable to any XSS on the origin and enables full session takeover. The frontend already uses `withCredentials` and CSRF (`fastapi-csrf-protect`) for cookie-based CSRF defense. Issue [#66](https://github.com/mnaimfaizy/prisma/issues/66) requires migrating refresh delivery/storage to HttpOnly cookies while keeping access tokens in memory only.
+Refresh tokens were persisted in the SPA `localStorage` (`tokenStorage.ts`), which makes them readable to any XSS on the origin and enables full session takeover. The admin_frontend already uses `withCredentials` and CSRF (`fastapi-csrf-protect`) for cookie-based CSRF defense. Issue [#66](https://github.com/mnaimfaizy/prisma/issues/66) requires migrating refresh delivery/storage to HttpOnly cookies while keeping access tokens in memory only.
 
 ## Decision
 
@@ -26,7 +26,7 @@ Refresh tokens were persisted in the SPA `localStorage` (`tokenStorage.ts`), whi
 
 ## CORS / deploy notes
 
-- `allow_credentials=True` is already enabled. Browsers reject `Access-Control-Allow-Origin: *` with credentials — set `BACKEND_CORS_ORIGINS` to the exact frontend origin(s).
+- `allow_credentials=True` is already enabled. Browsers reject `Access-Control-Allow-Origin: *` with credentials — set `BACKEND_CORS_ORIGINS` to the exact admin_frontend origin(s).
 - Frontend and API on different sites need either a shared cookie domain + appropriate SameSite, or SameSite=None; Secure.
 
 ## Consequences

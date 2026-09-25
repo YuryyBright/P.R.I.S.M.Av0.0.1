@@ -2,6 +2,6 @@
 
 This page moved to the dedicated Frontend docs section:
 
-**[React architecture](../frontend/react/architecture.md)**
+**[React architecture](../admin_frontend/react/architecture.md)**
 
-Start at [Frontend overview](../frontend/index.md) for setup, auth, state, UI, testing, and deployment.
+Start at [Frontend overview](../admin_frontend/index.md) for setup, auth, state, UI, testing, and deployment.

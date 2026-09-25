@@ -11,8 +11,8 @@ docker-compose -f docker-compose.dev.yml up -d
 curl http://localhost:8000/api/v1/health
 # Should return: {"status": "healthy"}
 
-# 3. Go back to frontend directory
-cd ../frontend
+# 3. Go back to admin_frontend directory
+cd ../admin_frontend
 
 # 4. Run the environment check script (optional but recommended)
 ./scripts/start-e2e-env.sh
@@ -68,7 +68,7 @@ python app/initial_data.py
 
 ### 3. Frontend Dev Server ✅
 
-Playwright automatically starts the frontend dev server, so you don't need to start it manually.
+Playwright automatically starts the admin_frontend dev server, so you don't need to start it manually.
 
 ## Troubleshooting
 
@@ -260,4 +260,4 @@ npm run test:e2e:codegen
                                                       └─────────────┘
 ```
 
-E2E tests run in a real browser, interact with the real frontend, which makes real API calls to the real backend, which queries the real database. This is why all components must be running!
+E2E tests run in a real browser, interact with the real admin_frontend, which makes real API calls to the real backend, which queries the real database. This is why all components must be running!

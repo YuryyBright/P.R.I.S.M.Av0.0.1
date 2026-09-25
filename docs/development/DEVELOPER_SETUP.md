@@ -109,7 +109,7 @@ Follow the backend setup instructions in the main README.md to set up your Pytho
 
 ### Frontend Setup
 
-Follow the frontend setup in [Frontend — React setup](../frontend/react/setup.md) (Node.js environment, env files, and `npm run dev`).
+Follow the admin_frontend setup in [Frontend — React setup](../admin_frontend/react/setup.md) (Node.js environment, env files, and `npm run dev`).
 
 ## Testing Framework
 

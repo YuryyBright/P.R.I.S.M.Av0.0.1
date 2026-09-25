@@ -17,7 +17,7 @@
 
 ### 3. **Frontend Documentation** ✅
 
-- **frontend/README.md**: Added comprehensive testing section (354 tests), enhanced security considerations
+- **admin_frontend/README.md**: Added comprehensive testing section (354 tests), enhanced security considerations
 - Updated project structure and testing commands
 
 ### 4. **Main Documentation Hub** ✅

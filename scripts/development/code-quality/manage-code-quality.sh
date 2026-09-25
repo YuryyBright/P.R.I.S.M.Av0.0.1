@@ -33,7 +33,7 @@ show_help() {
 
     print_color "\n📋 Parameters:" "yellow"
     print_color "  -a, --action       : Action to perform (format, lint, fix-imports, all)" "white"
-    print_color "  -t, --target       : Target to process (backend, frontend, all)" "white"
+    print_color "  -t, --target       : Target to process (backend, admin_frontend, all)" "white"
     print_color "  -c, --check        : Check format without making changes" "white"
     print_color "  -v, --verbose      : Show detailed output" "white"
     print_color "  -h, --help         : Show this help message" "white"
@@ -43,7 +43,7 @@ show_help() {
     print_color "  ./manage-code-quality.sh --action format                    # Format all code" "white"
     print_color "  ./manage-code-quality.sh --action lint --target backend     # Lint only backend code" "white"
     print_color "  ./manage-code-quality.sh --action format --check           # Check formatting without changes" "white"
-    print_color "  ./manage-code-quality.sh --action fix-imports --target frontend # Fix only frontend imports" "white"
+    print_color "  ./manage-code-quality.sh --action fix-imports --target admin_frontend # Fix only admin_frontend imports" "white"
 
     print_color "\n🎯 Actions:" "yellow"
     print_color "  format      : Format code (Black for Python, Prettier for TypeScript)" "white"
@@ -53,8 +53,8 @@ show_help() {
 
     print_color "\n🎯 Targets:" "yellow"
     print_color "  backend     : Process only backend Python code" "white"
-    print_color "  frontend    : Process only frontend TypeScript/React code" "white"
-    print_color "  all         : Process both backend and frontend code" "white"
+    print_color "  admin_frontend    : Process only admin_frontend TypeScript/React code" "white"
+    print_color "  all         : Process both backend and admin_frontend code" "white"
 
     print_color "\n🔧 Requirements:" "yellow"
     print_color "  Backend: Python, black, isort, flake8" "white"
@@ -105,10 +105,10 @@ esac
 
 # Validate target parameter
 case $TARGET in
-    backend|frontend|all) ;;
+    backend|admin_frontend|all) ;;
     *)
         print_color "Invalid target: $TARGET" "red"
-        print_color "Valid targets: backend, frontend, all" "red"
+        print_color "Valid targets: backend, admin_frontend, all" "red"
         exit 1
         ;;
 esac
@@ -175,11 +175,11 @@ fix_backend_imports() {
     cd - > /dev/null
 }
 
-# Function to format frontend code
+# Function to format admin_frontend code
 format_frontend() {
     print_color "🎨 Formatting Frontend Code..." "cyan"
 
-    cd "$(dirname "$0")/../../../frontend" || exit 1
+    cd "$(dirname "$0")/../../../admin_frontend" || exit 1
 
     if [ "$CHECK" = true ]; then
         print_color "Checking code format (no changes will be made)..." "yellow"
@@ -193,11 +193,11 @@ format_frontend() {
     cd - > /dev/null
 }
 
-# Function to lint frontend code
+# Function to lint admin_frontend code
 lint_frontend() {
     print_color "🔍 Linting Frontend Code..." "cyan"
 
-    cd "$(dirname "$0")/../../../frontend" || exit 1
+    cd "$(dirname "$0")/../../../admin_frontend" || exit 1
 
     print_color "Running ESLint..." "blue"
     npm run lint
@@ -206,11 +206,11 @@ lint_frontend() {
     cd - > /dev/null
 }
 
-# Function to fix frontend imports
+# Function to fix admin_frontend imports
 fix_frontend_imports() {
     print_color "📦 Fixing Frontend Imports..." "cyan"
 
-    cd "$(dirname "$0")/../../../frontend" || exit 1
+    cd "$(dirname "$0")/../../../admin_frontend" || exit 1
 
     print_color "Organizing imports..." "blue"
     npm run lint:fix
@@ -232,7 +232,7 @@ case $ACTION in
         if [ "$TARGET" = "backend" ] || [ "$TARGET" = "all" ]; then
             format_backend
         fi
-        if [ "$TARGET" = "frontend" ] || [ "$TARGET" = "all" ]; then
+        if [ "$TARGET" = "admin_frontend" ] || [ "$TARGET" = "all" ]; then
             format_frontend
         fi
         ;;
@@ -240,7 +240,7 @@ case $ACTION in
         if [ "$TARGET" = "backend" ] || [ "$TARGET" = "all" ]; then
             lint_backend
         fi
-        if [ "$TARGET" = "frontend" ] || [ "$TARGET" = "all" ]; then
+        if [ "$TARGET" = "admin_frontend" ] || [ "$TARGET" = "all" ]; then
             lint_frontend
         fi
         ;;
@@ -248,7 +248,7 @@ case $ACTION in
         if [ "$TARGET" = "backend" ] || [ "$TARGET" = "all" ]; then
             fix_backend_imports
         fi
-        if [ "$TARGET" = "frontend" ] || [ "$TARGET" = "all" ]; then
+        if [ "$TARGET" = "admin_frontend" ] || [ "$TARGET" = "all" ]; then
             fix_frontend_imports
         fi
         ;;
@@ -258,7 +258,7 @@ case $ACTION in
             format_backend
             lint_backend
         fi
-        if [ "$TARGET" = "frontend" ] || [ "$TARGET" = "all" ]; then
+        if [ "$TARGET" = "admin_frontend" ] || [ "$TARGET" = "all" ]; then
             fix_frontend_imports
             format_frontend
             lint_frontend

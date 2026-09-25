@@ -411,7 +411,7 @@ if ($Help) {
     Write-ColorOutput "  -StopEnvironment : Stop environment after testing" "White"
     Write-ColorOutput "  -CleanupAfter    : Cleanup containers after testing" "White"
     Write-ColorOutput "  -ShowDetails     : Show detailed test output" "White"
-    Write-ColorOutput "  -SkipFrontend    : Skip frontend-related tests" "White"
+    Write-ColorOutput "  -SkipFrontend    : Skip admin_frontend-related tests" "White"
     Write-ColorOutput "  -FixIssues       : Attempt to fix discovered issues" "White"
 
     Write-ColorOutput "`n💡 Examples:" "Yellow"

@@ -1,6 +1,6 @@
 # Playwright E2E Testing Examples
 
-This document provides practical examples of writing E2E tests with Playwright for the React frontend.
+This document provides practical examples of writing E2E tests with Playwright for the React admin_frontend.
 
 ## Table of Contents
 

@@ -74,7 +74,7 @@ class IDeleteResponseBase(IResponseBase[DataType], Generic[DataType]):
 
 
 class ErrorDetail(BaseModel):
-    """Detailed error information for frontend consumption"""
+    """Detailed error information for admin_frontend consumption"""
 
     field: str | None = None  # Field that caused the error (if applicable)
     code: str | None = None  # Error code for programmatic handling
@@ -82,7 +82,7 @@ class ErrorDetail(BaseModel):
 
 
 class IErrorResponse(BaseModel):
-    """Standardized error response schema for frontend consumption"""
+    """Standardized error response schema for admin_frontend consumption"""
 
     status: str = "error"
     message: str  # General error message

@@ -372,7 +372,7 @@ When creating the next release with the new process:
 4. ✅ Check VERSION file is updated correctly
 5. ✅ Confirm `docs/release-notes.md` follows conventions (no root `CHANGELOG.md`)
 6. ✅ Monitor GitHub Actions workflow
-7. ✅ Verify all three images (backend, frontend, worker) published
+7. ✅ Verify all three images (backend, admin_frontend, worker) published
 8. ✅ Test images in staging environment
 
 ## Metrics and Expected Benefits

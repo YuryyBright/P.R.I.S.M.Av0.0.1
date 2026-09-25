@@ -59,7 +59,7 @@ The `build-production-images.ps1` script builds optimized production Docker imag
 
 - `prisma:prod` (608MB) - Backend API service
 - `prisma_worker:prod` (590MB) - Celery worker service
-- `react_frontend:prod` (58MB) - React frontend service
+- `react_frontend:prod` (58MB) - React admin_frontend service
 
 **Auto-Generated Tags:**
 
@@ -235,7 +235,7 @@ Before using these scripts, ensure:
 - [Docker Build Summary](../../DOCKER_BUILD_SUMMARY.md) - Complete build results
 - [Main Scripts README](../README.md) - All script categories
 - [Backend Docker README](../../backend/README.dockerhub.md) - Backend-specific Docker info
-- [Frontend Docker README](../../frontend/README.dockerhub.md) - Frontend-specific Docker info
+- [Frontend Docker README](../../admin_frontend/README.dockerhub.md) - Frontend-specific Docker info
 
 ## 🆘 Troubleshooting
 

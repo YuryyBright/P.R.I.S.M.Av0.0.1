@@ -89,7 +89,7 @@ Created 31 E2E tests across 3 test files:
 
 ### 5. CI/CD Integration
 
-- ✅ Updated GitHub Actions workflow (`frontend-ci.yml`)
+- ✅ Updated GitHub Actions workflow (`admin_frontend-ci.yml`)
 - ✅ Added `e2e-tests` job with:
   - Playwright browser installation
   - Chromium-only execution for CI efficiency
@@ -141,7 +141,7 @@ Created comprehensive documentation:
    - Scenario-based recommendations
    - Decision rationale
 
-5. **Updated frontend/README.md**:
+5. **Updated admin_frontend/README.md**:
    - Added E2E testing section
    - Documented test commands
    - Referenced E2E_TESTING.md
@@ -206,7 +206,7 @@ Created comprehensive documentation:
 ## File Structure
 
 ```
-frontend/
+admin_frontend/
 ├── e2e/
 │   ├── fixtures/
 │   │   └── test-data.ts           # Test data and constants
@@ -228,7 +228,7 @@ docs/development/
 └── extensions.json                # VS Code extension recommendations
 
 .github/workflows/
-└── frontend-ci.yml          # Updated with E2E tests
+└── admin_frontend-ci.yml          # Updated with E2E tests
 ```
 
 ## Quick Start
@@ -238,7 +238,7 @@ docs/development/
 1. **Install dependencies** (if not already installed):
 
    ```bash
-   cd frontend
+   cd admin_frontend
    npm install
    ```
 
@@ -322,10 +322,10 @@ Tests automatically run in GitHub Actions on:
 
 ### Documentation
 
-- [E2E Testing Guide](../frontend/E2E_TESTING.md) - Main guide
+- [E2E Testing Guide](../admin_frontend/E2E_TESTING.md) - Main guide
 - [Framework Comparison](./E2E_FRAMEWORK_COMPARISON.md) - Decision analysis
-- [Code Examples](../frontend/e2e/EXAMPLES.md) - Practical examples
-- [Test Suite README](../frontend/e2e/README.md) - Test organization
+- [Code Examples](../admin_frontend/e2e/EXAMPLES.md) - Practical examples
+- [Test Suite README](../admin_frontend/e2e/README.md) - Test organization
 
 ### External Resources
 
@@ -349,7 +349,7 @@ The project now has a solid foundation for end-to-end testing that complements t
 
 ---
 
-**Issue**: Investigate and setup playwright for implementing the end to end testing in the frontend project  
+**Issue**: Investigate and setup playwright for implementing the end to end testing in the admin_frontend project  
 **Status**: ✅ **COMPLETE**  
 **Date**: January 2026  
 **Version**: Playwright 1.57.0

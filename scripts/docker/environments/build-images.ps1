@@ -189,8 +189,8 @@ function Get-ImageConfiguration {
             }
         },
         @{
-            Context = "frontend"
-            Dockerfile = "frontend/Dockerfile"
+            Context = "admin_frontend"
+            Dockerfile = "admin_frontend/Dockerfile"
             ImageName = "react_frontend:$Tag"
             Target = $config.target
             BuildArgs = @{

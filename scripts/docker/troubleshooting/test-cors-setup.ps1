@@ -1,5 +1,5 @@
 # Test script for checking cross-container communication and CORS issues
-# This script helps test the interaction between your frontend and backend containers
+# This script helps test the interaction between your admin_frontend and backend containers
 
 # Stop any existing containers
 Write-Host "Stopping any existing containers..." -ForegroundColor Yellow
@@ -21,15 +21,15 @@ docker-compose -f docker-compose.prod-test.yml ps
 Write-Host "Checking backend logs for CORS configuration..." -ForegroundColor Blue
 docker logs prisma 2>&1 | Select-String -Pattern "CORS|Origin"
 
-# Test internal container communication (from frontend to backend)
+# Test internal container communication (from admin_frontend to backend)
 Write-Host "Testing internal container communication..." -ForegroundColor Cyan
 docker exec react_frontend curl -v http://prisma:8000/api/v1/health
 
 # Display instructions for manual testing
 Write-Host "Setup complete! Here's how to test:" -ForegroundColor Green
-Write-Host "1. Open http://localhost in your browser to access the frontend" -ForegroundColor Yellow
+Write-Host "1. Open http://localhost in your browser to access the admin_frontend" -ForegroundColor Yellow
 Write-Host "2. Try to log in or access protected routes" -ForegroundColor Yellow
 Write-Host "3. Check the browser console for any CORS errors" -ForegroundColor Yellow
 Write-Host "4. To view backend logs: docker logs prisma" -ForegroundColor Yellow
-Write-Host "5. To view frontend logs: docker logs react_frontend" -ForegroundColor Yellow
+Write-Host "5. To view admin_frontend logs: docker logs react_frontend" -ForegroundColor Yellow
 Write-Host "6. To stop all services: docker-compose -f docker-compose.prod-test.yml down" -ForegroundColor Yellow

@@ -50,7 +50,7 @@ Breaking changes always surface under **Breaking Changes** in release notes rega
 
 ## Scopes (component / domain)
 
-Use a **component or domain** scope, not a top-level directory name (`backend`, `frontend`). Prefer the lists below; omit scope only when the change is truly repo-wide and no component fits.
+Use a **component or domain** scope, not a top-level directory name (`backend`, `admin_frontend`). Prefer the lists below; omit scope only when the change is truly repo-wide and no component fits.
 
 ### Backend
 

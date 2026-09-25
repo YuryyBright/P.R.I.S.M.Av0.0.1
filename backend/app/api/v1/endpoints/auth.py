@@ -1799,7 +1799,7 @@ async def get_csrf_token(
     request: Request, response: Response, csrf_protect: CsrfProtect = Depends(deps.get_csrf_protect)
 ) -> IPostResponseBase[dict]:
     """
-    Get CSRF token for frontend to use in state-changing operations.
+    Get CSRF token for admin_frontend to use in state-changing operations.
     This endpoint also sets the required CSRF cookie.
 
     Returns:
@@ -1808,7 +1808,7 @@ async def get_csrf_token(
     try:
         # Generate CSRF tokens - returns tuple (unsigned_token, signed_token)
         csrf_token, signed_token = csrf_protect.generate_csrf_tokens()
-        response_data = {"csrf_token": csrf_token}  # Send unsigned token to frontend
+        response_data = {"csrf_token": csrf_token}  # Send unsigned token to admin_frontend
         # Set the SIGNED token in cookie (this is what the library expects for validation)
         response.set_cookie(
             key="fastapi-csrf-token",

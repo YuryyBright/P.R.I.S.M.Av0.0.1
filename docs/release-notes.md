@@ -90,8 +90,8 @@ _Pre-release._
 **Technical Details:**
 
 - Consolidate JWT handling onto PyJWT
-- Multi-lane dependency upgrades across backend, frontend, workers/ops, GitHub Actions, and Docker/CI base images
-- Docker publish builds once from `v*` tags on release; skip frontend Playwright in CI until full-stack CI is wired
+- Multi-lane dependency upgrades across backend, admin_frontend, workers/ops, GitHub Actions, and Docker/CI base images
+- Docker publish builds once from `v*` tags on release; skip admin_frontend Playwright in CI until full-stack CI is wired
 - Reorganize backend scripts, harden Redis TLS defaults, enforce LF line endings for shell scripts, and add a project LICENSE
 - Add weekly graphify report refresh workflow (maintenance PRs enabled)
 
@@ -120,7 +120,7 @@ _Pre-release._
 - Improved release scripts with better Docker handling, changelog management, and cleanup
 - Added `changelog.txt` to `.gitignore` and fixed path resolution in release scripts
 - Removed `server-dir` from FTP deployment configuration and updated documentation links to point to the live site
-- Fixed frontend build, type, and linting issues
+- Fixed admin_frontend build, type, and linting issues
 - Resolved authentication tests to accept 429 status code for rate limiting scenarios
 
 **Breaking Changes:**
@@ -144,7 +144,7 @@ _Pre-release._
 - Added troubleshooting scripts for CORS and Docker configuration
 - Updated Docker configurations for production and testing environments
 - Refactored code for improved readability and consistency
-- Comprehensive updates to documentation and frontend security integration
+- Comprehensive updates to documentation and admin_frontend security integration
 - Updated documentation and security features across the project
 
 ### v0.0.2-beta (2025-07-02)
@@ -154,7 +154,7 @@ _Pre-release._
 **New Features:**
 
 - Enhanced FastAPI PRISMA backend with comprehensive role and permission management
-- React frontend with TypeScript and modern UI components
+- React admin_frontend with TypeScript and modern UI components
 - Improved Docker containerization and development workflow
 - Enhanced testing infrastructure with unit and integration tests
 
@@ -184,12 +184,12 @@ _Pre-release._
 - Basic authentication and authorization system
 - User management with role-based access control
 - REST API endpoints for user, role, and permission management
-- React frontend with authentication flows
+- React admin_frontend with authentication flows
 - Docker containerization for development and production
 
 **Technical Details:**
 
-- Monorepo structure with backend and frontend separation
+- Monorepo structure with backend and admin_frontend separation
 - JWT-based authentication with refresh token support
 - PostgreSQL database with SQLModel ORM
 - Redis for session management and caching

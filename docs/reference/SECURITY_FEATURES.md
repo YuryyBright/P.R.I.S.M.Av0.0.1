@@ -191,7 +191,7 @@ audit_log = AuditLog(
 
 ### Frontend Security Tests
 
-**Coverage**: 17 CSRF-related tests in the frontend test suite
+**Coverage**: 17 CSRF-related tests in the admin_frontend test suite
 
 **Test Areas**:
 
@@ -287,8 +287,8 @@ python backend/test/test_sanitization.py
 # Run security-focused backend tests
 pytest test/ -k "security or auth or csrf" -v
 
-# Run frontend security tests
-cd frontend
+# Run admin_frontend security tests
+cd admin_frontend
 npm test -- --run csrfService.test.ts
 ```
 

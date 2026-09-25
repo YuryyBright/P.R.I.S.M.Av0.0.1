@@ -6,12 +6,12 @@ Parent tracking issue: [#30](https://github.com/mnaimfaizy/prisma/issues/30).
 
 ## Source of truth
 
-| Surface                      | Manifest                                                                     | Notes                                                                                                                       |
-| ---------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Backend runtime + many tools | [`backend/requirements.txt`](../../backend/requirements.txt)                 | Fully pinned (`==`). **Authoritative** for install and CI.                                                                  |
-| Backend tooling config       | [`backend/pyproject.toml`](../../backend/pyproject.toml)                     | black / pytest / mypy / isort settings. Poetry package metadata is incomplete — do **not** treat Poetry as the lock source. |
-| Frontend                     | [`frontend/package.json`](../../frontend/package.json) + `package-lock.json` | npm; Semver ranges (`^` / `~`).                                                                                             |
-| Infra                        | Dockerfiles / compose                                                        | Python, Node, Postgres, Redis base images.                                                                                  |
+| Surface                      | Manifest                                                                                 | Notes                                                                                                                       |
+| ---------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Backend runtime + many tools | [`backend/requirements.txt`](../../backend/requirements.txt)                             | Fully pinned (`==`). **Authoritative** for install and CI.                                                                  |
+| Backend tooling config       | [`backend/pyproject.toml`](../../backend/pyproject.toml)                                 | black / pytest / mypy / isort settings. Poetry package metadata is incomplete — do **not** treat Poetry as the lock source. |
+| Frontend                     | [`admin_frontend/package.json`](../../admin_frontend/package.json) + `package-lock.json` | npm; Semver ranges (`^` / `~`).                                                                                             |
+| Infra                        | Dockerfiles / compose                                                                    | Python, Node, Postgres, Redis base images.                                                                                  |
 
 A follow-up may align Poetry with `requirements.txt`; until then, always pin and install from `requirements.txt`.
 
@@ -25,16 +25,16 @@ A follow-up may align Poetry with `requirements.txt`; until then, always pin and
 
 ## Lanes and gates
 
-| Lane | Cluster                      | Typical packages                                                                                                                          | Gates                                                                      |
-| ---- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 0    | Inventory & automation       | Dependabot, this doc, CVE snapshot                                                                                                        | Docs review; valid Dependabot config                                       |
-| 1    | Dev / test tooling           | pytest*, black, isort, flake8*, mypy, coverage, pre-commit, factory_boy, Faker; eslint*, prettier, vitest*, testing-library\*, Playwright | Backend unit + lint; frontend lint/build/e2e; local `npm run test:run`     |
-| 2    | Backend security / auth      | FastAPI, Starlette, Pydantic, PyJWT, bcrypt, cryptography, redis, CSRF/limiter, bleach                                                    | Backend tests; login/refresh/logout smoke; CSRF if middleware touched      |
-| 3    | Backend data / async DB      | SQLAlchemy, sqlmodel, asyncpg, aiosqlite, alembic, greenlet, sqlakeyset                                                                   | Migrations on empty DB; CRUD-heavy tests; keep `AsyncSession` + `.exec()`  |
-| 4    | Backend workers / ops        | celery, kombu, flower, gunicorn, uvicorn, sentry-sdk, httpx, tenacity                                                                     | Worker import smoke; Docker health if images change                        |
-| 5    | Frontend runtime (non-major) | axios, Redux Toolkit, react-hook-form, zod, Radix, lucide-react, recharts                                                                 | lint, `test:run`, build; Playwright auth if HTTP client touched            |
-| 6    | Frontend majors / framework  | React, Vite, Tailwind, react-router majors                                                                                                | Spike branch + changelog review before bulk bump                           |
-| 7    | Base images / Docker         | Python/Node/Postgres/Redis image tags                                                                                                     | Compose bring-up smoke; align CI service images with compose when changing |
+| Lane | Cluster                      | Typical packages                                                                                                                          | Gates                                                                        |
+| ---- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 0    | Inventory & automation       | Dependabot, this doc, CVE snapshot                                                                                                        | Docs review; valid Dependabot config                                         |
+| 1    | Dev / test tooling           | pytest*, black, isort, flake8*, mypy, coverage, pre-commit, factory_boy, Faker; eslint*, prettier, vitest*, testing-library\*, Playwright | Backend unit + lint; admin_frontend lint/build/e2e; local `npm run test:run` |
+| 2    | Backend security / auth      | FastAPI, Starlette, Pydantic, PyJWT, bcrypt, cryptography, redis, CSRF/limiter, bleach                                                    | Backend tests; login/refresh/logout smoke; CSRF if middleware touched        |
+| 3    | Backend data / async DB      | SQLAlchemy, sqlmodel, asyncpg, aiosqlite, alembic, greenlet, sqlakeyset                                                                   | Migrations on empty DB; CRUD-heavy tests; keep `AsyncSession` + `.exec()`    |
+| 4    | Backend workers / ops        | celery, kombu, flower, gunicorn, uvicorn, sentry-sdk, httpx, tenacity                                                                     | Worker import smoke; Docker health if images change                          |
+| 5    | Frontend runtime (non-major) | axios, Redux Toolkit, react-hook-form, zod, Radix, lucide-react, recharts                                                                 | lint, `test:run`, build; Playwright auth if HTTP client touched              |
+| 6    | Frontend majors / framework  | React, Vite, Tailwind, react-router majors                                                                                                | Spike branch + changelog review before bulk bump                             |
+| 7    | Base images / Docker         | Python/Node/Postgres/Redis image tags                                                                                                     | Compose bring-up smoke; align CI service images with compose when changing   |
 
 ## Testing against an unpinned set
 
@@ -67,7 +67,7 @@ Upgrade carefully (changelog review; prefer split PRs if needed):
 
 [Dependabot](https://docs.github.com/en/code-security/dependabot) is configured in [`.github/dependabot.yml`](../../.github/dependabot.yml):
 
-- Weekly updates for `pip` (`/backend`), `npm` (`/frontend`), and `github-actions`
+- Weekly updates for `pip` (`/backend`), `npm` (`/admin_frontend`), and `github-actions`
 - Grouped patch/minor PRs per ecosystem
 - Major bumps ignored for high-blast packages until the matching lane runs
 
@@ -81,7 +81,7 @@ python -m pip install pip-audit
 python -m pip_audit -r backend/requirements.txt
 
 # Frontend
-cd frontend && npm audit
+cd admin_frontend && npm audit
 ```
 
 Record dispositions on the parent issue or in the active lane PR: **fix now** (assign to a lane), **accept** (document why), or **false positive**.
@@ -90,7 +90,7 @@ CI does **not** currently fail on audit findings; that may be added later.
 
 ## CVE audit snapshot (2026-07-16)
 
-Snapshot from `pip-audit` against `backend/requirements.txt` and `npm audit` in `frontend`. Counts change over time; re-run before each lane.
+Snapshot from `pip-audit` against `backend/requirements.txt` and `npm audit` in `admin_frontend`. Counts change over time; re-run before each lane.
 
 ### Backend (`pip-audit`)
 

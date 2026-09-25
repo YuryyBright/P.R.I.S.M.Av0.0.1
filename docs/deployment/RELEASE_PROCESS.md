@@ -10,7 +10,7 @@ This document outlines the steps to create and publish a new release for the Fas
     - `DOCKERHUB_USERNAME`: Your Docker Hub username.
     - `DOCKERHUB_TOKEN`: A Docker Hub access token with read/write permissions.
 
-**Release history SSOT:** [`docs/release-notes.md`](../release-notes.md). There is no root `CHANGELOG.md`. Docker Hub repository descriptions are updated from `backend/README.dockerhub.md`, `frontend/README.dockerhub.md`, and `backend/README.worker.dockerhub.md` via `.github/workflows/docker-publish.yml` — not from release notes.
+**Release history SSOT:** [`docs/release-notes.md`](../release-notes.md). There is no root `CHANGELOG.md`. Docker Hub repository descriptions are updated from `backend/README.dockerhub.md`, `admin_frontend/README.dockerhub.md`, and `backend/README.worker.dockerhub.md` via `.github/workflows/docker-publish.yml` — not from release notes.
 
 ## Versioning Strategy
 
@@ -70,9 +70,9 @@ The GitHub Actions workflow is configured to trigger on any tag starting with `v
 
 1.  **GitHub Actions Workflow Triggered:** Docker Publish runs when a `v*` tag is pushed (human/local push), or via **workflow_dispatch** (Actions → Run workflow, or automatic dispatch from **Release Tag on Merge** after a Release PR). Tags created with `GITHUB_TOKEN` inside Actions do not start other workflows on push alone, which is why the Release Tag job dispatches Docker Publish explicitly. The workflow checks out the tagged commit (including on workflow_dispatch).
 2.  **Prepare:** Resolves `IMAGE_TAG` / metadata and validates Dockerfiles plus Hub README paths before any multi-arch build starts.
-3.  **Parallel image builds (matrix):** Backend, frontend, and worker build in parallel (`fail-fast: false` so every shard finishes for diagnosis). Each image is pushed to Docker Hub as `:${IMAGE_TAG}` only (e.g. `yourusername/prisma-backend:v1.0.0`) — not `:latest` yet.
+3.  **Parallel image builds (matrix):** Backend, admin_frontend, and worker build in parallel (`fail-fast: false` so every shard finishes for diagnosis). Each image is pushed to Docker Hub as `:${IMAGE_TAG}` only (e.g. `yourusername/prisma-backend:v1.0.0`) — not `:latest` yet.
 4.  **Promote `:latest`:** Only if all three builds succeed, a promote job retags each image’s `:latest` from the version tag via `docker buildx imagetools create` (no rebuild). See [`docs/adr/0002-docker-publish-job-dag.md`](../adr/0002-docker-publish-job-dag.md).
-5.  **Hub descriptions:** After promote, repository long descriptions are updated from `backend/README.dockerhub.md`, `frontend/README.dockerhub.md`, and `backend/README.worker.dockerhub.md` (not from `docs/release-notes.md`). That job soft-fails so Hub API flake does not fail the release.
+5.  **Hub descriptions:** After promote, repository long descriptions are updated from `backend/README.dockerhub.md`, `admin_frontend/README.dockerhub.md`, and `backend/README.worker.dockerhub.md` (not from `docs/release-notes.md`). That job soft-fails so Hub API flake does not fail the release.
 6.  **Failed runs:** The workflow fails if prepare, any build shard, or promote fails. A failed run may leave some `:${IMAGE_TAG}` tags on Hub; `:latest` stays on the previous good release until promote succeeds. Re-run overwrites the same version tags.
 
 ## Verifying the Release
@@ -84,7 +84,7 @@ The GitHub Actions workflow is configured to trigger on any tag starting with `v
 
 2.  **Check Docker Hub:**
     - Log in to your Docker Hub account.
-    - Navigate to your repositories (e.g., `prisma-backend`, `prisma-frontend`, `prisma-worker`).
+    - Navigate to your repositories (e.g., `prisma-backend`, `prisma-admin_frontend`, `prisma-worker`).
     - You should see the new image tags corresponding to the Git tag you pushed (e.g., `v1.0.0`, `v0.1.0-beta.1`).
 
 ## Example: Releasing `v0.2.0`

@@ -7,7 +7,7 @@ This document contains the recommended repository description and topics/tags fo
 **Recommended Description:**
 
 ```
-A production-ready Role-Based Access Control (PRISMA) microservice with FastAPI backend and React TypeScript frontend. Features JWT authentication, CSRF protection, rate limiting, role hierarchies, permission groups, and comprehensive security. Includes Celery workers, Redis caching, Docker deployment, and 90+ backend + 354 frontend tests.
+A production-ready Role-Based Access Control (PRISMA) microservice with FastAPI backend and React TypeScript admin_frontend. Features JWT authentication, CSRF protection, rate limiting, role hierarchies, permission groups, and comprehensive security. Includes Celery workers, Redis caching, Docker deployment, and 90+ backend + 354 admin_frontend tests.
 ```
 
 **Alternative Shorter Version (if character limit applies):**
@@ -119,7 +119,7 @@ curl -X PATCH \
   -H "Authorization: Bearer YOUR_TOKEN" \
   https://api.github.com/repos/mnaimfaizy/prisma \
   -d '{
-    "description": "A production-ready Role-Based Access Control (PRISMA) microservice with FastAPI backend and React TypeScript frontend. Features JWT authentication, CSRF protection, rate limiting, role hierarchies, permission groups, and comprehensive security. Includes Celery workers, Redis caching, Docker deployment, and 90+ backend + 354 frontend tests.",
+    "description": "A production-ready Role-Based Access Control (PRISMA) microservice with FastAPI backend and React TypeScript admin_frontend. Features JWT authentication, CSRF protection, rate limiting, role hierarchies, permission groups, and comprehensive security. Includes Celery workers, Redis caching, Docker deployment, and 90+ backend + 354 admin_frontend tests.",
     "homepage": "https://prisma.mnfprofile.com/",
     "topics": [
       "fastapi",

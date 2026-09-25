@@ -528,7 +528,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def derive_frontend_urls(self) -> "Settings":
-        """Point the emailed links at wherever the frontend actually is.
+        """Point the emailed links at wherever the admin_frontend actually is.
 
         PASSWORD_RESET_URL and EMAIL_VERIFICATION_URL used to be assigned in the
         class body as f-strings over FRONTEND_URL. That binds the *default*

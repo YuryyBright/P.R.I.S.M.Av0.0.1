@@ -26,19 +26,19 @@ if (-not $networkExists) {
 
 # Stop any running containers from previous tests
 Write-Host "Stopping any existing containers..." -ForegroundColor Green
-docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml down --remove-orphans
+docker compose -f backend/docker-compose.prod.yml -f admin_frontend/docker-compose.prod.yml down --remove-orphans
 
 # Build the production images
 Write-Host "Building production Docker images..." -ForegroundColor Green
-docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml build --no-cache
+docker compose -f backend/docker-compose.prod.yml -f admin_frontend/docker-compose.prod.yml build --no-cache
 
 # Start the production environment
 Write-Host "Starting production environment..." -ForegroundColor Green
-docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml up -d
+docker compose -f backend/docker-compose.prod.yml -f admin_frontend/docker-compose.prod.yml up -d
 
 # Check if containers are running
 Write-Host "Checking container status..." -ForegroundColor Green
-docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml ps
+docker compose -f backend/docker-compose.prod.yml -f admin_frontend/docker-compose.prod.yml ps
 
 # Wait for services to be ready
 Write-Host "Waiting for services to be ready..." -ForegroundColor Green
@@ -75,8 +75,8 @@ try {
     Write-Host "Failed to check backend health in ${backendContainer}: $_" -ForegroundColor Red
 }
 
-# Test frontend availability with retries
-Write-Host "Testing frontend availability..." -ForegroundColor Green
+# Test admin_frontend availability with retries
+Write-Host "Testing admin_frontend availability..." -ForegroundColor Green
 $frontendOk = $false
 for ($i = 0; $i -lt 5; $i++) {
     try {
@@ -89,7 +89,7 @@ for ($i = 0; $i -lt 5; $i++) {
             Write-Host "Frontend not ready yet, retrying... ($($i+1)/5)" -ForegroundColor Yellow
         }
     } catch {
-        Write-Host "Failed to access frontend (attempt $($i+1)): $_" -ForegroundColor Red
+        Write-Host "Failed to access admin_frontend (attempt $($i+1)): $_" -ForegroundColor Red
     }
     Start-Sleep -Seconds 3
 }
@@ -99,4 +99,4 @@ if (-not $frontendOk) {
 
 Write-Host "Production Docker environment test completed!" -ForegroundColor Green
 Write-Host "To stop the containers, run:" -ForegroundColor Yellow
-Write-Host "docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml down" -ForegroundColor Cyan
+Write-Host "docker compose -f backend/docker-compose.prod.yml -f admin_frontend/docker-compose.prod.yml down" -ForegroundColor Cyan

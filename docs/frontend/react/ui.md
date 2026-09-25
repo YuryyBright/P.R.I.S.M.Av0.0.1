@@ -6,7 +6,7 @@ Related: [Architecture](./architecture.md), [Setup](./setup.md).
 
 ## Configuration
 
-`frontend/components.json` configures ShadCN:
+`admin_frontend/components.json` configures ShadCN:
 
 - Style: `new-york`
 - TSX: enabled
@@ -26,7 +26,7 @@ Prefer composing feature UI from `ui/` primitives. Promote to `components/` only
 
 ## Adding a ShadCN component
 
-From `frontend/`, use the project’s ShadCN workflow (CLI / copy pattern consistent with existing `components/ui` files). Keep naming lowercase with hyphens to match the current library.
+From `admin_frontend/`, use the project’s ShadCN workflow (CLI / copy pattern consistent with existing `components/ui` files). Keep naming lowercase with hyphens to match the current library.
 
 ## Forms and validation
 

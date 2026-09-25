@@ -35,15 +35,15 @@ nav:
       - "Overview": "getting-started/index.md"
       - "Project Overview": "getting-started/PROJECT_OVERVIEW.md"
   - "Frontend":
-      - "Overview": "frontend/index.md"
+      - "Overview": "admin_frontend/index.md"
       - "React":
-          - "Setup": "frontend/react/setup.md"
-          - "Architecture": "frontend/react/architecture.md"
-          - "Authentication": "frontend/react/auth.md"
-          - "State management": "frontend/react/state.md"
-          - "UI components": "frontend/react/ui.md"
-          - "Testing": "frontend/react/testing.md"
-          - "Deployment": "frontend/react/deployment.md"
+          - "Setup": "admin_frontend/react/setup.md"
+          - "Architecture": "admin_frontend/react/architecture.md"
+          - "Authentication": "admin_frontend/react/auth.md"
+          - "State management": "admin_frontend/react/state.md"
+          - "UI components": "admin_frontend/react/ui.md"
+          - "Testing": "admin_frontend/react/testing.md"
+          - "Deployment": "admin_frontend/react/deployment.md"
   - "Development":
       - "Overview": "development/index.md"
       - "Developer Setup": "development/DEVELOPER_SETUP.md"
@@ -67,7 +67,7 @@ nav:
   - "Troubleshooting":
       - "Overview": "troubleshooting/index.md"
       - "Common Issues": "troubleshooting/common-issues.md"
-      - "Frontend Issues": "troubleshooting/frontend-issues.md"
+      - "Frontend Issues": "troubleshooting/admin_frontend-issues.md"
   - "API Reference":
       - "Overview": "reference/index.md"
       - "System Architecture": "reference/architecture.md"

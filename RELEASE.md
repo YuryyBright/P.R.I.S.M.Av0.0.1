@@ -129,7 +129,7 @@ Before creating a release, ensure:
 
 ### Code Quality
 
-- [ ] All CI/CD checks passing (backend-ci, frontend-ci)
+- [ ] All CI/CD checks passing (backend-ci, admin_frontend-ci)
 - [ ] All tests passing locally and in CI
 - [ ] Code review completed for all changes
 - [ ] No critical bugs or security vulnerabilities
@@ -259,7 +259,7 @@ git push origin v1.2.3
 1. Check [Docker Hub repositories](https://hub.docker.com/u/mnaimfaizy)
 2. Verify images published with correct tags:
    - `mnaimfaizy/prisma-backend:v1.2.3`
-   - `mnaimfaizy/prisma-frontend:v1.2.3`
+   - `mnaimfaizy/prisma-admin_frontend:v1.2.3`
    - `mnaimfaizy/prisma-worker:v1.2.3`
 
 #### Step 7: Create GitHub Release (Optional)
@@ -298,7 +298,7 @@ The `docker-publish.yml` workflow triggers on:
 8. Push to Docker Hub
 9. Update Docker Hub descriptions from:
    - `backend/README.dockerhub.md`
-   - `frontend/README.dockerhub.md`
+   - `admin_frontend/README.dockerhub.md`
    - `backend/README.worker.dockerhub.md`
    (via `.github/workflows/docker-publish.yml` — not from `docs/release-notes.md`)
 ```
@@ -426,7 +426,7 @@ git tag -l --sort=-v:refname | head -5
 ```bash
 # Pull previous Docker images
 docker pull mnaimfaizy/prisma-backend:v1.2.2
-docker pull mnaimfaizy/prisma-frontend:v1.2.2
+docker pull mnaimfaizy/prisma-admin_frontend:v1.2.2
 docker pull mnaimfaizy/prisma-worker:v1.2.2
 
 # Update docker-compose to use previous version

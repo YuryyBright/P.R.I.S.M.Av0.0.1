@@ -149,7 +149,7 @@ $imagesToTest = @(
         Environment = @{
             VITE_API_BASE_URL = "http://localhost:8000"
         }
-        Command = @("sh", "-c", "echo 'React frontend image validation - OK'")
+        Command = @("sh", "-c", "echo 'React admin_frontend image validation - OK'")
     }
 )
 

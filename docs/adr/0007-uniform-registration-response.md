@@ -27,7 +27,7 @@ Two failure modes hid behind the same message. A verification email that fails t
 
 **State the truth plainly** — "this email is already registered". Simplest and best UX, and defensible given the oracle already existed via resend. Rejected because the cheaper fix was to close resend's leak rather than widen registration's, and because the reporter's stuck-account case is solved better by reissuing the email than by telling the user to go find the resend page.
 
-**Keep the `400` and fix only the frontend.** Rejected: it leaves recovery as a second manual action the user must notice, and an established user who forgot they had an account still gets a wall.
+**Keep the `400` and fix only the admin_frontend.** Rejected: it leaves recovery as a second manual action the user must notice, and an established user who forgot they had an account still gets a wall.
 
 ## Consequences
 

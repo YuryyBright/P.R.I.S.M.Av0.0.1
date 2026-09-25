@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script to start the E2E test environment
-# This script ensures both backend and frontend are running for E2E tests
+# This script ensures both backend and admin_frontend are running for E2E tests
 
 set -e
 

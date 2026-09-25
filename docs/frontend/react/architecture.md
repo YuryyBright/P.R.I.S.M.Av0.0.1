@@ -14,7 +14,7 @@ Related: [System Architecture](../../reference/architecture.md), [Setup](./setup
 ## Project structure
 
 ```
-frontend/
+admin_frontend/
 ├── public/
 ├── src/
 │   ├── assets/
@@ -99,7 +99,7 @@ export const fetchUsers = createAsyncThunk(
 
 ## Conventions
 
-- Keep backend Pydantic schemas and frontend TypeScript interfaces aligned.
+- Keep backend Pydantic schemas and admin_frontend TypeScript interfaces aligned.
 - Prefer feature-local components; promote to `components/` only when reused.
 - Use typed `useAppDispatch` / `useAppSelector`.
 - Handle API errors in thunks/services; surface user-facing messages without leaking internals.
@@ -107,4 +107,4 @@ export const fetchUsers = createAsyncThunk(
 
 ## Troubleshooting
 
-See [Frontend Issues](../../troubleshooting/frontend-issues.md).
+See [Frontend Issues](../../troubleshooting/admin_frontend-issues.md).

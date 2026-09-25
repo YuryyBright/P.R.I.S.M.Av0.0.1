@@ -109,8 +109,8 @@ function Clean-CacheFiles {
 
     # Node.js cache
     Write-ColorOutput "Cleaning Node.js cache..." "Blue"
-    Remove-ItemSafely "$projectRoot\frontend\node_modules\.cache" "Node.js cache"
-    Remove-ItemSafely "$projectRoot\frontend\.vite" "Vite cache"
+    Remove-ItemSafely "$projectRoot\admin_frontend\node_modules\.cache" "Node.js cache"
+    Remove-ItemSafely "$projectRoot\admin_frontend\.vite" "Vite cache"
 
     # mypy cache
     Remove-ItemSafely "$projectRoot\backend\.mypy_cache" "MyPy cache"
@@ -120,7 +120,7 @@ function Clean-CacheFiles {
 
     # Coverage cache
     Remove-ItemSafely "$projectRoot\backend\.coverage" "Coverage cache"
-    Remove-ItemSafely "$projectRoot\frontend\coverage" "Frontend coverage"
+    Remove-ItemSafely "$projectRoot\admin_frontend\coverage" "Frontend coverage"
 
     Write-ColorOutput "✅ Cache cleanup completed" "Green"
 }
@@ -154,8 +154,8 @@ function Clean-BuildArtifacts {
     $projectRoot = "$PSScriptRoot\..\.."
 
     # Frontend build artifacts
-    Remove-ItemSafely "$projectRoot\frontend\dist" "Frontend build directory"
-    Remove-ItemSafely "$projectRoot\frontend\build" "Frontend build directory"
+    Remove-ItemSafely "$projectRoot\admin_frontend\dist" "Frontend build directory"
+    Remove-ItemSafely "$projectRoot\admin_frontend\build" "Frontend build directory"
 
     # Python build artifacts
     Remove-ItemSafely "$projectRoot\backend\build" "Python build directory"
@@ -190,7 +190,7 @@ function Invoke-SecurityScan {
 
     # Node.js security scan
     Write-ColorOutput "Scanning Node.js dependencies..." "Blue"
-    Push-Location "$projectRoot\frontend"
+    Push-Location "$projectRoot\admin_frontend"
     try {
         & npm audit
         Write-ColorOutput "✅ Node.js security scan completed" "Green"
@@ -226,7 +226,7 @@ function Update-Dependencies {
 
     # Update Node.js dependencies
     Write-ColorOutput "Updating Node.js dependencies..." "Blue"
-    Push-Location "$projectRoot\frontend"
+    Push-Location "$projectRoot\admin_frontend"
     try {
         & npm update
         Write-ColorOutput "✅ Node.js dependencies updated" "Green"

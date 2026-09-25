@@ -16,7 +16,7 @@ This document summarizes the major refactor and maintenance changes applied to t
 - **Modular Compose Files:**
   - All environments (`dev`, `test`, `prod`) now use modular, directory-scoped Docker Compose files.
   - Compose files are parameterized with environment variables for source directories, ports, and volumes.
-  - Compose files for backend and frontend are now fully decoupled and can be orchestrated via a root script or PowerShell utility.
+  - Compose files for backend and admin_frontend are now fully decoupled and can be orchestrated via a root script or PowerShell utility.
 
 - **External Networks:**
   - Each environment uses a dedicated, external Docker network (e.g., `prisma_dev_network`, `prisma_test_network`, `prisma_prod_network`) for service isolation and cross-compose communication.

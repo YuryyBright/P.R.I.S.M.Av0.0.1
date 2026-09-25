@@ -131,7 +131,7 @@ a single request.
 
 - Check that all services are running: `docker-compose -f docker-compose.prod.yml ps`
 - Verify API access: `curl https://yourdomain.com/api/v1/health`
-- Access the frontend through your domain
+- Access the admin_frontend through your domain
 
 ## Maintenance
 

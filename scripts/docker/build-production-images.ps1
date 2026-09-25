@@ -49,15 +49,15 @@ Write-ColorOutput "=== FastAPI PRISMA Production Image Builder ===" "Blue"
 Write-ColorOutput "" "White"
 
 # Validate we're in the correct directory
-if (-not (Test-Path "backend" -PathType Container) -or -not (Test-Path "frontend" -PathType Container)) {
-    Write-ColorOutput "❌ Error: Must run from project root directory containing 'backend' and 'frontend' folders" "Red"
+if (-not (Test-Path "backend" -PathType Container) -or -not (Test-Path "admin_frontend" -PathType Container)) {
+    Write-ColorOutput "❌ Error: Must run from project root directory containing 'backend' and 'admin_frontend' folders" "Red"
     exit 1
 }
 
 # Refactored: Use modular compose files and ensure network for production
 
 # Compose files and network for production
-$composeFiles = @("backend/docker-compose.prod.yml", "frontend/docker-compose.prod.yml")
+$composeFiles = @("backend/docker-compose.prod.yml", "admin_frontend/docker-compose.prod.yml")
 $networkName = "prisma_prod_network"
 $projectName = "prisma_production"
 $composeArgs = ($composeFiles | ForEach-Object { "-f $_" }) -join " "
@@ -80,10 +80,10 @@ if ($CleanFirst) {
 }
 
 # Set build context environment variables
-$env:REACT_FRONTEND_SRC = "../frontend"
+$env:ADMIN_FRONTEND_SRC = "../admin_frontend"
 $env:BACKEND_SRC = "../backend"
 
-# Build images using docker compose (modular, both backend and frontend)
+# Build images using docker compose (modular, both backend and admin_frontend)
 $buildCmd = "docker compose $composeArgs $projectArg build"
 if ($NoCache) { $buildCmd += " --no-cache" }
 if ($Verbose) { Write-ColorOutput "Executing: $buildCmd" "Yellow" }
@@ -94,7 +94,7 @@ $builtImages = @("prisma:prod", "prisma_worker:prod", "react_frontend:prod")
 $allBuildsSucceeded = $true
 
 # Unset build context environment variables
-Remove-Item Env:REACT_FRONTEND_SRC -ErrorAction SilentlyContinue
+Remove-Item Env:ADMIN_FRONTEND_SRC -ErrorAction SilentlyContinue
 Remove-Item Env:BACKEND_SRC -ErrorAction SilentlyContinue
 
 # Tag with prod-test for production testing environment

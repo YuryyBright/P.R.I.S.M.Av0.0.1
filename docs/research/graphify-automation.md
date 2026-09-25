@@ -83,12 +83,12 @@ That is a strong signal: upstream treats CI as **artifact generation**, not as a
 
 Workflows under `.github/workflows/` (from GitHub API / raw files):
 
-| Workflow             | Trigger pattern                                                               |
-| -------------------- | ----------------------------------------------------------------------------- |
-| `backend-ci.yml`     | `push`/`pull_request` to `main`, paths `backend/**`                           |
-| `frontend-ci.yml`    | path-filtered frontend CI                                                     |
-| `docs.yml`           | `push` to `main`, paths `docs/**`, `mkdocs.yml`; `contents: write` for deploy |
-| `docker-publish.yml` | publish flow                                                                  |
+| Workflow                | Trigger pattern                                                               |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| `backend-ci.yml`        | `push`/`pull_request` to `main`, paths `backend/**`                           |
+| `admin_frontend-ci.yml` | path-filtered admin_frontend CI                                               |
+| `docs.yml`              | `push` to `main`, paths `docs/**`, `mkdocs.yml`; `contents: write` for deploy |
+| `docker-publish.yml`    | publish flow                                                                  |
 
 Shared conventions we should mirror:
 
@@ -224,7 +224,7 @@ Or keep using the existing scripts without hooks. Do **not** wire this into `.pr
 Trigger rebuild when structure agents care about changes:
 
 - `backend/app/**` (or whole `backend/**`)
-- `frontend/src/**` (or whole `frontend/**`)
+- `admin_frontend/src/**` (or whole `admin_frontend/**`)
 - Optionally `docs/reference/architecture.md`, `docs/agents/**` — only if you later drop `--code-only` or run a second docs pass (needs LLM keys; out of scope for v1 automation)
 
 ### Permissions / secrets

@@ -1,6 +1,6 @@
 # E2E Test Suite
 
-This directory contains end-to-end tests for the React frontend application using Playwright.
+This directory contains end-to-end tests for the React admin_frontend application using Playwright.
 
 ## Directory Structure
 

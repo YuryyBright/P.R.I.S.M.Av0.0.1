@@ -39,7 +39,7 @@ if (Test-Path ".\validate-docker-config.ps1") {
 Write-Host "`n2. Checking Docker Compose syntax..." -ForegroundColor Yellow
 $composeFiles = @(
     "backend/docker-compose.prod.yml",
-    "frontend/docker-compose.prod.yml"
+    "admin_frontend/docker-compose.prod.yml"
 )
 $syntaxOk = $true
 foreach ($composeFile in $composeFiles) {
@@ -65,9 +65,9 @@ if (-not $syntaxOk) {
 Write-Host "`n3. Checking required files..." -ForegroundColor Yellow
 $requiredFiles = @(
     "backend/docker-compose.prod.yml",
-    "frontend/docker-compose.prod.yml",
+    "admin_frontend/docker-compose.prod.yml",
     "backend/.env.production",
-    "frontend/.env.production",
+    "admin_frontend/.env.production",
     "backend/certs/ca.crt",
     "backend/certs/redis.crt",
     "backend/certs/redis.key"
@@ -101,7 +101,7 @@ switch ($choice) {
     "2" {
         Write-Host "`nStarting services for local production testing (using modular compose files)..." -ForegroundColor Yellow
         Write-Host "This will:" -ForegroundColor Cyan
-        Write-Host "- Build all Docker images (using backend/docker-compose.prod.yml and frontend/docker-compose.prod.yml)" -ForegroundColor Cyan
+        Write-Host "- Build all Docker images (using backend/docker-compose.prod.yml and admin_frontend/docker-compose.prod.yml)" -ForegroundColor Cyan
         Write-Host "- Start all services" -ForegroundColor Cyan
         Write-Host "- Make services available at:" -ForegroundColor Cyan
         Write-Host "  • Frontend: http://localhost" -ForegroundColor Cyan
@@ -127,17 +127,17 @@ switch ($choice) {
                 Write-Host "✅ Docker network '$networkName' already exists." -ForegroundColor Green
             }
 
-            docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml up -d --build
+            docker compose -f backend/docker-compose.prod.yml -f admin_frontend/docker-compose.prod.yml up -d --build
 
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "`n✅ Services started successfully!" -ForegroundColor Green
                 Write-Host "`nService Status:" -ForegroundColor Cyan
-                docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml ps
+                docker compose -f backend/docker-compose.prod.yml -f admin_frontend/docker-compose.prod.yml ps
 
                 Write-Host "`nTo view logs:" -ForegroundColor Yellow
-                Write-Host "docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml logs -f" -ForegroundColor Cyan
+                Write-Host "docker compose -f backend/docker-compose.prod.yml -f admin_frontend/docker-compose.prod.yml logs -f" -ForegroundColor Cyan
                 Write-Host "`nTo stop services:" -ForegroundColor Yellow
-                Write-Host "docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml down" -ForegroundColor Cyan
+                Write-Host "docker compose -f backend/docker-compose.prod.yml -f admin_frontend/docker-compose.prod.yml down" -ForegroundColor Cyan
             } else {
                 Write-Host "❌ Failed to start services" -ForegroundColor Red
             }
@@ -146,19 +146,19 @@ switch ($choice) {
     "3" {
         Write-Host "`nBuilding images using modular compose files..." -ForegroundColor Yellow
         Write-Host "- Backend: backend/docker-compose.prod.yml (prisma_prod)" -ForegroundColor Cyan
-        Write-Host "- Frontend: frontend/Dockerfile.prod (react_frontend:prod)" -ForegroundColor Cyan
+        Write-Host "- Frontend: admin_frontend/Dockerfile.prod (react_frontend:prod)" -ForegroundColor Cyan
         Write-Host "- Worker: backend/docker-compose.prod.yml (prisma_worker_prod)" -ForegroundColor Cyan
         docker-compose -f backend/docker-compose.prod.yml build prisma_prod
         if ($LASTEXITCODE -ne 0) {
             Write-Host "❌ Failed to build backend image" -ForegroundColor Red
             return
         }
-        Set-Location -Path "frontend"
+        Set-Location -Path "admin_frontend"
         docker build -f Dockerfile.prod -t react_frontend:prod .
         $frontendExit = $LASTEXITCODE
         Set-Location -Path ".."
         if ($frontendExit -ne 0) {
-            Write-Host "❌ Failed to build frontend image" -ForegroundColor Red
+            Write-Host "❌ Failed to build admin_frontend image" -ForegroundColor Red
             return
         }
         docker-compose -f backend/docker-compose.prod.yml build prisma_worker_prod
@@ -169,11 +169,11 @@ switch ($choice) {
         Write-Host "✅ Images built successfully" -ForegroundColor Green
     }
     "4" {
-        Write-Host "`nService Configuration (backend and frontend):" -ForegroundColor Yellow
+        Write-Host "`nService Configuration (backend and admin_frontend):" -ForegroundColor Yellow
         Write-Host "--- backend/docker-compose.prod.yml ---" -ForegroundColor Cyan
         docker-compose -f backend/docker-compose.prod.yml config
-        Write-Host "--- frontend/docker-compose.prod.yml ---" -ForegroundColor Cyan
-        docker-compose -f frontend/docker-compose.prod.yml config
+        Write-Host "--- admin_frontend/docker-compose.prod.yml ---" -ForegroundColor Cyan
+        docker-compose -f admin_frontend/docker-compose.prod.yml config
     }
     default {
         Write-Host "`n✅ Validation complete!" -ForegroundColor Green

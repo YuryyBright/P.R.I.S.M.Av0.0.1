@@ -20,7 +20,7 @@ From the error context screenshot, we can see:
 - Credentials are filled: `admin@example.com` / `AdminPass123!` ✅
 - **"Login failed" alert is shown** ❌ (This is the key indicator)
 
-The login fails because the React frontend cannot connect to the backend API at `http://localhost:8000/api/v1`.
+The login fails because the React admin_frontend cannot connect to the backend API at `http://localhost:8000/api/v1`.
 
 ## Solution
 
@@ -57,7 +57,7 @@ python app/initial_data.py
 ### Run E2E Tests
 
 ```bash
-cd frontend
+cd admin_frontend
 
 # Use the environment check script
 ./scripts/start-e2e-env.sh
@@ -114,7 +114,7 @@ To prevent this confusion in the future, the following improvements were made:
 2. **Run the environment check:**
 
    ```bash
-   cd frontend && ./scripts/start-e2e-env.sh
+   cd admin_frontend && ./scripts/start-e2e-env.sh
    ```
 
 3. **Run tests:**
@@ -129,7 +129,7 @@ The CI pipeline should:
 1. Start backend services (database, API)
 2. Wait for health checks
 3. Initialize test data
-4. Start frontend
+4. Start admin_frontend
 5. Run E2E tests
 6. Clean up services
 
@@ -194,12 +194,12 @@ The test will:
 
 ## Files Modified
 
-- ✅ `frontend/E2E_TESTING.md` - Added prerequisites section
-- ✅ `frontend/e2e/README.md` - Added prerequisites reference
-- ✅ `frontend/e2e/QUICK_START.md` - Created comprehensive guide (NEW)
-- ✅ `frontend/e2e/global-setup.ts` - Created global setup hook (NEW)
-- ✅ `frontend/scripts/start-e2e-env.sh` - Created helper script (NEW)
-- ✅ `frontend/playwright.config.ts` - Added global setup configuration
+- ✅ `admin_frontend/E2E_TESTING.md` - Added prerequisites section
+- ✅ `admin_frontend/e2e/README.md` - Added prerequisites reference
+- ✅ `admin_frontend/e2e/QUICK_START.md` - Created comprehensive guide (NEW)
+- ✅ `admin_frontend/e2e/global-setup.ts` - Created global setup hook (NEW)
+- ✅ `admin_frontend/scripts/start-e2e-env.sh` - Created helper script (NEW)
+- ✅ `admin_frontend/playwright.config.ts` - Added global setup configuration
 
 ## Next Steps
 
@@ -209,4 +209,4 @@ The test will:
 4. Verify it passes
 5. Continue with E2E test development
 
-For detailed troubleshooting, see: `frontend/e2e/QUICK_START.md`
+For detailed troubleshooting, see: `admin_frontend/e2e/QUICK_START.md`
