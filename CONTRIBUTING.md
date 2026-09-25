@@ -1,6 +1,6 @@
-# Contributing to FastAPI RBAC
+# Contributing to FastAPI PRISMA
 
-Thank you for your interest in contributing to the FastAPI RBAC project!
+Thank you for your interest in contributing to the FastAPI PRISMA project!
 
 ## Contribution Guidelines
 

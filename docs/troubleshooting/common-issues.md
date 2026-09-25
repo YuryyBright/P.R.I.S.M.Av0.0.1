@@ -1,12 +1,12 @@
 # Common Issues
 
-This page lists common issues that developers might encounter when working with the FastAPI RBAC project and their solutions.
+This page lists common issues that developers might encounter when working with the FastAPI PRISMA project and their solutions.
 
 ## Installation Issues
 
 ### Package Conflicts
 
-**Issue:** Dependencies conflict between the FastAPI RBAC backend and other Python packages.
+**Issue:** Dependencies conflict between the FastAPI PRISMA backend and other Python packages.
 
 **Solution:** Use a dedicated virtual environment for the backend project. You can create one using:
 

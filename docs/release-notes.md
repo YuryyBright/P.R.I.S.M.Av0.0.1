@@ -1,6 +1,6 @@
 # Release Notes
 
-This document provides a chronological record of all releases and major changes for the FastAPI RBAC project. Each release entry includes version information, release date, and a summary of features, bug fixes, and breaking changes.
+This document provides a chronological record of all releases and major changes for the FastAPI PRISMA project. Each release entry includes version information, release date, and a summary of features, bug fixes, and breaking changes.
 
 This file serves as the single source of truth for release history and versioning across the entire monorepo.
 
@@ -48,13 +48,13 @@ _Pre-release._
 
 - Hub runtime package with Oracle Always Free setup guide and .env-only secrets bootstrap
 - Hub runtime split requirements for Neon, Upstash, and hostname-only REDIS_HOST
-- Document UI_FTP_* secrets in the release checklist
+- Document UI*FTP*\* secrets in the release checklist
 
 **Technical Details:**
 
 - Consolidate HTTP rate limits onto slowapi with shared Redis-backed limiter; remove unused fastapi-limiter scaffold
 - Split Docker publish into parallel matrix job DAG; promote :latest only after all builds succeed (ADR 0002)
-- Rename Admin UI FTP CI secrets to UI_FTP_*
+- Rename Admin UI FTP CI secrets to UI*FTP*\*
 
 ### v0.1.0-beta (2026-07-24)
 
@@ -102,7 +102,7 @@ _Pre-release._
 - Release automation scripts for streamlined publishing and changelog management
 - Dry-run option for release scripts to enable safe testing before actual release
 - Enhanced documentation with new index page, logo assets, and favicon for improved branding
-- Comprehensive documentation for the FastAPI RBAC project
+- Comprehensive documentation for the FastAPI PRISMA project
 - Contributing guidelines to support community collaboration
 - Troubleshooting agent prompt for user support
 - Prompt templates for architect, implementor, and manager roles
@@ -153,7 +153,7 @@ _Pre-release._
 
 **New Features:**
 
-- Enhanced FastAPI RBAC backend with comprehensive role and permission management
+- Enhanced FastAPI PRISMA backend with comprehensive role and permission management
 - React frontend with TypeScript and modern UI components
 - Improved Docker containerization and development workflow
 - Enhanced testing infrastructure with unit and integration tests
@@ -180,7 +180,7 @@ _Pre-release._
 
 **New Features:**
 
-- Initial release of FastAPI RBAC monorepo
+- Initial release of FastAPI PRISMA monorepo
 - Basic authentication and authorization system
 - User management with role-based access control
 - REST API endpoints for user, role, and permission management
@@ -198,7 +198,7 @@ _Pre-release._
 **Known Issues:**
 
 - Beta version - not recommended for production use
-- Some advanced RBAC features still in development
+- Some advanced PRISMA features still in development
 
 ## Release Process
 

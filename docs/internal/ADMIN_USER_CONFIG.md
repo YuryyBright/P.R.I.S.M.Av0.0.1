@@ -1,6 +1,6 @@
 # Admin User Creation Configuration - Environment Variables
 
-This document outlines the new environment variables added to control admin user creation behavior in the FastAPI RBAC system.
+This document outlines the new environment variables added to control admin user creation behavior in the FastAPI PRISMA system.
 
 ## New Environment Variables
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains the complete implementation of secure Redis SSL/TLS connections for the FastAPI RBAC application's production environment. This work addresses critical security vulnerabilities and improves connection resilience.
+This directory contains the complete implementation of secure Redis SSL/TLS connections for the FastAPI PRISMA application's production environment. This work addresses critical security vulnerabilities and improves connection resilience.
 
 ## What Was Changed
 
@@ -304,10 +304,10 @@ When reporting issues, include:
 
 ## License
 
-This implementation is part of the FastAPI RBAC project and follows the same license.
+This implementation is part of the FastAPI PRISMA project and follows the same license.
 
 ---
 
 **Version:** 1.0  
 **Last Updated:** 2025-12-30  
-**Author:** FastAPI RBAC Development Team
+**Author:** FastAPI PRISMA Development Team

@@ -49,7 +49,7 @@ async def clear_user_delete_references(db_session: AsyncSession, user_id: UUID) 
     """Clear rows that must not block or outlive a user deletion as orphans (#238).
 
     Password history is the user's own and is deleted. Creator attribution on
-    RBAC artifacts and audit rows is nulled so those rows survive without a
+    PRISMA artifacts and audit rows is nulled so those rows survive without a
     dangling FK. Assigned roles and audit ``actor_id`` are not touched here.
     """
     await db_session.exec(  # type: ignore[call-overload]
@@ -351,7 +351,7 @@ class CRUDUser(CRUDBase[User, IUserCreate, IUserUpdate]):
         Remove a user by ID. Requires db_session to be provided explicitly.
 
         Owned rows (password history) are deleted and creator attribution on
-        surviving RBAC artifacts is nulled so a leftover FK cannot 500 the
+        surviving PRISMA artifacts is nulled so a leftover FK cannot 500 the
         caller. Assigned roles are refused with 409, matching the endpoint
         contract (#238).
         """

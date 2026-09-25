@@ -29,7 +29,7 @@ print_color() {
 show_help() {
     print_color "\n🛠️  Code Quality Management Script" "cyan"
     print_color "========================================" "cyan"
-    print_color "\nThis script provides comprehensive code quality management for the FastAPI RBAC project." "white"
+    print_color "\nThis script provides comprehensive code quality management for the FastAPI PRISMA project." "white"
 
     print_color "\n📋 Parameters:" "yellow"
     print_color "  -a, --action       : Action to perform (format, lint, fix-imports, all)" "white"
@@ -179,7 +179,7 @@ fix_backend_imports() {
 format_frontend() {
     print_color "🎨 Formatting Frontend Code..." "cyan"
 
-    cd "$(dirname "$0")/../../../react-frontend" || exit 1
+    cd "$(dirname "$0")/../../../frontend" || exit 1
 
     if [ "$CHECK" = true ]; then
         print_color "Checking code format (no changes will be made)..." "yellow"
@@ -197,7 +197,7 @@ format_frontend() {
 lint_frontend() {
     print_color "🔍 Linting Frontend Code..." "cyan"
 
-    cd "$(dirname "$0")/../../../react-frontend" || exit 1
+    cd "$(dirname "$0")/../../../frontend" || exit 1
 
     print_color "Running ESLint..." "blue"
     npm run lint
@@ -210,7 +210,7 @@ lint_frontend() {
 fix_frontend_imports() {
     print_color "📦 Fixing Frontend Imports..." "cyan"
 
-    cd "$(dirname "$0")/../../../react-frontend" || exit 1
+    cd "$(dirname "$0")/../../../frontend" || exit 1
 
     print_color "Organizing imports..." "blue"
     npm run lint:fix
@@ -220,7 +220,7 @@ fix_frontend_imports() {
 }
 
 # Main execution
-print_color "🛠️  FastAPI RBAC Code Quality Manager" "blue"
+print_color "🛠️  FastAPI PRISMA Code Quality Manager" "blue"
 print_color "====================================" "blue"
 print_color "Action: $ACTION" "white"
 print_color "Target: $TARGET" "white"

@@ -1,4 +1,4 @@
-# FastAPI RBAC Documentation
+# FastAPI PRISMA Documentation
 
 This directory contains all project documentation organized by purpose and audience.
 
@@ -25,7 +25,7 @@ This directory contains all project documentation organized by purpose and audie
   - `index.md` - Overview and multi-framework placeholder
   - `react/setup.md` - Install, env, commands
   - `react/architecture.md` - Layout and patterns
-  - `react/auth.md` - Client auth and RBAC guards
+  - `react/auth.md` - Client auth and PRISMA guards
   - `react/state.md` - Redux Toolkit
   - `react/ui.md` - ShadCN / Tailwind
   - `react/testing.md` - Vitest and Playwright
@@ -84,7 +84,7 @@ This project features **enterprise-grade security** and **comprehensive testing*
 - **Backend Testing**: 41 comprehensive tests covering infrastructure, authentication, and security
 - **Frontend Testing**: 354 tests across 16 files with complete coverage
 - **Security Testing**: CSRF, rate limiting, input validation, and authentication workflows
-- **Integration Testing**: End-to-end authentication and RBAC workflow verification
+- **Integration Testing**: End-to-end authentication and PRISMA workflow verification
 - **Test Performance**: Complete test suite runs in ~30-45 seconds
 
 ## 📝 Contributing to Documentation

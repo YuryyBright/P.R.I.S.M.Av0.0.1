@@ -7,13 +7,13 @@ This document contains the recommended repository description and topics/tags fo
 **Recommended Description:**
 
 ```
-A production-ready Role-Based Access Control (RBAC) microservice with FastAPI backend and React TypeScript frontend. Features JWT authentication, CSRF protection, rate limiting, role hierarchies, permission groups, and comprehensive security. Includes Celery workers, Redis caching, Docker deployment, and 90+ backend + 354 frontend tests.
+A production-ready Role-Based Access Control (PRISMA) microservice with FastAPI backend and React TypeScript frontend. Features JWT authentication, CSRF protection, rate limiting, role hierarchies, permission groups, and comprehensive security. Includes Celery workers, Redis caching, Docker deployment, and 90+ backend + 354 frontend tests.
 ```
 
 **Alternative Shorter Version (if character limit applies):**
 
 ```
-Enterprise RBAC microservice with FastAPI + React. JWT auth, CSRF protection, role hierarchies, permission groups, Celery workers, Redis, Docker deployment. Production-ready with 400+ tests.
+Enterprise PRISMA microservice with FastAPI + React. JWT auth, CSRF protection, role hierarchies, permission groups, Celery workers, Redis, Docker deployment. Production-ready with 400+ tests.
 ```
 
 ## Website URL
@@ -119,7 +119,7 @@ curl -X PATCH \
   -H "Authorization: Bearer YOUR_TOKEN" \
   https://api.github.com/repos/mnaimfaizy/prisma \
   -d '{
-    "description": "A production-ready Role-Based Access Control (RBAC) microservice with FastAPI backend and React TypeScript frontend. Features JWT authentication, CSRF protection, rate limiting, role hierarchies, permission groups, and comprehensive security. Includes Celery workers, Redis caching, Docker deployment, and 90+ backend + 354 frontend tests.",
+    "description": "A production-ready Role-Based Access Control (PRISMA) microservice with FastAPI backend and React TypeScript frontend. Features JWT authentication, CSRF protection, rate limiting, role hierarchies, permission groups, and comprehensive security. Includes Celery workers, Redis caching, Docker deployment, and 90+ backend + 354 frontend tests.",
     "homepage": "https://prisma.mnfprofile.com/",
     "topics": [
       "fastapi",
@@ -178,7 +178,7 @@ If you need to limit to 20 topics, use these in priority order:
 - **Discoverability**: These topics help developers find your repository when searching for:
   - Authentication/authorization solutions
   - FastAPI examples and templates
-  - RBAC implementations
+  - PRISMA implementations
   - React + FastAPI full-stack applications
   - Microservice architectures
   - Security best practices

@@ -1,13 +1,13 @@
-# FastAPI RBAC Backend
+# FastAPI PRISMA Backend
 
-This Docker image contains the backend service for the FastAPI RBAC (Role-Based Access Control) project. It provides the core API functionalities, user management, authentication, and authorization.
+This Docker image contains the backend service for the FastAPI PRISMA (Role-Based Access Control) project. It provides the core API functionalities, user management, authentication, and authorization.
 
 **Project Source Code:** [https://github.com/mnaimfaizy/prisma](https://github.com/mnaimfaizy/prisma)
 
 ## Features
 
 - JWT-based authentication (access and refresh tokens)
-- Role-Based Access Control (RBAC)
+- Role-Based Access Control (PRISMA)
 - User and Role management APIs
 - Password hashing and history
 - Token allowlisting with Redis (revocation by deleting membership)
@@ -71,7 +71,7 @@ This image is configured using environment variables. For a comprehensive list a
   - `FIRST_SUPERUSER_PASSWORD`
 - **API Configuration:**
   - `API_V1_STR` (default: `/api/v1`)
-  - `PROJECT_NAME` (default: `FastAPI RBAC`)
+  - `PROJECT_NAME` (default: `FastAPI PRISMA`)
 - **Email (for password resets, etc.):**
   - `EMAILS_ENABLED` (set to `True` to enable)
   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_TLS`

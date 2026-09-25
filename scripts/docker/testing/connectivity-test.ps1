@@ -1,5 +1,5 @@
 # Test script to verify all components are working
-Write-Host "=== FastAPI RBAC Test Environment Connectivity Test ===" -ForegroundColor Green
+Write-Host "=== FastAPI PRISMA Test Environment Connectivity Test ===" -ForegroundColor Green
 
 # Test 1: Frontend connectivity (with retries)
 Write-Host "`n1. Testing Frontend (React)..." -ForegroundColor Yellow

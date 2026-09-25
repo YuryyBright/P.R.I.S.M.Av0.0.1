@@ -1,7 +1,7 @@
 # Session Management Security Analysis
 
 **Date:** 2025-12-21
-**Project:** FastAPI RBAC
+**Project:** FastAPI PRISMA
 **Version:** 1.0
 **Status:** Investigation Complete
 
@@ -9,13 +9,14 @@
 
 ## Executive Summary
 
-This document provides a comprehensive security analysis of the current session management implementation in the FastAPI RBAC project. The analysis covers both backend (FastAPI/Python) and frontend (React/TypeScript) components, evaluating the current approach against modern security best practices and industry standards.
+This document provides a comprehensive security analysis of the current session management implementation in the FastAPI PRISMA project. The analysis covers both backend (FastAPI/Python) and frontend (React/TypeScript) components, evaluating the current approach against modern security best practices and industry standards.
 
 ### Key Findings
 
 **Overall Security Rating: 🟢 STRONG** (with opportunities for enhancement)
 
 The current implementation demonstrates strong security foundations with:
+
 - ✅ JWT-based authentication with separate access and refresh tokens
 - ✅ Redis-backed token allowlist (revocation by deleting membership)
 - ✅ Comprehensive token validation with standard claims
@@ -24,6 +25,7 @@ The current implementation demonstrates strong security foundations with:
 - ✅ Enhanced security features (IP validation, password history, rate limiting)
 
 **Areas for Enhancement:**
+
 - 🟡 Token rotation strategy could be strengthened
 - 🟡 Consider implementing refresh token rotation
 - 🟡 Session tracking and monitoring could be improved
@@ -96,6 +98,7 @@ The project implements a dual-token JWT authentication system:
 #### Strengths
 
 1. **Enhanced Token Claims**
+
    ```python
    def add_token_claims(claims: dict[str, Any]) -> dict[str, Any]:
        base_claims = {
@@ -106,6 +109,7 @@ The project implements a dual-token JWT authentication system:
            "nbf": now,              # Not valid before time
        }
    ```
+
    - **Analysis:** Implements all standard JWT claims (RFC 7519)
    - **Security:** Unique token IDs (jti) prevent replay attacks
    - **Validation:** nbf (not before) prevents token use before issue time
@@ -135,6 +139,7 @@ The project implements a dual-token JWT authentication system:
            },
        )
    ```
+
    - **Analysis:** Validates all critical claims
    - **Clock Skew:** 5-minute leeway for `iat` validation handles clock drift
    - **Type Safety:** Enforces token type matching
@@ -208,10 +213,12 @@ the response is written (#206).
    - IP address logging for audit trails
 
 2. **Rate Limiting**
+
    ```python
    @router.post("/login")
    @limiter.limit("5/minute")
    ```
+
    - Prevents brute force attacks
    - Configurable limits per endpoint
 
@@ -247,6 +254,7 @@ the response is written (#206).
 #### Strengths
 
 1. **Strong Password Requirements**
+
    ```python
    PASSWORD_MIN_LENGTH: int = 12
    PASSWORD_REQUIRE_UPPERCASE: bool = True
@@ -279,10 +287,12 @@ the response is written (#206).
 #### Strengths
 
 1. **Secure Access Token Storage**
+
    ```typescript
    // Access token in memory (not localStorage)
    let inMemoryToken: string | null = null;
    ```
+
    - **Analysis:** Prevents XSS attacks from stealing access tokens
    - **Best Practice:** Following OWASP recommendations
 
@@ -312,16 +322,20 @@ the response is written (#206).
 #### Strengths
 
 1. **Automatic Token Refresh**
+
    ```typescript
    if (error.response?.status === 401 && !originalRequest?._retry) {
-       const response = await store.dispatch(refreshAccessToken(refreshToken)).unwrap();
-       if (response && response.access_token) {
-           setStoredAccessToken(response.access_token);
-           originalRequest.headers.Authorization = `Bearer ${response.access_token}`;
-           return api(originalRequest);
-       }
+     const response = await store
+       .dispatch(refreshAccessToken(refreshToken))
+       .unwrap();
+     if (response && response.access_token) {
+       setStoredAccessToken(response.access_token);
+       originalRequest.headers.Authorization = `Bearer ${response.access_token}`;
+       return api(originalRequest);
+     }
    }
    ```
+
    - Seamless user experience
    - Prevents unnecessary logouts
    - Retry mechanism prevents duplicate refresh attempts
@@ -355,9 +369,10 @@ the response is written (#206).
    ```typescript
    const timeUntilExpiry = expiryTime - currentTime - 10000; // 10 second buffer
    this.tokenExpiryTimer = window.setTimeout(() => {
-       store.dispatch(logout());
+     store.dispatch(logout());
    }, timeUntilExpiry);
    ```
+
    - Prevents using expired tokens
    - Automatic cleanup before expiry
 
@@ -400,7 +415,7 @@ The implementation demonstrates multiple layers of security:
 
 - **RFC 7519 (JWT):** Full compliance with standard claims
 - **OWASP Top 10:**
-  - ✅ A01:2021 – Broken Access Control (Addressed via RBAC)
+  - ✅ A01:2021 – Broken Access Control (Addressed via PRISMA)
   - ✅ A02:2021 – Cryptographic Failures (Strong password hashing)
   - ✅ A03:2021 – Injection (Input sanitization)
   - ✅ A05:2021 – Security Misconfiguration (Proper CORS, CSRF)
@@ -434,11 +449,13 @@ None identified. The current implementation has no critical security vulnerabili
 #### 1. Refresh Token Rotation Not Implemented
 
 **Current State:**
+
 - Refresh tokens are long-lived (100 days)
 - Once issued, they remain valid until expiry
 - No rotation on use
 
 **Risk:**
+
 - If a refresh token is compromised (stolen), the attacker has persistent access until:
   - Token naturally expires (100 days)
   - User changes password
@@ -452,10 +469,12 @@ None identified. The current implementation has no critical security vulnerabili
 #### 2. Refresh Tokens in localStorage
 
 **Current State:**
+
 - Refresh tokens stored in browser localStorage
 - Vulnerable to XSS attacks
 
 **Risk:**
+
 - If the application has an XSS vulnerability, refresh tokens can be stolen
 - Attacker can obtain long-term access (100 days)
 
@@ -469,10 +488,12 @@ None identified. The current implementation has no critical security vulnerabili
 #### 3. Limited Session Visibility
 
 **Current State:**
+
 - Users cannot see active sessions
 - No ability to revoke individual sessions
 
 **Risk:**
+
 - Users cannot detect unauthorized access
 - Cannot revoke compromised sessions without password change
 
@@ -484,10 +505,12 @@ None identified. The current implementation has no critical security vulnerabili
 #### 4. Token Refresh Race Conditions
 
 **Current State:**
+
 - Multiple simultaneous requests could trigger multiple token refresh attempts
 - Basic `_retry` flag prevents infinite loops but not race conditions
 
 **Risk:**
+
 - Potential for unnecessary token refreshes
 - Could cause user experience issues
 
@@ -499,10 +522,12 @@ None identified. The current implementation has no critical security vulnerabili
 #### 5. Static Session Expiry
 
 **Current State:**
+
 - Access tokens have fixed 60-minute expiry
 - No extension based on user activity
 
 **Risk:**
+
 - Active users forced to reauthenticate
 - Poor user experience for long sessions
 
@@ -517,51 +542,51 @@ None identified. The current implementation has no critical security vulnerabili
 
 ### OAuth 2.0 / OpenID Connect Best Practices
 
-| Practice | Current Implementation | Status |
-|----------|----------------------|--------|
-| **Separate access and refresh tokens** | ✅ Implemented | ✅ Compliant |
-| **Short-lived access tokens** | ✅ 60 minutes (configurable) | ✅ Compliant |
-| **Refresh token rotation** | ❌ Not implemented | 🟡 Recommended |
-| **Token binding (PKCE)** | ❌ Not applicable (not OAuth flow) | ⚪ N/A |
-| **HTTP-only cookies for refresh tokens** | ❌ Using localStorage | 🟡 Recommended |
-| **Token revocation** | ✅ Redis allowlist (delete membership) | ✅ Compliant |
+| Practice                                 | Current Implementation                 | Status         |
+| ---------------------------------------- | -------------------------------------- | -------------- |
+| **Separate access and refresh tokens**   | ✅ Implemented                         | ✅ Compliant   |
+| **Short-lived access tokens**            | ✅ 60 minutes (configurable)           | ✅ Compliant   |
+| **Refresh token rotation**               | ❌ Not implemented                     | 🟡 Recommended |
+| **Token binding (PKCE)**                 | ❌ Not applicable (not OAuth flow)     | ⚪ N/A         |
+| **HTTP-only cookies for refresh tokens** | ❌ Using localStorage                  | 🟡 Recommended |
+| **Token revocation**                     | ✅ Redis allowlist (delete membership) | ✅ Compliant   |
 
 ### OWASP Authentication Cheat Sheet
 
-| Recommendation | Current Implementation | Status |
-|----------------|----------------------|--------|
-| **Multi-factor authentication** | ❌ Not implemented | 🔵 Future Enhancement |
-| **Account lockout** | ✅ Implemented (5 attempts, 24h lockout) | ✅ Compliant |
-| **Password complexity** | ✅ Implemented (12+ chars, complexity) | ✅ Compliant |
-| **Password history** | ✅ Last 5 passwords | ✅ Compliant |
-| **Secure password storage** | ✅ Bcrypt with work factor 12 | ✅ Compliant |
-| **Rate limiting** | ✅ Implemented (5/min login, 3/hour registration) | ✅ Compliant |
-| **Session management** | ✅ JWT with Redis backing | ✅ Compliant |
-| **CSRF protection** | ✅ Implemented | ✅ Compliant |
+| Recommendation                  | Current Implementation                            | Status                |
+| ------------------------------- | ------------------------------------------------- | --------------------- |
+| **Multi-factor authentication** | ❌ Not implemented                                | 🔵 Future Enhancement |
+| **Account lockout**             | ✅ Implemented (5 attempts, 24h lockout)          | ✅ Compliant          |
+| **Password complexity**         | ✅ Implemented (12+ chars, complexity)            | ✅ Compliant          |
+| **Password history**            | ✅ Last 5 passwords                               | ✅ Compliant          |
+| **Secure password storage**     | ✅ Bcrypt with work factor 12                     | ✅ Compliant          |
+| **Rate limiting**               | ✅ Implemented (5/min login, 3/hour registration) | ✅ Compliant          |
+| **Session management**          | ✅ JWT with Redis backing                         | ✅ Compliant          |
+| **CSRF protection**             | ✅ Implemented                                    | ✅ Compliant          |
 
 ### NIST Digital Identity Guidelines (SP 800-63B)
 
-| Guideline | Current Implementation | Status |
-|-----------|----------------------|--------|
-| **Password length minimum** | ✅ 12 characters (exceeds NIST 8 min) | ✅ Compliant |
-| **No password composition rules** | ⚠️ Requires uppercase, digits, special | ⚠️ Differs |
-| **Password breach checking** | ❌ Not implemented | 🔵 Optional |
-| **Rate limiting** | ✅ Implemented | ✅ Compliant |
-| **Session timeout** | ✅ 60 minutes for access tokens | ✅ Compliant |
+| Guideline                              | Current Implementation                                 | Status           |
+| -------------------------------------- | ------------------------------------------------------ | ---------------- |
+| **Password length minimum**            | ✅ 12 characters (exceeds NIST 8 min)                  | ✅ Compliant     |
+| **No password composition rules**      | ⚠️ Requires uppercase, digits, special                 | ⚠️ Differs       |
+| **Password breach checking**           | ❌ Not implemented                                     | 🔵 Optional      |
+| **Rate limiting**                      | ✅ Implemented                                         | ✅ Compliant     |
+| **Session timeout**                    | ✅ 60 minutes for access tokens                        | ✅ Compliant     |
 | **Reauthentication for sensitive ops** | ⚠️ Partial (password change requires current password) | 🟡 Could enhance |
 
 **Note on NIST Composition Rules:** NIST SP 800-63B recommends AGAINST mandatory composition rules (uppercase, digits, etc.) in favor of length and breach checking. However, many organizations still prefer composition rules. This is a policy decision, not a security flaw.
 
 ### Industry Leaders (Auth0, AWS Cognito, Firebase)
 
-| Feature | Current Implementation | Industry Standard |
-|---------|----------------------|-------------------|
-| **Refresh token rotation** | ❌ Not implemented | ✅ Standard practice |
-| **Device fingerprinting** | ⚠️ IP and User-Agent hashing | ✅ More sophisticated |
-| **Anomaly detection** | ❌ Not implemented | ✅ Available in enterprise solutions |
-| **Session management UI** | ❌ Not implemented | ✅ Standard feature |
-| **MFA support** | ❌ Not implemented | ✅ Standard feature |
-| **Passwordless authentication** | ❌ Not implemented | 🔵 Emerging standard |
+| Feature                         | Current Implementation       | Industry Standard                    |
+| ------------------------------- | ---------------------------- | ------------------------------------ |
+| **Refresh token rotation**      | ❌ Not implemented           | ✅ Standard practice                 |
+| **Device fingerprinting**       | ⚠️ IP and User-Agent hashing | ✅ More sophisticated                |
+| **Anomaly detection**           | ❌ Not implemented           | ✅ Available in enterprise solutions |
+| **Session management UI**       | ❌ Not implemented           | ✅ Standard feature                  |
+| **MFA support**                 | ❌ Not implemented           | ✅ Standard feature                  |
+| **Passwordless authentication** | ❌ Not implemented           | 🔵 Emerging standard                 |
 
 ---
 
@@ -575,6 +600,7 @@ None identified. The current implementation has no critical security vulnerabili
 When a refresh token is used to obtain a new access token, also issue a new refresh token and invalidate the old one.
 
 **Benefits:**
+
 - Reduces window of opportunity for attackers
 - Detects token theft (if old token used after rotation)
 - Industry standard practice (Auth0, AWS Cognito, Firebase)
@@ -582,6 +608,7 @@ When a refresh token is used to obtain a new access token, also issue a new refr
 **Implementation Approach:**
 
 1. **Backend Changes** (`app/api/v1/endpoints/auth.py`):
+
 ```python
 @router.post("/new_access_token", status_code=201)
 async def get_new_access_token(
@@ -625,21 +652,24 @@ async def get_new_access_token(
 ```
 
 2. **Frontend Changes** (`src/services/api.ts`):
+
 ```typescript
 // In response interceptor
 if (error.response?.status === 401 && !originalRequest?._retry) {
-    const response = await store.dispatch(refreshAccessToken(refreshToken)).unwrap();
-    if (response && response.access_token) {
-        setStoredAccessToken(response.access_token);
+  const response = await store
+    .dispatch(refreshAccessToken(refreshToken))
+    .unwrap();
+  if (response && response.access_token) {
+    setStoredAccessToken(response.access_token);
 
-        // NEW: Store the rotated refresh token
-        if (response.refresh_token) {
-            setStoredRefreshToken(response.refresh_token);
-        }
-
-        originalRequest.headers.Authorization = `Bearer ${response.access_token}`;
-        return api(originalRequest);
+    // NEW: Store the rotated refresh token
+    if (response.refresh_token) {
+      setStoredRefreshToken(response.refresh_token);
     }
+
+    originalRequest.headers.Authorization = `Bearer ${response.access_token}`;
+    return api(originalRequest);
+  }
 }
 ```
 
@@ -653,6 +683,7 @@ if (error.response?.status === 401 && !originalRequest?._retry) {
 Expose all session-related settings in configuration for easy tuning without code changes.
 
 **Benefits:**
+
 - Easier security policy enforcement
 - Environment-specific configurations (dev vs. prod)
 - Quick response to security incidents
@@ -660,6 +691,7 @@ Expose all session-related settings in configuration for easy tuning without cod
 **Implementation:**
 
 Add to `app/core/config.py`:
+
 ```python
 # Session Security (already present)
 CONCURRENT_SESSION_LIMIT: int = 5
@@ -686,11 +718,13 @@ SESSION_ANOMALY_DETECTION: bool = False  # Future feature
 Store refresh tokens in HTTP-only, Secure, SameSite cookies instead of localStorage.
 
 **Benefits:**
+
 - Immune to XSS attacks (JavaScript cannot access)
 - Automatic CSRF protection with SameSite attribute
 - Industry best practice (recommended by OWASP)
 
 **Trade-offs:**
+
 - Requires CORS configuration adjustments
 - Slightly more complex for mobile apps
 - Must ensure proper SameSite configuration
@@ -698,6 +732,7 @@ Store refresh tokens in HTTP-only, Secure, SameSite cookies instead of localStor
 **Implementation Approach:**
 
 1. **Backend Changes** (`app/api/v1/endpoints/auth.py`):
+
 ```python
 @router.post("/login")
 async def login(
@@ -735,6 +770,7 @@ async def login(
 ```
 
 2. **Frontend Changes**:
+
 ```typescript
 // src/services/api.ts - Token refresh no longer needs to send refresh token
 if (error.response?.status === 401 && !originalRequest?._retry) {
@@ -765,12 +801,14 @@ async refreshToken() {
 Allow users to view and manage active sessions.
 
 **Benefits:**
+
 - Users can detect unauthorized access
 - Ability to revoke compromised sessions
 - Better security awareness
 - Compliance with some regulations (GDPR right to access)
 
 **Features:**
+
 - List all active sessions
 - Show session details (device, location, last activity)
 - Revoke individual sessions
@@ -779,6 +817,7 @@ Allow users to view and manage active sessions.
 **Implementation Approach:**
 
 1. **Backend - Add Session Metadata** (proposed; extend `app/utils/token.py` allowlist model):
+
 ```python
 # proposed: app/utils/token.py (or a dedicated sessions helper)
 async def store_session_metadata(
@@ -797,6 +836,7 @@ async def store_session_metadata(
 ```
 
 2. **Backend - Add Session Management Endpoints**:
+
 ```python
 # app/api/v1/endpoints/user.py (or new sessions.py)
 @router.get("/users/me/sessions")
@@ -820,6 +860,7 @@ async def revoke_session(
 ```
 
 3. **Frontend - Session Management Page**:
+
 ```typescript
 // src/features/sessions/SessionList.tsx
 const SessionList: React.FC = () => {
@@ -854,31 +895,34 @@ const SessionList: React.FC = () => {
 Prevent race conditions when multiple requests trigger token refresh simultaneously.
 
 **Benefits:**
+
 - Prevents multiple simultaneous refresh attempts
 - Better user experience
 - More efficient token usage
 
 **Implementation:**
+
 ```typescript
 // src/services/authTokenManager.ts
 class AuthTokenManager {
-    private refreshPromise: Promise<any> | null = null;
+  private refreshPromise: Promise<any> | null = null;
 
-    async refreshToken(refreshToken: string): Promise<string> {
-        // If refresh already in progress, return existing promise
-        if (this.refreshPromise) {
-            return this.refreshPromise;
-        }
-
-        // Start new refresh
-        this.refreshPromise = store.dispatch(refreshAccessToken(refreshToken))
-            .unwrap()
-            .finally(() => {
-                this.refreshPromise = null;  // Reset after completion
-            });
-
-        return this.refreshPromise;
+  async refreshToken(refreshToken: string): Promise<string> {
+    // If refresh already in progress, return existing promise
+    if (this.refreshPromise) {
+      return this.refreshPromise;
     }
+
+    // Start new refresh
+    this.refreshPromise = store
+      .dispatch(refreshAccessToken(refreshToken))
+      .unwrap()
+      .finally(() => {
+        this.refreshPromise = null; // Reset after completion
+      });
+
+    return this.refreshPromise;
+  }
 }
 ```
 
@@ -902,6 +946,7 @@ deserves its own design rather than revival of that unused control.
 Add support for TOTP-based 2FA (Google Authenticator, Authy, etc.).
 
 **Benefits:**
+
 - Significantly reduces account takeover risk
 - Compliance requirement for many industries
 - Industry standard for sensitive applications
@@ -916,6 +961,7 @@ Add support for TOTP-based 2FA (Google Authenticator, Authy, etc.).
 Detect suspicious login patterns (new device, new location, unusual time).
 
 **Benefits:**
+
 - Early detection of compromised accounts
 - User notifications for suspicious activity
 - Enhanced security monitoring
@@ -930,6 +976,7 @@ Detect suspicious login patterns (new device, new location, unusual time).
 Support WebAuthn, Magic Links, or Passkeys.
 
 **Benefits:**
+
 - Better UX (no password to remember)
 - More secure (phishing-resistant)
 - Future-proof authentication
@@ -1017,18 +1064,22 @@ Support WebAuthn, Magic Links, or Passkeys.
 ### Backend
 
 **Core Security:**
+
 - `app/core/security.py` - JWT create/decode (PyJWT), password hashing, validation
 - `app/utils/token.py` - Redis session allowlist helpers
 
 **Authentication:**
+
 - `app/api/v1/endpoints/auth.py` - Authentication endpoints
 - `app/api/deps.py` - Dependency injection, token validation
 - `app/schemas/token_schema.py` - Token data models
 
 **Configuration:**
+
 - `app/core/config.py` - All security settings
 
 **Database:**
+
 - `app/models/user_model.py` - User model with security fields
 - `app/models/password_history_model.py` - Password history tracking
 - `app/crud/user_crud.py` - User operations including password management
@@ -1036,19 +1087,23 @@ Support WebAuthn, Magic Links, or Passkeys.
 ### Frontend
 
 **Token Management:**
+
 - `src/lib/tokenStorage.ts` - Token storage (memory + localStorage)
 - `src/services/authTokenManager.ts` - Token expiry management
 
 **API Layer:**
+
 - `src/services/api.ts` - Axios instance with interceptors
 - `src/services/auth.service.ts` - Authentication API calls
 - `src/services/csrfService.ts` - CSRF token management
 
 **State Management:**
+
 - `src/store/slices/authSlice.ts` - Redux authentication state
 - `src/hooks/useAuth.ts` - Authentication hook
 
 **Components:**
+
 - `src/components/auth/ProtectedRoute.tsx` - Route protection
 - `src/components/auth/LoginForm.tsx` - Login form
 
@@ -1118,7 +1173,7 @@ Support WebAuthn, Magic Links, or Passkeys.
 
 ### Summary
 
-The FastAPI RBAC project implements a **strong and secure session management system** that follows industry best practices and complies with major security standards (OWASP, NIST, RFC 7519). The architecture demonstrates:
+The FastAPI PRISMA project implements a **strong and secure session management system** that follows industry best practices and complies with major security standards (OWASP, NIST, RFC 7519). The architecture demonstrates:
 
 1. **Solid Security Foundations:**
    - JWT-based authentication with proper claim validation
@@ -1143,18 +1198,14 @@ The FastAPI RBAC project implements a **strong and secure session management sys
 While the current implementation is secure, the following enhancements would bring it to "best-in-class" status:
 
 **High Priority:**
+
 1. Refresh token rotation
 2. Refresh tokens in HTTP-only cookies
 3. Token refresh queue (prevent race conditions)
 
-**Medium Priority:**
-4. Session management dashboard
-5. Enhanced session metadata and monitoring
+**Medium Priority:** 4. Session management dashboard 5. Enhanced session metadata and monitoring
 
-**Future:**
-6. Multi-factor authentication
-7. Anomaly detection
-8. Passwordless authentication
+**Future:** 6. Multi-factor authentication 7. Anomaly detection 8. Passwordless authentication
 
 ### Risk Assessment
 
@@ -1163,6 +1214,7 @@ While the current implementation is secure, the following enhancements would bri
 The system has no critical vulnerabilities and implements comprehensive security controls. The identified enhancements are preventive measures to further reduce already-low risks.
 
 **Recommended Actions:**
+
 1. Implement Priority 1 recommendations (refresh token rotation, HTTP-only cookies)
 2. Monitor security advisories for dependencies (PyJWT, bcrypt, Redis)
 3. Regular security audits and penetration testing
@@ -1173,6 +1225,7 @@ The system has no critical vulnerabilities and implements comprehensive security
 **The current session management implementation is secure and appropriate for production use.** However, implementing the Priority 1 and Priority 2 recommendations would align the system with cutting-edge security practices and prepare it for future compliance requirements.
 
 The development team should be commended for:
+
 - Thoughtful security architecture
 - Comprehensive implementation
 - Following established standards

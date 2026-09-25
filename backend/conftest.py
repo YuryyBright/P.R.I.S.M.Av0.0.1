@@ -23,7 +23,7 @@ from test.venv_drift import fail_on_drift  # noqa: E402  (needs the sys.path abo
 fail_on_drift()
 
 """
-Global pytest configuration for the FastAPI RBAC backend project.
+Global pytest configuration for the FastAPI PRISMA backend project.
 
 This module sets up fixtures and configuration for all backend test modules.
 """

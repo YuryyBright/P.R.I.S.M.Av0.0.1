@@ -56,7 +56,7 @@ fi
 
 # Build frontend image
 echo "Building frontend production image..."
-docker build -f react-frontend/Dockerfile.prod -t react_frontend:prod react-frontend
+docker build -f frontend/Dockerfile.prod -t react_frontend:prod frontend
 if [ $? -ne 0 ]; then
   echo "Failed to build frontend image" >&2
   exit 1

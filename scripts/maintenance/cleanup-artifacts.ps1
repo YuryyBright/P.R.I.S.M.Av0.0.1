@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 # Maintenance and Cleanup Script
-# This script provides various maintenance operations for the FastAPI RBAC project
+# This script provides various maintenance operations for the FastAPI PRISMA project
 
 param(
     [Parameter(Mandatory=$false)]
@@ -56,19 +56,19 @@ function Clean-DockerArtifacts {
     }
 
     try {
-        # Stop and remove FastAPI RBAC containers
+        # Stop and remove FastAPI PRISMA containers
         $containers = docker ps -a --filter "name=prisma" --format "{{.Names}}"
         if ($containers) {
-            Write-ColorOutput "Stopping FastAPI RBAC containers..." "Blue"
+            Write-ColorOutput "Stopping FastAPI PRISMA containers..." "Blue"
             docker stop $containers 2>$null
             docker rm $containers 2>$null
         }
 
-        # Remove FastAPI RBAC images if Force is specified
+        # Remove FastAPI PRISMA images if Force is specified
         if ($Force) {
             $images = docker images --filter "reference=prisma*" --filter "reference=react_frontend*" --format "{{.Repository}}:{{.Tag}}"
             if ($images) {
-                Write-ColorOutput "Removing FastAPI RBAC images..." "Blue"
+                Write-ColorOutput "Removing FastAPI PRISMA images..." "Blue"
                 docker rmi $images 2>$null
             }
         }
@@ -81,7 +81,7 @@ function Clean-DockerArtifacts {
         if ($Force) {
             $volumes = docker volume ls --filter "name=prisma" --format "{{.Name}}"
             if ($volumes) {
-                Write-ColorOutput "Removing FastAPI RBAC volumes..." "Blue"
+                Write-ColorOutput "Removing FastAPI PRISMA volumes..." "Blue"
                 docker volume rm $volumes 2>$null
             }
         }
@@ -109,8 +109,8 @@ function Clean-CacheFiles {
 
     # Node.js cache
     Write-ColorOutput "Cleaning Node.js cache..." "Blue"
-    Remove-ItemSafely "$projectRoot\react-frontend\node_modules\.cache" "Node.js cache"
-    Remove-ItemSafely "$projectRoot\react-frontend\.vite" "Vite cache"
+    Remove-ItemSafely "$projectRoot\frontend\node_modules\.cache" "Node.js cache"
+    Remove-ItemSafely "$projectRoot\frontend\.vite" "Vite cache"
 
     # mypy cache
     Remove-ItemSafely "$projectRoot\backend\.mypy_cache" "MyPy cache"
@@ -120,7 +120,7 @@ function Clean-CacheFiles {
 
     # Coverage cache
     Remove-ItemSafely "$projectRoot\backend\.coverage" "Coverage cache"
-    Remove-ItemSafely "$projectRoot\react-frontend\coverage" "Frontend coverage"
+    Remove-ItemSafely "$projectRoot\frontend\coverage" "Frontend coverage"
 
     Write-ColorOutput "✅ Cache cleanup completed" "Green"
 }
@@ -154,8 +154,8 @@ function Clean-BuildArtifacts {
     $projectRoot = "$PSScriptRoot\..\.."
 
     # Frontend build artifacts
-    Remove-ItemSafely "$projectRoot\react-frontend\dist" "Frontend build directory"
-    Remove-ItemSafely "$projectRoot\react-frontend\build" "Frontend build directory"
+    Remove-ItemSafely "$projectRoot\frontend\dist" "Frontend build directory"
+    Remove-ItemSafely "$projectRoot\frontend\build" "Frontend build directory"
 
     # Python build artifacts
     Remove-ItemSafely "$projectRoot\backend\build" "Python build directory"
@@ -190,7 +190,7 @@ function Invoke-SecurityScan {
 
     # Node.js security scan
     Write-ColorOutput "Scanning Node.js dependencies..." "Blue"
-    Push-Location "$projectRoot\react-frontend"
+    Push-Location "$projectRoot\frontend"
     try {
         & npm audit
         Write-ColorOutput "✅ Node.js security scan completed" "Green"
@@ -226,7 +226,7 @@ function Update-Dependencies {
 
     # Update Node.js dependencies
     Write-ColorOutput "Updating Node.js dependencies..." "Blue"
-    Push-Location "$projectRoot\react-frontend"
+    Push-Location "$projectRoot\frontend"
     try {
         & npm update
         Write-ColorOutput "✅ Node.js dependencies updated" "Green"
@@ -240,7 +240,7 @@ function Update-Dependencies {
 function Show-Help {
     Write-ColorOutput "`n🧹 Maintenance and Cleanup Script" "Cyan"
     Write-ColorOutput "==================================" "Cyan"
-    Write-ColorOutput "`nThis script provides comprehensive maintenance operations for the FastAPI RBAC project.`n" "White"
+    Write-ColorOutput "`nThis script provides comprehensive maintenance operations for the FastAPI PRISMA project.`n" "White"
 
     Write-ColorOutput "📋 Parameters:" "Yellow"
     Write-ColorOutput "  -Action      : Action to perform (clean-all, clean-docker, clean-cache, clean-logs, clean-build, security-scan, update-deps)" "White"
@@ -273,7 +273,7 @@ if ($Help -or $Action -eq "help") {
     exit 0
 }
 
-Write-ColorOutput "🧹 FastAPI RBAC Maintenance Manager" "Blue"
+Write-ColorOutput "🧹 FastAPI PRISMA Maintenance Manager" "Blue"
 Write-ColorOutput "===================================" "Blue"
 Write-ColorOutput "Action: $Action" "White"
 Write-ColorOutput "Dry Run: $DryRun" "White"

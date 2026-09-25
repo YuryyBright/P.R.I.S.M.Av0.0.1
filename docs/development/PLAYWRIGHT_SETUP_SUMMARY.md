@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document summarizes the Playwright E2E testing setup for the FastAPI RBAC React Frontend project, completed as part of issue investigation and implementation.
+This document summarizes the Playwright E2E testing setup for the FastAPI PRISMA React Frontend project, completed as part of issue investigation and implementation.
 
 ## What Was Accomplished
 
@@ -89,7 +89,7 @@ Created 31 E2E tests across 3 test files:
 
 ### 5. CI/CD Integration
 
-- ✅ Updated GitHub Actions workflow (`react-frontend-ci.yml`)
+- ✅ Updated GitHub Actions workflow (`frontend-ci.yml`)
 - ✅ Added `e2e-tests` job with:
   - Playwright browser installation
   - Chromium-only execution for CI efficiency
@@ -141,7 +141,7 @@ Created comprehensive documentation:
    - Scenario-based recommendations
    - Decision rationale
 
-5. **Updated react-frontend/README.md**:
+5. **Updated frontend/README.md**:
    - Added E2E testing section
    - Documented test commands
    - Referenced E2E_TESTING.md
@@ -206,7 +206,7 @@ Created comprehensive documentation:
 ## File Structure
 
 ```
-react-frontend/
+frontend/
 ├── e2e/
 │   ├── fixtures/
 │   │   └── test-data.ts           # Test data and constants
@@ -228,7 +228,7 @@ docs/development/
 └── extensions.json                # VS Code extension recommendations
 
 .github/workflows/
-└── react-frontend-ci.yml          # Updated with E2E tests
+└── frontend-ci.yml          # Updated with E2E tests
 ```
 
 ## Quick Start
@@ -238,7 +238,7 @@ docs/development/
 1. **Install dependencies** (if not already installed):
 
    ```bash
-   cd react-frontend
+   cd frontend
    npm install
    ```
 
@@ -322,10 +322,10 @@ Tests automatically run in GitHub Actions on:
 
 ### Documentation
 
-- [E2E Testing Guide](../react-frontend/E2E_TESTING.md) - Main guide
+- [E2E Testing Guide](../frontend/E2E_TESTING.md) - Main guide
 - [Framework Comparison](./E2E_FRAMEWORK_COMPARISON.md) - Decision analysis
-- [Code Examples](../react-frontend/e2e/EXAMPLES.md) - Practical examples
-- [Test Suite README](../react-frontend/e2e/README.md) - Test organization
+- [Code Examples](../frontend/e2e/EXAMPLES.md) - Practical examples
+- [Test Suite README](../frontend/e2e/README.md) - Test organization
 
 ### External Resources
 
@@ -349,7 +349,7 @@ The project now has a solid foundation for end-to-end testing that complements t
 
 ---
 
-**Issue**: Investigate and setup playwright for implementing the end to end testing in the react-frontend project  
+**Issue**: Investigate and setup playwright for implementing the end to end testing in the frontend project  
 **Status**: ✅ **COMPLETE**  
 **Date**: January 2026  
 **Version**: Playwright 1.57.0

@@ -1,14 +1,14 @@
-# Getting Started with FastAPI RBAC
+# Getting Started with FastAPI PRISMA
 
-Welcome to the FastAPI RBAC project! This guide will help you get up and running quickly, whether you're a new developer joining the team or an experienced developer exploring the project.
+Welcome to the FastAPI PRISMA project! This guide will help you get up and running quickly, whether you're a new developer joining the team or an experienced developer exploring the project.
 
-## 🎯 What is FastAPI RBAC?
+## 🎯 What is FastAPI PRISMA?
 
 This is a comprehensive user management microservice that handles Authentication and Authorization for other services. It features:
 
 - **FastAPI Backend**: Modern, high-performance API with async support
 - **React Frontend**: TypeScript-based UI with modern component architecture
-- **Role-Based Access Control (RBAC)**: Flexible permission system with roles and groups
+- **Role-Based Access Control (PRISMA)**: Flexible permission system with roles and groups
 - **JWT Authentication**: Secure token-based authentication with refresh tokens
 - **Docker Support**: Containerized deployment with production-ready configuration
 
@@ -77,7 +77,7 @@ prisma/
 │   ├── app/          # Main application code
 │   ├── alembic/      # Database migrations
 │   └── tests/        # Backend tests
-├── react-frontend/   # React TypeScript application
+├── frontend/   # React TypeScript application
 │   ├── src/          # Frontend source code
 │   └── public/       # Static assets
 ├── docs/             # All documentation
@@ -141,7 +141,7 @@ prisma/
 ### 4. Explore the Code (1+ hours)
 
 - Browse the backend API structure in `backend/app/`
-- Explore the React components in `react-frontend/src/`
+- Explore the React components in `frontend/src/`
 - Read the [API Documentation](../development/API_DOCUMENTATION.md)
 
 ### 5. Make Your First Change
@@ -176,6 +176,6 @@ After getting started, you might want to:
 
 ## 🎉 Welcome to the Team!
 
-You're now ready to start working with FastAPI RBAC. The project uses modern best practices and tools to ensure a great developer experience. If you run into any issues or have suggestions for improving this guide, please let us know!
+You're now ready to start working with FastAPI PRISMA. The project uses modern best practices and tools to ensure a great developer experience. If you run into any issues or have suggestions for improving this guide, please let us know!
 
 Happy coding! 🚀

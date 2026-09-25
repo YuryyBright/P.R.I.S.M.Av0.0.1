@@ -100,22 +100,22 @@ if (-not (Test-Path "backend\docker-compose.prod.yml")) {
     exit 1
 }
 
-if (-not (Test-Path "react-frontend\docker-compose.prod.yml")) {
-    Write-Error "react-frontend\docker-compose.prod.yml not found"
+if (-not (Test-Path "frontend\docker-compose.prod.yml")) {
+    Write-Error "frontend\docker-compose.prod.yml not found"
     exit 1
 }
 
-if (-not (Test-Path "react-frontend\Dockerfile.prod")) {
-    Write-Error "react-frontend\Dockerfile.prod not found"
+if (-not (Test-Path "frontend\Dockerfile.prod")) {
+    Write-Error "frontend\Dockerfile.prod not found"
     exit 1
 }
 
-if (-not (Test-Path "react-frontend\.env.production")) {
-    Write-Warning "react-frontend\.env.production not found - creating from example"
-    if (Test-Path "react-frontend\.env.example") {
-        Copy-Item "react-frontend\.env.example" "react-frontend\.env.production"
+if (-not (Test-Path "frontend\.env.production")) {
+    Write-Warning "frontend\.env.production not found - creating from example"
+    if (Test-Path "frontend\.env.example") {
+        Copy-Item "frontend\.env.example" "frontend\.env.production"
     } else {
-        Write-Error "react-frontend\.env.example not found - cannot create production env file"
+        Write-Error "frontend\.env.example not found - cannot create production env file"
         exit 1
     }
 }
@@ -134,7 +134,7 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "Building frontend production image..." -ForegroundColor Green
 # Build directly with docker build to avoid depends_on issues
-Set-Location -Path "react-frontend"
+Set-Location -Path "frontend"
 docker build -f Dockerfile.prod -t react_frontend:prod .
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to build React Frontend image"

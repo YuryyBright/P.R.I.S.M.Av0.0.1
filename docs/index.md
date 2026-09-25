@@ -1,13 +1,13 @@
 <p align="center">
   <picture>
     <source srcset="assets/logo_with_background.png" media="(prefers-color-scheme: dark)" />
-    <img src="assets/logo.png" alt="FastAPI RBAC Logo" width="100%" />
+    <img src="assets/logo.png" alt="FastAPI PRISMA Logo" width="100%" />
   </picture>
 </p>
 
-# FastAPI RBAC - User Management Microservice
+# FastAPI PRISMA - User Management Microservice
 
-A comprehensive Role-Based Access Control (RBAC) system with FastAPI backend and React frontend, designed to handle Authentication and Authorization for other services.
+A comprehensive Role-Based Access Control (PRISMA) system with FastAPI backend and React frontend, designed to handle Authentication and Authorization for other services.
 
 ## 🚀 Quick Start
 
@@ -85,7 +85,7 @@ prisma/
 │   ├── app/                 # Main application code
 │   ├── alembic/            # Database migrations
 │   └── tests/              # Backend tests
-├── 📁 react-frontend/       # React TypeScript app
+├── 📁 frontend/       # React TypeScript app
 │   ├── src/                # Frontend source code
 │   └── public/             # Static assets
 ├── 📁 docs/                # 📚 Organized documentation
@@ -124,7 +124,7 @@ docker-compose up -d
 .\scripts\dev\run-tests.ps1
 
 # Run frontend tests
-cd react-frontend
+cd frontend
 npm test
 
 # Access services:
@@ -149,7 +149,7 @@ npm test
 | ------------------------ | ------------------------------------------------- | ---------------------------------------------------------- |
 | **Start development**    | `docker-compose up -d`                            | [Getting Started](docs/getting-started/GETTING_STARTED.md) |
 | **Run backend tests**    | `.\scripts\dev\run-tests.ps1`                     | [Testing Guide](docs/development/TESTING.md)               |
-| **Run frontend tests**   | `cd react-frontend && npm test`                   | [Frontend Testing](react-frontend/README.md#testing)       |
+| **Run frontend tests**   | `cd frontend && npm test`                         | [Frontend Testing](frontend/README.md#testing)             |
 | **Security validation**  | `python backend/test/test_csrf_implementation.py` | [Security Features](#-enterprise-security)                 |
 | **Deploy to production** | `.\scripts\deployment\push-to-dockerhub.ps1`      | [Deployment](docs/deployment/PRODUCTION_SETUP.md)          |
 | **Troubleshoot CORS**    | `.\scripts\docker\diagnose-cors.ps1`              | [CORS Guide](docs/troubleshooting/CORS_TROUBLESHOOTING.md) |
@@ -245,7 +245,7 @@ uvicorn app.main:app --port 8001 --reload
 
 ```bash
 # Navigate to frontend directory
-cd react-frontend
+cd frontend
 
 # Install dependencies
 npm install
@@ -271,14 +271,14 @@ cd backend
 docker-compose up -d
 
 # Just the frontend
-cd react-frontend
+cd frontend
 docker-compose up -d
 ```
 
 ## Documentation
 
 - [Backend Documentation](backend/backend.md)
-- [Frontend Documentation](react-frontend/README.md)
+- [Frontend Documentation](frontend/README.md)
 - [API Documentation](http://localhost:8001/docs) (when backend is running)
 
 ## License

@@ -19,7 +19,7 @@ Backend session invalidation uses a Redis **allowlist** (`app/utils/token.py`), 
 
 ## CSRF
 
-State-changing auth calls (login, refresh, logout, logout everywhere, password change, etc.) require CSRF. Obtain/attach tokens via the auth/CSRF service layer; see [Security Features](../../reference/SECURITY_FEATURES.md) and `react-frontend` CSRF-related services/tests.
+State-changing auth calls (login, refresh, logout, logout everywhere, password change, etc.) require CSRF. Obtain/attach tokens via the auth/CSRF service layer; see [Security Features](../../reference/SECURITY_FEATURES.md) and `frontend` CSRF-related services/tests.
 
 ## Route and UI guards
 
@@ -37,11 +37,11 @@ Keep permission **names** aligned with backend permission records.
 
 ## Where the code lives
 
-| Concern | Typical location |
-| --- | --- |
-| Login / signup / password reset UI | `src/features/auth/` |
-| Auth Redux slice | `src/store/slices/authSlice.ts` (`logoutUser`, `logoutAllUser`) |
-| Log out everywhere control | `src/components/auth/LogoutEverywhereControl.tsx` |
-| Axios + interceptors | `src/services/api.ts`, `authTokenManager.ts` |
-| Hooks | `src/hooks/useAuth.ts`, `usePermissions.ts` |
-| Route guards | `src/components/auth/` / `src/components/layout/` |
+| Concern                            | Typical location                                                |
+| ---------------------------------- | --------------------------------------------------------------- |
+| Login / signup / password reset UI | `src/features/auth/`                                            |
+| Auth Redux slice                   | `src/store/slices/authSlice.ts` (`logoutUser`, `logoutAllUser`) |
+| Log out everywhere control         | `src/components/auth/LogoutEverywhereControl.tsx`               |
+| Axios + interceptors               | `src/services/api.ts`, `authTokenManager.ts`                    |
+| Hooks                              | `src/hooks/useAuth.ts`, `usePermissions.ts`                     |
+| Route guards                       | `src/components/auth/` / `src/components/layout/`               |

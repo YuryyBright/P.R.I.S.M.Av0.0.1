@@ -1,6 +1,6 @@
-# Contributing to FastAPI RBAC
+# Contributing to FastAPI PRISMA
 
-Thank you for your interest in contributing to the FastAPI RBAC project! We're excited to have you join our community and look forward to your contributions. This guide will help you get started and ensure your contributions align with our project standards.
+Thank you for your interest in contributing to the FastAPI PRISMA project! We're excited to have you join our community and look forward to your contributions. This guide will help you get started and ensure your contributions align with our project standards.
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ Thank you for your interest in contributing to the FastAPI RBAC project! We're e
 
 ## Welcome
 
-FastAPI RBAC is a comprehensive Role-Based Access Control system with a FastAPI backend and React frontend, designed to handle authentication and authorization for microservices. Our mission is to provide a secure, scalable, and developer-friendly RBAC solution that follows enterprise security standards.
+FastAPI PRISMA is a comprehensive Role-Based Access Control system with a FastAPI backend and React frontend, designed to handle authentication and authorization for microservices. Our mission is to provide a secure, scalable, and developer-friendly PRISMA solution that follows enterprise security standards.
 
 ### What We Accept
 
@@ -70,7 +70,7 @@ At this time, we do not accept the following:
 ```
 prisma/
 ├── 📁 backend/              # FastAPI application
-├── 📁 react-frontend/       # React TypeScript app
+├── 📁 frontend/       # React TypeScript app
 ├── 📁 docs/                # Documentation
 ├── 📁 scripts/             # Utility scripts
 └── 📄 docker-compose*.yml  # Container configurations
@@ -225,7 +225,7 @@ mypy . --exclude alembic
 **Run quality checks**:
 
 ```bash
-cd react-frontend
+cd frontend
 npx prettier --write .
 npx eslint . --fix
 ```
@@ -288,7 +288,7 @@ python backend/test_runner.py specific --path backend/test/unit/test_crud_user.p
 **Running Tests**:
 
 ```bash
-cd react-frontend
+cd frontend
 npm test          # Run all tests
 npm run test:ui   # Run with UI
 npm run coverage  # Generate coverage report
@@ -516,7 +516,7 @@ By contributing to this project, you agree that your contributions will be licen
 | ---------------------- | ----------------------------------- | ---------------------------------------------------------- |
 | **Setup development**  | `docker-compose up -d`              | [Getting Started](docs/getting-started/GETTING_STARTED.md) |
 | **Run backend tests**  | `python backend/test_runner.py all` | [Testing Guide](docs/development/TESTING.md)               |
-| **Run frontend tests** | `cd react-frontend && npm test`     | [Frontend Testing](react-frontend/README.md#testing)       |
+| **Run frontend tests** | `cd frontend && npm test`           | [Frontend Testing](frontend/README.md#testing)             |
 | **Format code**        | `black . && prettier --write .`     | [Code Standards](#code-standards)                          |
 | **Check quality**      | `flake8 . && eslint .`              | [Development Guidelines](#development-guidelines)          |
 
@@ -524,4 +524,4 @@ By contributing to this project, you agree that your contributions will be licen
 
 **Ready to contribute?** 🚀 [Start with our Getting Started Guide](docs/getting-started/GETTING_STARTED.md)
 
-Thank you for contributing to FastAPI RBAC! Your efforts help make this project better for everyone. 🙏
+Thank you for contributing to FastAPI PRISMA! Your efforts help make this project better for everyone. 🙏

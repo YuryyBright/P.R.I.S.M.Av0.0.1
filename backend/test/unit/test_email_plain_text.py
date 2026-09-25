@@ -25,7 +25,7 @@ def verification_html() -> str:
     return render_template(
         "email-verification.html",
         {
-            "project_name": "FastAPI RBAC",
+            "project_name": "FastAPI PRISMA",
             "username": "qa@example.com",
             "email": "qa@example.com",
             "verification_url": VERIFICATION_URL,
@@ -105,7 +105,7 @@ def test_every_template_yields_text_containing_its_links(template: str) -> None:
     import re
 
     context = {
-        "project_name": "FastAPI RBAC",
+        "project_name": "FastAPI PRISMA",
         "username": "qa@example.com",
         "email": "qa@example.com",
         "valid_for": "24 hours",

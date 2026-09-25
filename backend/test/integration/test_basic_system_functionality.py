@@ -1,5 +1,5 @@
 """
-Integration test: Basic system functionality for FastAPI RBAC backend.
+Integration test: Basic system functionality for FastAPI PRISMA backend.
 
 This module provides integration tests for core system components (DB, endpoints, CORS, config, "
 "error handling)."

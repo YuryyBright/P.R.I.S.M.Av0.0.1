@@ -1,10 +1,10 @@
 # Security Features Documentation
 
-This document provides comprehensive information about the security features implemented in the FastAPI RBAC project.
+This document provides comprehensive information about the security features implemented in the FastAPI PRISMA project.
 
 ## 🔒 Security Overview
 
-The FastAPI RBAC system implements enterprise-grade security with multiple layers of protection against common web vulnerabilities and attacks.
+The FastAPI PRISMA system implements enterprise-grade security with multiple layers of protection against common web vulnerabilities and attacks.
 
 **Security Rating**: ⭐⭐⭐⭐⭐ (Enterprise-Grade)
 
@@ -60,7 +60,7 @@ const csrfToken = await csrfService.getCsrfToken();
 
 The key is `user:{id}` when `get_current_user` has already established the caller, and `ip:{client address}` otherwise. Prefixes keep those two from colliding. The key function does not decode tokens. The four endpoints above never call `get_current_user`, so they stay address-keyed at the thresholds listed. A later authenticated route that takes `@limiter.limit` gets a per-user bucket instead of sharing one address quota.
 
-The address used for the IP key is the *real* client address: `ProxyHeadersMiddleware` corrects `request.client` from `X-Forwarded-For` / `X-Real-IP` when the peer is a `TRUSTED_PROXIES` member, and ignores those headers otherwise ([ADR 0011](../adr/0011-session-security-model.md) decision 8). Behind a proxy that is not configured as trusted, every anonymous client shares one bucket.
+The address used for the IP key is the _real_ client address: `ProxyHeadersMiddleware` corrects `request.client` from `X-Forwarded-For` / `X-Real-IP` when the peer is a `TRUSTED_PROXIES` member, and ignores those headers otherwise ([ADR 0011](../adr/0011-session-security-model.md) decision 8). Behind a proxy that is not configured as trusted, every anonymous client shares one bucket.
 
 Registration / resend-verification also use separate Redis **abuse counters** (not slowapi).
 
@@ -288,7 +288,7 @@ python backend/test/test_sanitization.py
 pytest test/ -k "security or auth or csrf" -v
 
 # Run frontend security tests
-cd react-frontend
+cd frontend
 npm test -- --run csrfService.test.ts
 ```
 

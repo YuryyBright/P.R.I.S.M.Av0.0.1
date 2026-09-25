@@ -1,16 +1,16 @@
 # Frontend
 
-Documentation for the UI layer of FastAPI RBAC.
+Documentation for the UI layer of FastAPI PRISMA.
 
 ## Current implementation
 
-The shipped UI is a **React + TypeScript + Vite** app in [`react-frontend/`](https://github.com/mnaimfaizy/prisma/tree/main/react-frontend).
+The shipped UI is a **React + TypeScript + Vite** app in [`frontend/`](https://github.com/mnaimfaizy/prisma/tree/main/frontend).
 
 | Page                                                     | Covers                                 |
 | -------------------------------------------------------- | -------------------------------------- |
 | [Setup](./react/setup.md)                                | Install, env files, local dev commands |
 | [Architecture](./react/architecture.md)                  | Project layout and coding patterns     |
-| [Authentication](./react/auth.md)                        | Client auth, tokens, RBAC guards       |
+| [Authentication](./react/auth.md)                        | Client auth, tokens, PRISMA guards     |
 | [State management](./react/state.md)                     | Redux Toolkit slices and thunks        |
 | [UI components](./react/ui.md)                           | ShadCN / Tailwind                      |
 | [Testing](./react/testing.md)                            | Vitest and Playwright                  |

@@ -1,6 +1,6 @@
 # Environment Management Scripts
 
-This directory contains scripts for managing, building, and cleaning up Docker environments for the FastAPI RBAC project.
+This directory contains scripts for managing, building, and cleaning up Docker environments for the FastAPI PRISMA project.
 
 ## cleanup-environments.ps1
 
@@ -41,14 +41,14 @@ A comprehensive PowerShell script to clean up Docker resources for test, dev, an
 - `-DryRun` : Show what would be cleaned without making changes.
 - `-ShowDetails` : Show detailed output during operations.
 - `-Help` : Show help message.
-- `-GlobalPrune` : Perform a full Docker system prune (all containers, images, volumes, networks, and build cache on this system; not limited to FastAPI RBAC resources).
+- `-GlobalPrune` : Perform a full Docker system prune (all containers, images, volumes, networks, and build cache on this system; not limited to FastAPI PRISMA resources).
 
 ### Warnings
 
 - Using `-IncludeVolumes` or `-Force` will permanently delete database data!
 - Using `-IncludeImages` or `-Force` will require rebuilding images next time.
 - Using `-Force` cleans EVERYTHING (containers, images, volumes, networks) for the selected environment(s).
-- Using `-GlobalPrune` will remove **ALL** Docker containers, images, volumes, networks, and build cache on this system (not limited to FastAPI RBAC resources).
+- Using `-GlobalPrune` will remove **ALL** Docker containers, images, volumes, networks, and build cache on this system (not limited to FastAPI PRISMA resources).
 - Use `-DryRun` first to preview what will be cleaned.
 
 ### Examples

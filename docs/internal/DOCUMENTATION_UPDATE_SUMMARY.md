@@ -17,7 +17,7 @@
 
 ### 3. **Frontend Documentation** ✅
 
-- **react-frontend/README.md**: Added comprehensive testing section (354 tests), enhanced security considerations
+- **frontend/README.md**: Added comprehensive testing section (354 tests), enhanced security considerations
 - Updated project structure and testing commands
 
 ### 4. **Main Documentation Hub** ✅

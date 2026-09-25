@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-This guide provides instructions for deploying the FastAPI RBAC project to a production environment.
+This guide provides instructions for deploying the FastAPI PRISMA project to a production environment.
 
 ## Prerequisites
 

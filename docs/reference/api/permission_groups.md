@@ -1,6 +1,6 @@
 # Permission Groups API
 
-This document provides information about the permission group management endpoints of the FastAPI RBAC API.
+This document provides information about the permission group management endpoints of the FastAPI PRISMA API.
 
 ## Endpoints
 

@@ -1,5 +1,5 @@
 """
-Celery configuration module for the FastAPI RBAC project.
+Celery configuration module for the FastAPI PRISMA project.
 This module provides configuration settings for Celery tasks and workers.
 """
 

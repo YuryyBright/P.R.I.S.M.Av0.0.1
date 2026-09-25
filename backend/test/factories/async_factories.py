@@ -369,7 +369,7 @@ class AsyncTestDataBuilder:
         self.role_group_factory = AsyncRoleGroupFactory(session)
 
     async def create_basic_rbac_setup(self) -> Dict[str, Any]:
-        """Create a basic RBAC setup with users, roles, and permissions."""
+        """Create a basic PRISMA setup with users, roles, and permissions."""
 
         # Create permission groups
         user_perm_group = await self.permission_group_factory.create(

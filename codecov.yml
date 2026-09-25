@@ -74,7 +74,7 @@ flags:
       - backend/app/
   frontend:
     paths:
-      - react-frontend/src/
+      - frontend/src/
 
 comment:
   layout: "reach, diff, flags, files"

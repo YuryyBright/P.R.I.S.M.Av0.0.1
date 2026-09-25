@@ -1,5 +1,5 @@
 """
-Background tasks module for FastAPI RBAC system.
+Background tasks module for FastAPI PRISMA system.
 
 This module provides utility functions for common background tasks such as:
 - Sending email notifications

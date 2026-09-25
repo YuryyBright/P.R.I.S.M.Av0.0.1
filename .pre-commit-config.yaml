@@ -5,13 +5,13 @@ repos:
     rev: v4.6.0
     hooks:
       - id: trailing-whitespace
-        exclude: ^react-frontend/
+        exclude: ^frontend/
       - id: end-of-file-fixer
-        exclude: ^react-frontend/
+        exclude: ^frontend/
       - id: check-yaml
-        exclude: ^react-frontend/
+        exclude: ^frontend/
       - id: check-added-large-files
-        exclude: ^react-frontend/
+        exclude: ^frontend/
   - repo: https://github.com/psf/black
     rev: 25.12.0 # Keep in sync with backend/requirements.txt
     hooks:
@@ -19,7 +19,7 @@ repos:
         files: ^backend/
         exclude: >
           (?x)(
-            ^react-frontend/|
+            ^frontend/|
             ^.venv/|
             ^venv/|
             ^.env/|
@@ -37,7 +37,7 @@ repos:
         args: ["--settings-path=backend/pyproject.toml"] # Use pyproject.toml for settings
         exclude: >
           (?x)(
-            ^react-frontend/|
+            ^frontend/|
             ^.venv/|
             ^venv/|
             ^.env/|
@@ -60,7 +60,7 @@ repos:
           ]
         exclude: >
           (?x)(
-            ^react-frontend/|
+            ^frontend/|
             ^.venv/|
             ^venv/|
             ^.env/|
@@ -78,7 +78,7 @@ repos:
         files: ^backend/ # Ensure it only runs on backend code
         exclude: >
           (?x)(
-            ^react-frontend/|
+            ^frontend/|
             ^.venv/|
             ^venv/|
             ^.env/|

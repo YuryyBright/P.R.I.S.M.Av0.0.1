@@ -170,7 +170,7 @@ Selenium has been the industry standard, but Playwright offers:
 
 ### Our Project Requirements
 
-For the FastAPI RBAC React Frontend, we needed:
+For the FastAPI PRISMA React Frontend, we needed:
 
 - ✅ Cross-browser testing (Chromium primarily, with Firefox/WebKit as options)
 - ✅ Fast test execution for CI/CD pipeline
@@ -283,7 +283,7 @@ Migration from Selenium would be more significant but worthwhile:
 6. Strong TypeScript support
 7. Easy CI/CD integration
 
-While Cypress and Selenium are both excellent tools with their own strengths, Playwright provides the best fit for our FastAPI RBAC React Frontend project's requirements.
+While Cypress and Selenium are both excellent tools with their own strengths, Playwright provides the best fit for our FastAPI PRISMA React Frontend project's requirements.
 
 ## References
 

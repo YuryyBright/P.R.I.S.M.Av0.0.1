@@ -2,7 +2,7 @@
 Enhanced Redis connection management with SSL support for production.
 
 This module provides a centralized, secure, and resilient way to manage
-Redis connections across the FastAPI RBAC application, with special
+Redis connections across the FastAPI PRISMA application, with special
 attention to production SSL/TLS requirements.
 
 Features:

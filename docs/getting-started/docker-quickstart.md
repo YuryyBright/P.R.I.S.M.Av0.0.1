@@ -1,6 +1,6 @@
-# FastAPI RBAC Docker Environment Quick Start Guide
+# FastAPI PRISMA Docker Environment Quick Start Guide
 
-This guide helps you quickly get started with the different Docker environments for the FastAPI RBAC project.
+This guide helps you quickly get started with the different Docker environments for the FastAPI PRISMA project.
 
 ## Prerequisites
 

@@ -1,13 +1,13 @@
-# FastAPI RBAC - User Management Microservice
+# FastAPI PRISMA - User Management Microservice
 
 <p align="center">
-  <img src="docs/assets/logo_with_background.png" alt="FastAPI RBAC Logo" width="100%">
+  <img src="docs/assets/logo_with_background.png" alt="FastAPI PRISMA Logo" width="100%">
 </p>
 
 <div align="center">
 
 [![Backend CI](https://github.com/mnaimfaizy/prisma/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/mnaimfaizy/prisma/actions/workflows/backend-ci.yml)
-[![React Frontend CI](https://github.com/mnaimfaizy/prisma/actions/workflows/react-frontend-ci.yml/badge.svg)](https://github.com/mnaimfaizy/prisma/actions/workflows/react-frontend-ci.yml)
+[![React Frontend CI](https://github.com/mnaimfaizy/prisma/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/mnaimfaizy/prisma/actions/workflows/frontend-ci.yml)
 [![Docker Publish](https://github.com/mnaimfaizy/prisma/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/mnaimfaizy/prisma/actions/workflows/docker-publish.yml)
 [![Documentation](https://github.com/mnaimfaizy/prisma/actions/workflows/docs.yml/badge.svg)](https://github.com/mnaimfaizy/prisma/actions/workflows/docs.yml)
 [![Backend Coverage](https://img.shields.io/codecov/c/github/mnaimfaizy/prisma?flag=backend&label=backend%20coverage&logo=codecov&logoColor=white)](https://codecov.io/gh/mnaimfaizy/prisma?flags%5B0%5D=backend)
@@ -26,7 +26,7 @@
 
 </div>
 
-A comprehensive Role-Based Access Control (RBAC) system with FastAPI backend and React frontend, designed to handle Authentication and Authorization for other services.
+A comprehensive Role-Based Access Control (PRISMA) system with FastAPI backend and React frontend, designed to handle Authentication and Authorization for other services.
 
 ## 🚀 Quick Start
 
@@ -107,7 +107,7 @@ prisma/
 │   ├── app/                 # Main application code
 │   ├── alembic/            # Database migrations
 │   └── tests/              # Backend tests
-├── 📁 react-frontend/       # React TypeScript app
+├── 📁 frontend/       # React TypeScript app
 │   ├── src/                # Frontend source code
 │   └── public/             # Static assets
 ├── 📁 docs/                # 📚 Organized documentation
@@ -148,7 +148,7 @@ docker-compose up -d
 .\scripts\dev\run-tests.ps1
 
 # Run frontend tests
-cd react-frontend
+cd frontend
 npm test
 
 # Access services:
@@ -176,7 +176,7 @@ npm test
 | ------------------------ | ------------------------------------------------- | ------------------------------------------------------------------------------- |
 | **Start development**    | `docker-compose up -d`                            | [Getting Started](https://prisma.mnfprofile.com/getting-started/)               |
 | **Run backend tests**    | `.scripts\dev\run-tests.ps1`                     | [Testing Guide](https://prisma.mnfprofile.com/development/testing/)             |
-| **Run frontend tests**   | `cd react-frontend && npm test`                   | [Frontend Testing](https://prisma.mnfprofile.com/development/#frontend-testing) |
+| **Run frontend tests**   | `cd frontend && npm test`                         | [Frontend Testing](https://prisma.mnfprofile.com/development/#frontend-testing) |
 | **Security validation**  | `python backend/test/test_csrf_implementation.py` | [Security Features](https://prisma.mnfprofile.com/#-enterprise-security)        |
 | **Deploy to production** | `.scripts\deployment\push-to-dockerhub.ps1`      | [Deployment](https://prisma.mnfprofile.com/deployment/)                         |
 | **Troubleshoot CORS**    | `.scripts\docker\diagnose-cors.ps1`              | [CORS Guide](https://prisma.mnfprofile.com/troubleshooting/common-issues/)      |
@@ -286,7 +286,7 @@ uvicorn app.main:app --port 8001 --reload
 
 ```bash
 # Navigate to frontend directory
-cd react-frontend
+cd frontend
 
 # Install dependencies
 npm install
@@ -312,7 +312,7 @@ cd backend
 docker-compose up -d
 
 # Just the frontend
-cd react-frontend
+cd frontend
 docker-compose up -d
 ```
 

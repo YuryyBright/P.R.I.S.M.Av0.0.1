@@ -59,7 +59,7 @@ async def test_data_builder(db: AsyncSession) -> AsyncTestDataBuilder:
 
 @pytest.fixture
 async def basic_rbac_setup(test_data_builder: AsyncTestDataBuilder) -> Dict[str, Any]:
-    """Create a basic RBAC setup for testing."""
+    """Create a basic PRISMA setup for testing."""
     return await test_data_builder.create_basic_rbac_setup()
 
 

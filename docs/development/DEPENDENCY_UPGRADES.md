@@ -1,17 +1,17 @@
 # Dependency Upgrades
 
-How we keep FastAPI RBAC dependencies current without “bump everything” PRs.
+How we keep FastAPI PRISMA dependencies current without “bump everything” PRs.
 
 Parent tracking issue: [#30](https://github.com/mnaimfaizy/prisma/issues/30).
 
 ## Source of truth
 
-| Surface                      | Manifest                                                                                 | Notes                                                                                                                       |
-| ---------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Backend runtime + many tools | [`backend/requirements.txt`](../../backend/requirements.txt)                             | Fully pinned (`==`). **Authoritative** for install and CI.                                                                  |
-| Backend tooling config       | [`backend/pyproject.toml`](../../backend/pyproject.toml)                                 | black / pytest / mypy / isort settings. Poetry package metadata is incomplete — do **not** treat Poetry as the lock source. |
-| Frontend                     | [`react-frontend/package.json`](../../react-frontend/package.json) + `package-lock.json` | npm; Semver ranges (`^` / `~`).                                                                                             |
-| Infra                        | Dockerfiles / compose                                                                    | Python, Node, Postgres, Redis base images.                                                                                  |
+| Surface                      | Manifest                                                                     | Notes                                                                                                                       |
+| ---------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Backend runtime + many tools | [`backend/requirements.txt`](../../backend/requirements.txt)                 | Fully pinned (`==`). **Authoritative** for install and CI.                                                                  |
+| Backend tooling config       | [`backend/pyproject.toml`](../../backend/pyproject.toml)                     | black / pytest / mypy / isort settings. Poetry package metadata is incomplete — do **not** treat Poetry as the lock source. |
+| Frontend                     | [`frontend/package.json`](../../frontend/package.json) + `package-lock.json` | npm; Semver ranges (`^` / `~`).                                                                                             |
+| Infra                        | Dockerfiles / compose                                                        | Python, Node, Postgres, Redis base images.                                                                                  |
 
 A follow-up may align Poetry with `requirements.txt`; until then, always pin and install from `requirements.txt`.
 
@@ -67,7 +67,7 @@ Upgrade carefully (changelog review; prefer split PRs if needed):
 
 [Dependabot](https://docs.github.com/en/code-security/dependabot) is configured in [`.github/dependabot.yml`](../../.github/dependabot.yml):
 
-- Weekly updates for `pip` (`/backend`), `npm` (`/react-frontend`), and `github-actions`
+- Weekly updates for `pip` (`/backend`), `npm` (`/frontend`), and `github-actions`
 - Grouped patch/minor PRs per ecosystem
 - Major bumps ignored for high-blast packages until the matching lane runs
 
@@ -81,7 +81,7 @@ python -m pip install pip-audit
 python -m pip_audit -r backend/requirements.txt
 
 # Frontend
-cd react-frontend && npm audit
+cd frontend && npm audit
 ```
 
 Record dispositions on the parent issue or in the active lane PR: **fix now** (assign to a lane), **accept** (document why), or **false positive**.
@@ -90,7 +90,7 @@ CI does **not** currently fail on audit findings; that may be added later.
 
 ## CVE audit snapshot (2026-07-16)
 
-Snapshot from `pip-audit` against `backend/requirements.txt` and `npm audit` in `react-frontend`. Counts change over time; re-run before each lane.
+Snapshot from `pip-audit` against `backend/requirements.txt` and `npm audit` in `frontend`. Counts change over time; re-run before each lane.
 
 ### Backend (`pip-audit`)
 

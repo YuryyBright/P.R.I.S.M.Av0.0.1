@@ -1,5 +1,5 @@
 ﻿#!/bin/bash
-# Development setup script for FastAPI RBAC project
+# Development setup script for FastAPI PRISMA project
 
 # Ensure the script exits on any error
 set -e

@@ -2,14 +2,14 @@
 
 [graphify](https://github.com/safishamsi/graphify) (PyPI package `graphifyy`) builds a persistent knowledge graph of this repository so agents and humans can answer architecture questions without re-exploring the tree every session.
 
-This guide is **project-level** adoption. Runtime auth/RBAC behavior is unchanged.
+This guide is **project-level** adoption. Runtime auth/PRISMA behavior is unchanged.
 
 ## What it is for
 
 Use the graph when asking:
 
 - How auth/token lifecycle connects (JWT + Redis)
-- How RBAC domain entities relate (`user` → `role` → `permission`, role/permission groups)
+- How PRISMA domain entities relate (`user` → `role` → `permission`, role/permission groups)
 - Where API deps → CRUD → models seams sit
 - How the React auth layer talks to `/api/v1` auth endpoints
 
@@ -105,7 +105,7 @@ Or:
 ./scripts/development/graphify/update-graphify.sh --full
 ```
 
-Corpus note: a full-repo detect is typically **>500 files**. Prefer `--code-only` for the free AST path, or scope to `backend/app`, `react-frontend/src`, and `docs` if you need a smaller semantic extract.
+Corpus note: a full-repo detect is typically **>500 files**. Prefer `--code-only` for the free AST path, or scope to `backend/app`, `frontend/src`, and `docs` if you need a smaller semantic extract.
 
 ## Query / path / explain
 
@@ -141,7 +141,7 @@ God-node / surprise highlights worth keeping in mind:
 - Domain hubs: `User`, `Role`, `Permission` rank among highest-degree nodes (alongside utilities like `UUID` / test helpers).
 - Auth → Redis: `login()` has an inferred `calls` edge to `add_token_to_redis()` (`auth.py` → `token.py`).
 - Frontend import cycles through `api.ts` ↔ Redux slices ↔ `*.service.ts` are real structural loops; treat them as navigation signals, not necessarily bugs.
-- Community 0 hubs include frontend auth UI (`LoginForm`, `ProtectedRoute`, `InitAuth`); permission/role model communities cluster around the RBAC models package.
+- Community 0 hubs include frontend auth UI (`LoginForm`, `ProtectedRoute`, `InitAuth`); permission/role model communities cluster around the PRISMA models package.
 
 Re-read `graphify-out/GRAPH_REPORT.md` after each full rebuild — numbers and community IDs drift.
 

@@ -1,6 +1,6 @@
 ﻿#!/bin/bash
 
-echo "=== FastAPI RBAC System Development Mode ==="
+echo "=== FastAPI PRISMA System Development Mode ==="
 
 # Function to wait for PostgreSQL to be ready
 function postgres_ready() {

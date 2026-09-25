@@ -1,6 +1,6 @@
 # Redis SSL/TLS Setup for Production
 
-This document provides comprehensive guidance on configuring and managing Redis SSL/TLS connections for the FastAPI RBAC application in production environments.
+This document provides comprehensive guidance on configuring and managing Redis SSL/TLS connections for the FastAPI PRISMA application in production environments.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ This document provides comprehensive guidance on configuring and managing Redis 
 
 ## Overview
 
-The FastAPI RBAC application uses Redis for:
+The FastAPI PRISMA application uses Redis for:
 
 - Session management and token storage
 - Caching via FastAPI-Cache

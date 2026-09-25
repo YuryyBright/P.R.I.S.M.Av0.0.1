@@ -1,6 +1,6 @@
 ﻿#!/bin/bash
 
-echo "=== FastAPI RBAC System Entrypoint ==="
+echo "=== FastAPI PRISMA System Entrypoint ==="
 
 # Function to wait for PostgreSQL to be ready
 function postgres_ready() {

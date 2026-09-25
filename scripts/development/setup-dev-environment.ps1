@@ -32,7 +32,7 @@ function Write-ColorOutput {
 function Show-Help {
     Write-ColorOutput "`n🚀 Development Environment Setup Script" "Cyan"
     Write-ColorOutput "=========================================" "Cyan"
-    Write-ColorOutput "`nThis script sets up the complete local development environment for FastAPI RBAC.`n" "White"
+    Write-ColorOutput "`nThis script sets up the complete local development environment for FastAPI PRISMA.`n" "White"
 
     Write-ColorOutput "📋 Parameters:" "Yellow"
     Write-ColorOutput "  -Action        : Action to perform (setup, start, stop, status, clean)" "White"
@@ -113,7 +113,7 @@ function Install-Dependencies {
 
     if (-not $SkipFrontend) {
         Write-ColorOutput "Installing Frontend Dependencies..." "Blue"
-        Push-Location "$PSScriptRoot\\..\\..\\react-frontend"
+        Push-Location "$PSScriptRoot\\..\\..\\frontend"
         & npm install
         Pop-Location
     }
@@ -268,7 +268,7 @@ function Clean-DevelopmentEnvironment {
     # Clean Node.js cache
     if (-not $SkipFrontend) {
         Write-ColorOutput "Cleaning Node.js cache..." "Blue"
-        Push-Location "$PSScriptRoot\..\..\..\react-frontend"
+        Push-Location "$PSScriptRoot\..\..\..\frontend"
         & npm run clean 2>$null
         Pop-Location
     }
@@ -283,7 +283,7 @@ if ($Help -or $Action -eq "help") {
     exit 0
 }
 
-Write-ColorOutput "🚀 FastAPI RBAC Development Environment Manager" "Blue"
+Write-ColorOutput "🚀 FastAPI PRISMA Development Environment Manager" "Blue"
 Write-ColorOutput "===============================================" "Blue"
 Write-ColorOutput "Action: $Action" "White"
 Write-ColorOutput ""

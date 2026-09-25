@@ -2,7 +2,7 @@
 # PowerShell equivalent for docker/entrypoint-dev.sh
 
 $ErrorActionPreference = 'Stop'
-Write-Host "=== FastAPI RBAC System Development Mode ==="
+Write-Host "=== FastAPI PRISMA System Development Mode ==="
 
 # Function to wait for PostgreSQL to be ready
 function Wait-PostgresReady {

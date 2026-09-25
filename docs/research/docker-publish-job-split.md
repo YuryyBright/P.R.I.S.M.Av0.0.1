@@ -278,8 +278,8 @@ strategy:
         file: ./backend/Dockerfile.prod
         name: prisma-backend
       - image: frontend
-        context: ./react-frontend
-        file: ./react-frontend/Dockerfile.prod
+        context: ./frontend
+        file: ./frontend/Dockerfile.prod
         name: prisma-frontend
       - image: worker
         context: ./backend

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "=== FastAPI RBAC System Testing Entrypoint ==="
+echo "=== FastAPI PRISMA System Testing Entrypoint ==="
 echo "Environment: ${ENVIRONMENT:-testing}"
 echo "Mode: ${MODE:-testing}"
 

@@ -36,6 +36,7 @@ This guide provides step-by-step instructions for implementing the high-priority
 Refresh token rotation ensures that each time a refresh token is used to obtain a new access token, a new refresh token is also issued, and the old refresh token is invalidated.
 
 **Security Benefits:**
+
 - Limits the lifetime of any single refresh token
 - Detects token theft (old token reuse)
 - Reduces risk window if a refresh token is compromised
@@ -301,7 +302,7 @@ async def get_new_access_token(
 
 #### Step 3: Update Frontend Token Refresh Handler
 
-**File:** `react-frontend/src/services/api.ts`
+**File:** `frontend/src/services/api.ts`
 
 Update the response interceptor to handle the new refresh token:
 
@@ -350,7 +351,7 @@ api.interceptors.response.use(
           store.dispatch(logout());
           return Promise.reject(error);
         } catch (refreshError) {
-          console.error('Token refresh failed:', refreshError);
+          console.error("Token refresh failed:", refreshError);
           store.dispatch(logout());
           return Promise.reject(error);
         }
@@ -358,13 +359,13 @@ api.interceptors.response.use(
     }
 
     // ... rest of error handling ...
-  }
+  },
 );
 ```
 
 #### Step 4: Update Redux Auth Slice
 
-**File:** `react-frontend/src/store/slices/authSlice.ts`
+**File:** `frontend/src/store/slices/authSlice.ts`
 
 Update the `refreshAccessToken` fulfilled case:
 
@@ -487,6 +488,7 @@ async def test_refresh_token_reuse_detection(client, test_user, redis_client):
 #### Integration Tests
 
 Test the full flow:
+
 1. Login
 2. Wait for access token to expire
 3. Frontend automatically refreshes
@@ -498,6 +500,7 @@ Test the full flow:
 If issues occur after deployment:
 
 1. **Quick Rollback:**
+
    ```python
    # In app/core/config.py
    ENABLE_REFRESH_TOKEN_ROTATION: bool = False
@@ -527,11 +530,13 @@ If issues occur after deployment:
 Move refresh tokens from localStorage to HTTP-only cookies for enhanced XSS protection.
 
 **Security Benefits:**
+
 - Immune to XSS attacks (JavaScript cannot access HTTP-only cookies)
 - Automatic CSRF protection with SameSite attribute
 - Industry best practice (OWASP recommended)
 
 **Trade-offs:**
+
 - Requires careful CORS configuration
 - Slightly more complex for mobile apps
 - Cookie size limitations (usually not an issue)
@@ -747,7 +752,7 @@ COOKIE_SAMESITE: str = "lax"  # "strict", "lax", or "none"
 
 #### Step 5: Update Frontend
 
-**File:** `react-frontend/src/lib/tokenStorage.ts`
+**File:** `frontend/src/lib/tokenStorage.ts`
 
 ```typescript
 // Remove refresh token storage functions (no longer needed)
@@ -760,7 +765,7 @@ export const setStoredAccessToken = (token: string): void => {
   try {
     inMemoryToken = token;
   } catch (error) {
-    console.error('Failed to store access token:', error);
+    console.error("Failed to store access token:", error);
     inMemoryToken = null;
   }
 };
@@ -785,7 +790,7 @@ export const clearAuthTokens = (): void => {
 };
 ```
 
-**File:** `react-frontend/src/services/api.ts`
+**File:** `frontend/src/services/api.ts`
 
 ```typescript
 // Update to not send refresh token in body
@@ -799,7 +804,7 @@ api.interceptors.response.use(
         try {
           // Refresh token sent automatically via cookie - no need to get from storage
           const response = await store
-            .dispatch(refreshAccessToken())  // No refresh token parameter needed
+            .dispatch(refreshAccessToken()) // No refresh token parameter needed
             .unwrap();
 
           if (response && response.access_token) {
@@ -814,7 +819,7 @@ api.interceptors.response.use(
           store.dispatch(logout());
           return Promise.reject(error);
         } catch (refreshError) {
-          console.error('Token refresh failed:', refreshError);
+          console.error("Token refresh failed:", refreshError);
           store.dispatch(logout());
           return Promise.reject(error);
         }
@@ -822,11 +827,11 @@ api.interceptors.response.use(
     }
 
     // ... rest of error handling ...
-  }
+  },
 );
 ```
 
-**File:** `react-frontend/src/store/slices/authSlice.ts`
+**File:** `frontend/src/store/slices/authSlice.ts`
 
 ```typescript
 // Update refreshAccessToken thunk
@@ -898,12 +903,12 @@ Prevent race conditions when multiple simultaneous requests trigger token refres
 
 **Implementation:**
 
-**File:** `react-frontend/src/services/authTokenManager.ts`
+**File:** `frontend/src/services/authTokenManager.ts`
 
 ```typescript
 class AuthTokenManager {
   private tokenExpiryTimer: number | null = null;
-  private refreshPromise: Promise<any> | null = null;  // NEW
+  private refreshPromise: Promise<any> | null = null; // NEW
 
   /**
    * Refresh access token with queue management
@@ -911,27 +916,27 @@ class AuthTokenManager {
   async refreshAccessToken(): Promise<string> {
     // If refresh already in progress, return existing promise
     if (this.refreshPromise) {
-      console.log('Token refresh already in progress, waiting...');
+      console.log("Token refresh already in progress, waiting...");
       return this.refreshPromise;
     }
 
-    console.log('Starting new token refresh');
+    console.log("Starting new token refresh");
 
     // Start new refresh
     this.refreshPromise = store
       .dispatch(refreshAccessToken())
       .unwrap()
       .then((response) => {
-        console.log('Token refresh successful');
+        console.log("Token refresh successful");
         return response.access_token;
       })
       .catch((error) => {
-        console.error('Token refresh failed:', error);
+        console.error("Token refresh failed:", error);
         throw error;
       })
       .finally(() => {
-        console.log('Clearing refresh promise');
-        this.refreshPromise = null;  // Reset after completion
+        console.log("Clearing refresh promise");
+        this.refreshPromise = null; // Reset after completion
       });
 
     return this.refreshPromise;
@@ -973,6 +978,7 @@ class AuthTokenManager {
 ### Integration Testing
 
 Test complete authentication flows:
+
 1. Login → Use API → Access expires → Auto-refresh → Continue
 2. Login → Logout → Verify cookies cleared
 3. Login → Manual refresh → Verify rotation
@@ -1016,6 +1022,7 @@ Test complete authentication flows:
 ### Rollback Triggers
 
 Rollback if:
+
 - Error rate > 5% for token operations
 - User complaints > normal baseline
 - Security events spike unexpectedly
@@ -1028,6 +1035,7 @@ Rollback if:
 These implementations significantly enhance the security posture of the session management system while maintaining good user experience. Follow the steps carefully, test thoroughly, and monitor closely after deployment.
 
 **Estimated Implementation Time:**
+
 - Refresh Token Rotation: 4-6 hours
 - HTTP-Only Cookies: 6-8 hours
 - Token Refresh Queue: 2-3 hours

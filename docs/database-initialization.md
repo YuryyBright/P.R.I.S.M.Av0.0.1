@@ -4,7 +4,7 @@ This document explains how database initialization works in different environmen
 
 ## Overview
 
-The FastAPI RBAC system uses a multi-step database initialization process:
+The FastAPI PRISMA system uses a multi-step database initialization process:
 
 1. **Database Connection Check** - Waits for database to be ready
 2. **Pre-start Script** - Validates database connectivity and configuration

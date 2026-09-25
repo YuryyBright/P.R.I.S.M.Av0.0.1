@@ -32,7 +32,7 @@ function Write-ColorOutput {
 function Show-Help {
     Write-ColorOutput "`n🛠️  Code Quality Management Script" "Cyan"
     Write-ColorOutput "========================================" "Cyan"
-    Write-ColorOutput "`nThis script provides comprehensive code quality management for the FastAPI RBAC project." "White"
+    Write-ColorOutput "`nThis script provides comprehensive code quality management for the FastAPI PRISMA project." "White"
 
     Write-ColorOutput "`n📋 Parameters:" "Yellow"
     Write-ColorOutput "  -Action        : Action to perform (format, lint, fix-imports, all)" "White"
@@ -136,7 +136,7 @@ function Invoke-BackendFixImports {
 function Invoke-FrontendFormat {
     Write-ColorOutput "🎨 Formatting Frontend Code..." "Cyan"
 
-    Push-Location "$PSScriptRoot\..\..\..\react-frontend"
+    Push-Location "$PSScriptRoot\..\..\..\frontend"
 
     try {
         if ($Check) {
@@ -159,7 +159,7 @@ function Invoke-FrontendFormat {
 function Invoke-FrontendLint {
     Write-ColorOutput "🔍 Linting Frontend Code..." "Cyan"
 
-    Push-Location "$PSScriptRoot\..\..\..\react-frontend"
+    Push-Location "$PSScriptRoot\..\..\..\frontend"
 
     try {
         Write-ColorOutput "Running ESLint..." "Blue"
@@ -180,7 +180,7 @@ function Invoke-FrontendLint {
 function Invoke-FrontendFixImports {
     Write-ColorOutput "📦 Fixing Frontend Imports..." "Cyan"
 
-    Push-Location "$PSScriptRoot\..\..\..\react-frontend"
+    Push-Location "$PSScriptRoot\..\..\..\frontend"
 
     try {
         Write-ColorOutput "Organizing imports..." "Blue"
@@ -202,7 +202,7 @@ if ($Action -eq "help" -or $args -contains "-h" -or $args -contains "--help" -or
     exit 0
 }
 
-Write-ColorOutput "🛠️  FastAPI RBAC Code Quality Manager" "Blue"
+Write-ColorOutput "🛠️  FastAPI PRISMA Code Quality Manager" "Blue"
 Write-ColorOutput "====================================" "Blue"
 Write-ColorOutput "Action: $Action" "White"
 Write-ColorOutput "Target: $Target" "White"

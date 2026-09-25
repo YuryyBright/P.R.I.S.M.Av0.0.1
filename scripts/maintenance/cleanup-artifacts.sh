@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Maintenance and Cleanup Script (Shell version)
-# Cleans Python, Node, mypy, pytest, and coverage caches for FastAPI RBAC project
+# Cleans Python, Node, mypy, pytest, and coverage caches for FastAPI PRISMA project
 
 set -e
 
@@ -31,8 +31,8 @@ find "$PROJECT_ROOT/backend" -type f -name "*.pyc" -delete
 
 # Node.js cache
 color_echo blue "Cleaning Node.js cache..."
-remove_dir "$PROJECT_ROOT/react-frontend/node_modules/.cache" "Node.js cache"
-remove_dir "$PROJECT_ROOT/react-frontend/.vite" "Vite cache"
+remove_dir "$PROJECT_ROOT/frontend/node_modules/.cache" "Node.js cache"
+remove_dir "$PROJECT_ROOT/frontend/.vite" "Vite cache"
 
 # mypy cache
 remove_dir "$PROJECT_ROOT/backend/.mypy_cache" "MyPy cache"
@@ -42,6 +42,6 @@ remove_dir "$PROJECT_ROOT/backend/.pytest_cache" "Pytest cache"
 
 # Coverage cache
 remove_dir "$PROJECT_ROOT/backend/.coverage" "Coverage cache"
-remove_dir "$PROJECT_ROOT/react-frontend/coverage" "Frontend coverage"
+remove_dir "$PROJECT_ROOT/frontend/coverage" "Frontend coverage"
 
 color_echo green "✅ Cache cleanup completed"

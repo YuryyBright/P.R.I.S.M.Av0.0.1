@@ -154,7 +154,7 @@ services:
     restart: always
     container_name: prisma_db_dev
     ports:
-      - "5433:5432" # Different port to avoid conflicts
+      - "5432:5432" # Different port to avoid conflicts
     env_file:
       - .env.development
     environment:

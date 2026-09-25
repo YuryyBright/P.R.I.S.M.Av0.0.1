@@ -1,5 +1,5 @@
 """
-Centralized Celery configuration for the FastAPI RBAC system.
+Centralized Celery configuration for the FastAPI PRISMA system.
 This module contains the main Celery app instance used across the application.
 """
 

@@ -1,10 +1,10 @@
-# Create-Release.ps1 - FastAPI RBAC Release Automation Script
+# Create-Release.ps1 - FastAPI PRISMA Release Automation Script
 #
 # Default: Release PR mode (branch release/vX.Y.Z, VERSION + notes, push, gh pr create).
 # Emergency: -DirectTag tags from main (discouraged).
 # Kept in parity with create-release.sh (Phase C1).
 #
-# Author: FastAPI RBAC Team
+# Author: FastAPI PRISMA Team
 # Created: July 2, 2025
 
 param(
@@ -53,7 +53,7 @@ trap {
 }
 
 function Show-Help {
-    Write-Host "`nFastAPI RBAC Release Automation Script" -ForegroundColor Cyan
+    Write-Host "`nFastAPI PRISMA Release Automation Script" -ForegroundColor Cyan
     Write-Host "======================================" -ForegroundColor Cyan
     Write-Host "`nDefault mode opens a Release PR (release/vX.Y.Z). Use -DirectTag only for emergencies.`n" -ForegroundColor White
 
@@ -727,7 +727,7 @@ try {
     }
 
     Clear-ChangelogArtifact
-    Write-Host "`nThank you for using the FastAPI RBAC Release Automation Script!" -ForegroundColor Cyan
+    Write-Host "`nThank you for using the FastAPI PRISMA Release Automation Script!" -ForegroundColor Cyan
 }
 finally {
     Pop-Location

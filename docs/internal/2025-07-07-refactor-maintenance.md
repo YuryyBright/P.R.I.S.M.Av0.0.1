@@ -1,11 +1,11 @@
-# FastAPI RBAC System: Refactor & Maintenance Summary
+# FastAPI PRISMA System: Refactor & Maintenance Summary
 
 **Date:** 2025-07-07
 **Type:** Refactor & Maintenance
 
 ## Overview
 
-This document summarizes the major refactor and maintenance changes applied to the FastAPI RBAC project in July 2025. The focus was on production-readiness, environment isolation, Docker Compose modularity, and improved developer experience for local, test, and production environments.
+This document summarizes the major refactor and maintenance changes applied to the FastAPI PRISMA project in July 2025. The focus was on production-readiness, environment isolation, Docker Compose modularity, and improved developer experience for local, test, and production environments.
 
 ---
 

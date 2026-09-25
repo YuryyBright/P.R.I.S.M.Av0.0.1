@@ -1,5 +1,5 @@
 """
-Global pytest configuration for the FastAPI RBAC project.
+Global pytest configuration for the FastAPI PRISMA project.
 
 This module sets up fixtures and configuration for all test modules.
 """

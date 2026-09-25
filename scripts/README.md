@@ -65,7 +65,7 @@ Backend-specific scripts remain in the backend directory:
 
 ### Frontend Scripts
 
-Frontend build and development scripts are managed through npm/package.json in `react-frontend/`
+Frontend build and development scripts are managed through npm/package.json in `frontend/`
 
 ## 🖥️ Platform Support
 

@@ -1,6 +1,6 @@
 # Docker Environment Separation - Implementation Summary
 
-This document summarizes all the changes made to implement complete separation between local development and production testing environments for the FastAPI RBAC project.
+This document summarizes all the changes made to implement complete separation between local development and production testing environments for the FastAPI PRISMA project.
 
 ## Overview of Changes
 
@@ -29,9 +29,9 @@ The project now supports four distinct environments with complete isolation:
 
 #### Frontend Directory
 
-- **`react-frontend/docker-compose.dev.yml`** - Frontend development service
-- **`react-frontend/docker-compose.test.yml`** - Frontend testing environment
-- **`react-frontend/docker-compose.prod.yml`** - Frontend production service
+- **`frontend/docker-compose.dev.yml`** - Frontend development service
+- **`frontend/docker-compose.test.yml`** - Frontend testing environment
+- **`frontend/docker-compose.prod.yml`** - Frontend production service
 
 ### 2. Environment Files
 
@@ -43,9 +43,9 @@ The project now supports four distinct environments with complete isolation:
 
 #### Frontend Environment Files
 
-- **`react-frontend/.env.development`** - New development environment settings
-- **`react-frontend/.env.test`** - Updated testing environment settings
-- **`react-frontend/.env.production`** - Updated production environment settings
+- **`frontend/.env.development`** - New development environment settings
+- **`frontend/.env.test`** - Updated testing environment settings
+- **`frontend/.env.production`** - Updated production environment settings
 
 ### 3. Management Scripts
 

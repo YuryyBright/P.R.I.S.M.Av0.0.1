@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# Docker Environment Management Script for FastAPI RBAC
+# Docker Environment Management Script for FastAPI PRISMA
 # This script helps manage different Docker environments with proper separation
 
 param(
@@ -74,7 +74,7 @@ $environments = @{
         }
     }
     "prod" = @{
-        "compose_files" = @("backend/docker-compose.prod.yml", "react-frontend/docker-compose.prod.yml")
+        "compose_files" = @("backend/docker-compose.prod.yml", "frontend/docker-compose.prod.yml")
         "network" = "prisma_network"
         "description" = "Production Environment (Secure, Optimized)"
         "ports" = @{
@@ -91,7 +91,7 @@ $environments = @{
 if ($Help -or $Action -eq "help") {
     Write-ColorOutput "🐳 Docker Environment Manager - Help" "Cyan"
     Write-ColorOutput "======================================" "Cyan"
-    Write-ColorOutput "`nThis script manages Docker environments for the FastAPI RBAC project.`n" "White"
+    Write-ColorOutput "`nThis script manages Docker environments for the FastAPI PRISMA project.`n" "White"
 
     Write-ColorOutput "📋 Usage:" "Yellow"
     Write-ColorOutput "  .\manage-environments.ps1 -Environment <env> -Action <action> [options]" "White"
@@ -143,7 +143,7 @@ if (-not $envConfig) {
     exit 1
 }
 
-Write-ColorOutput "=== FastAPI RBAC Environment Manager ===" "Blue"
+Write-ColorOutput "=== FastAPI PRISMA Environment Manager ===" "Blue"
 Write-ColorOutput "Environment: $Environment" "Green"
 Write-ColorOutput "Description: $($envConfig.description)" "Yellow"
 Write-ColorOutput "Action: $Action" "Green"

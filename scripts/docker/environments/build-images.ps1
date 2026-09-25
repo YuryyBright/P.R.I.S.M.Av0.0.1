@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# Build Environment Images Script for FastAPI RBAC
+# Build Environment Images Script for FastAPI PRISMA
 # This script builds all Docker images for specified environments with proper tagging
 
 param(
@@ -74,7 +74,7 @@ $environments = @{
 if ($Help) {
     Write-ColorOutput "🐳 Docker Image Builder - Help" "Cyan"
     Write-ColorOutput "==============================" "Cyan"
-    Write-ColorOutput "`nThis script builds Docker images for the FastAPI RBAC project environments.`n" "White"
+    Write-ColorOutput "`nThis script builds Docker images for the FastAPI PRISMA project environments.`n" "White"
 
     Write-ColorOutput "📋 Usage:" "Yellow"
     Write-ColorOutput "  .\build-images.ps1 -Environment <env> [options]" "White"
@@ -189,8 +189,8 @@ function Get-ImageConfiguration {
             }
         },
         @{
-            Context = "react-frontend"
-            Dockerfile = "react-frontend/Dockerfile"
+            Context = "frontend"
+            Dockerfile = "frontend/Dockerfile"
             ImageName = "react_frontend:$Tag"
             Target = $config.target
             BuildArgs = @{
@@ -272,7 +272,7 @@ function Build-EnvironmentImages {
 }
 
 # Main execution logic
-Write-ColorOutput "🐳 FastAPI RBAC Docker Image Builder" "Cyan"
+Write-ColorOutput "🐳 FastAPI PRISMA Docker Image Builder" "Cyan"
 Write-ColorOutput "====================================" "Cyan"
 Write-ColorOutput "" "White"
 

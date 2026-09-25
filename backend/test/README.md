@@ -1,6 +1,6 @@
-# FastAPI RBAC Test Suite
+# FastAPI PRISMA Test Suite
 
-This document provides comprehensive information about the refactored test suite for the FastAPI RBAC backend.
+This document provides comprehensive information about the refactored test suite for the FastAPI PRISMA backend.
 
 ## Test Suite Status and Coverage (June 2025)
 

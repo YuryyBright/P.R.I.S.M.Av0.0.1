@@ -1,6 +1,6 @@
 # Testing Guide
 
-This guide covers how to run tests and write new ones for the FastAPI RBAC project.
+This guide covers how to run tests and write new ones for the FastAPI PRISMA project.
 
 ## Quick Start
 
@@ -40,7 +40,7 @@ python -m pytest test/test_basic_functionality.py test/test_auth_simplified.py t
 
 Additional test files for specific components:
 
-- `test_api_rbac_comprehensive.py` - Complete RBAC workflow testing
+- `test_api_rbac_comprehensive.py` - Complete PRISMA workflow testing
 - `test_crud_*.py` - Database CRUD operation testing
 - `test_models_*.py` - Database model validation
 - `test_security.py` - Security feature testing
@@ -80,7 +80,7 @@ python -m pytest test/test_api_auth_comprehensive.py::TestAuthenticationEdgeCase
 ### Domain-Specific Testing
 
 ```bash
-# RBAC comprehensive testing (requires configuration)
+# PRISMA comprehensive testing (requires configuration)
 python -m pytest test/test_api_rbac_comprehensive.py -v
 
 # CRUD operations

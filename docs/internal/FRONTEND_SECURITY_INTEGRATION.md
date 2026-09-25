@@ -18,7 +18,7 @@
 
 **New File Created:**
 
-- `react-frontend/src/services/csrfService.ts` - Complete CSRF token management
+- `frontend/src/services/csrfService.ts` - Complete CSRF token management
 
 **Features Implemented:**
 
@@ -32,7 +32,7 @@
 
 **File Updated:**
 
-- `react-frontend/src/services/api.ts` - Enhanced request/response interceptors
+- `frontend/src/services/api.ts` - Enhanced request/response interceptors
 
 **New Capabilities:**
 

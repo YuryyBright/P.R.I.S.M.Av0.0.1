@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "=== FastAPI RBAC Production Environment ==="
+echo "=== FastAPI PRISMA Production Environment ==="
 
 # Function to wait for PostgreSQL to be ready
 function postgres_ready() {

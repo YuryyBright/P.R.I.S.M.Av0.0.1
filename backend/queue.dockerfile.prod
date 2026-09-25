@@ -1,4 +1,4 @@
-# FastAPI RBAC Queue Worker Production Dockerfile
+# FastAPI PRISMA Queue Worker Production Dockerfile
 # Multi-stage build for Celery workers, beat, and flower in production
 
 # BUILD STAGE

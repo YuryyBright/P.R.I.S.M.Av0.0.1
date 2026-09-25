@@ -1,6 +1,6 @@
 # Developer Setup Guide
 
-This guide provides detailed instructions for setting up the development environment for the FastAPI RBAC project. It includes instructions for configuring your IDE, installing dependencies, and common workflows.
+This guide provides detailed instructions for setting up the development environment for the FastAPI PRISMA project. It includes instructions for configuring your IDE, installing dependencies, and common workflows.
 
 ## VS Code Setup
 

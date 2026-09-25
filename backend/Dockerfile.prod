@@ -1,4 +1,4 @@
-# FastAPI RBAC Backend Production Dockerfile
+# FastAPI PRISMA Backend Production Dockerfile
 # Multi-stage build for a production-ready FastAPI application
 
 # BUILD STAGE

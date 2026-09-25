@@ -1,6 +1,6 @@
-# FastAPI RBAC Celery Worker
+# FastAPI PRISMA Celery Worker
 
-This Docker image contains the Celery worker service for the FastAPI RBAC (Role-Based Access Control) project. It handles background tasks such as sending emails, processing long-running operations, and executing scheduled tasks.
+This Docker image contains the Celery worker service for the FastAPI PRISMA (Role-Based Access Control) project. It handles background tasks such as sending emails, processing long-running operations, and executing scheduled tasks.
 
 **Project Source Code:** [https://github.com/mnaimfaizy/prisma](https://github.com/mnaimfaizy/prisma)
 
@@ -24,7 +24,7 @@ Refer to the [GitHub repository tags](https://github.com/mnaimfaizy/prisma/tags)
 
 - A running PostgreSQL database (shared with the backend service).
 - A running Redis instance (used as the Celery broker and backend).
-- The FastAPI RBAC Backend service should ideally be running or its database schema initialized, as workers might interact with the database models.
+- The FastAPI PRISMA Backend service should ideally be running or its database schema initialized, as workers might interact with the database models.
 
 ### Running the Container
 

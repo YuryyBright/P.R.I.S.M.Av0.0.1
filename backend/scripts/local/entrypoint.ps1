@@ -2,7 +2,7 @@
 # PowerShell equivalent for entrypoint.sh
 
 $ErrorActionPreference = 'Stop'
-Write-Host "=== FastAPI RBAC System Entrypoint ==="
+Write-Host "=== FastAPI PRISMA System Entrypoint ==="
 
 # Function to wait for PostgreSQL (same as in development-entrypoint.ps1)
 function Wait-PostgresReady {

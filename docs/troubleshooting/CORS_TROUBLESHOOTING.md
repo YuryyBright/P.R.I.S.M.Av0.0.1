@@ -22,7 +22,7 @@ CORS errors typically occur when:
 2. **Configure correct API URL in your frontend**:
    - Inside Docker network: Use `http://prisma:8000`
    - From host browser: Use `http://localhost:8000`
-   - In react-frontend's docker-compose.prod.yml:
+   - In frontend's docker-compose.prod.yml:
      ```yaml
      environment:
        - VITE_API_BASE_URL=http://prisma:8000

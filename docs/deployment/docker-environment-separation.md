@@ -1,6 +1,6 @@
 # Docker Environment Separation Guide
 
-This document explains the complete separation between local development and production testing environments for the FastAPI RBAC project.
+This document explains the complete separation between local development and production testing environments for the FastAPI PRISMA project.
 
 ## Environment Overview
 
@@ -204,7 +204,7 @@ docker-compose -f docker-compose.prod-test.yml logs -f
 
 ```bash
 # Start production environment (individual service compose files)
-docker-compose -f backend/docker-compose.prod.yml -f react-frontend/docker-compose.prod.yml up -d
+docker-compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml up -d
 ```
 
 ## Key Configuration Differences

@@ -1,6 +1,6 @@
 # Release Management Guide
 
-This document describes the complete release process for the FastAPI RBAC project. This project is distributed as Docker images on Docker Hub, not as a Python package.
+This document describes the complete release process for the FastAPI PRISMA project. This project is distributed as Docker images on Docker Hub, not as a Python package.
 
 ## Table of Contents
 
@@ -18,7 +18,7 @@ This document describes the complete release process for the FastAPI RBAC projec
 
 ## Overview
 
-FastAPI RBAC uses a fully automated CI/CD pipeline for releases:
+FastAPI PRISMA uses a fully automated CI/CD pipeline for releases:
 
 - **Versioning**: Semantic versioning (SemVer) with Git tags
 - **Distribution**: Docker images published to Docker Hub
@@ -298,7 +298,7 @@ The `docker-publish.yml` workflow triggers on:
 8. Push to Docker Hub
 9. Update Docker Hub descriptions from:
    - `backend/README.dockerhub.md`
-   - `react-frontend/README.dockerhub.md`
+   - `frontend/README.dockerhub.md`
    - `backend/README.worker.dockerhub.md`
    (via `.github/workflows/docker-publish.yml` — not from `docs/release-notes.md`)
 ```
@@ -491,7 +491,7 @@ git branch -d hotfix/v1.2.4
 1. Log in to Docker Hub
 2. Go to Account Settings → Security
 3. Click "New Access Token"
-4. Name: "GitHub Actions RBAC"
+4. Name: "GitHub Actions PRISMA"
 5. Permissions: Read, Write, Delete
 6. Copy token immediately (shown only once)
 

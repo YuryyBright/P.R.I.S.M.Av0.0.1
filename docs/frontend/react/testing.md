@@ -17,7 +17,7 @@ Related: [Setup](./setup.md), [Architecture](./architecture.md), backend testing
 
 ### Commands
 
-Run from `react-frontend/`:
+Run from `frontend/`:
 
 ```bash
 npm test                 # Vitest (interactive / watch-oriented)
@@ -48,14 +48,14 @@ npm run test:e2e:report
 npm run test:e2e:codegen
 ```
 
-Specs and helpers live under `react-frontend/e2e/`. Deeper runbooks remain in the package:
+Specs and helpers live under `frontend/e2e/`. Deeper runbooks remain in the package:
 
-- [`react-frontend/E2E_TESTING.md`](../../../react-frontend/E2E_TESTING.md)
-- [`react-frontend/e2e/README.md`](../../../react-frontend/e2e/README.md)
-- [`react-frontend/e2e/QUICK_START.md`](../../../react-frontend/e2e/QUICK_START.md)
+- [`frontend/E2E_TESTING.md`](../../../frontend/E2E_TESTING.md)
+- [`frontend/e2e/README.md`](../../../frontend/e2e/README.md)
+- [`frontend/e2e/QUICK_START.md`](../../../frontend/e2e/QUICK_START.md)
 
 Ensure the app (and usually the API) are available for e2e as described in those guides.
 
 ## Coverage expectations
 
-Treat the counts in `react-frontend/README.md` / CI as snapshots — they drift. Prefer green CI and meaningful assertions over chasing a fixed number in this page.
+Treat the counts in `frontend/README.md` / CI as snapshots — they drift. Prefer green CI and meaningful assertions over chasing a fixed number in this page.

@@ -23,7 +23,7 @@ That is a family, not a single row. The seven references are:
 
 `remove_user` already refused assigned roles with 409. The other references had no equivalent, so they failed as 500. A generic `IntegrityError` → 409 handler would stop the 500 without saying which reference blocked the delete; it is a safety net, not the policy.
 
-The references do not share one answer. Password history is meaningless without the user. Assigned roles are a caller mistake that can be undone. Audit events are a compliance record and must outlive the account. RBAC artifacts outlive their creator.
+The references do not share one answer. Password history is meaningless without the user. Assigned roles are a caller mistake that can be undone. Audit events are a compliance record and must outlive the account. PRISMA artifacts outlive their creator.
 
 ## Decision
 

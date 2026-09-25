@@ -166,7 +166,7 @@ git push origin :refs/tags/v1.2.3
    ```bash
    docker build -f backend/Dockerfile.prod backend/
    docker build -f backend/queue.dockerfile.prod backend/
-   docker build -f react-frontend/Dockerfile.prod react-frontend/
+   docker build -f frontend/Dockerfile.prod frontend/
    ```
    The worker image must use `queue.dockerfile.prod` (compose does too). Do **not** use `--target worker` on `Dockerfile.prod` — that stage does not exist.
 3. Check Docker Hub credentials in GitHub secrets (`DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`)

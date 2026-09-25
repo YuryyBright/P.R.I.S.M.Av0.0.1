@@ -1,7 +1,7 @@
 # Test Script for Docker Production Setup
 # This script builds and runs the production Docker containers to verify they work correctly
 
-Write-Host "FastAPI RBAC Production Docker Test" -ForegroundColor Cyan
+Write-Host "FastAPI PRISMA Production Docker Test" -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
 
 # Ensure we're in the project root
@@ -26,19 +26,19 @@ if (-not $networkExists) {
 
 # Stop any running containers from previous tests
 Write-Host "Stopping any existing containers..." -ForegroundColor Green
-docker compose -f backend/docker-compose.prod.yml -f react-frontend/docker-compose.prod.yml down --remove-orphans
+docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml down --remove-orphans
 
 # Build the production images
 Write-Host "Building production Docker images..." -ForegroundColor Green
-docker compose -f backend/docker-compose.prod.yml -f react-frontend/docker-compose.prod.yml build --no-cache
+docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml build --no-cache
 
 # Start the production environment
 Write-Host "Starting production environment..." -ForegroundColor Green
-docker compose -f backend/docker-compose.prod.yml -f react-frontend/docker-compose.prod.yml up -d
+docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml up -d
 
 # Check if containers are running
 Write-Host "Checking container status..." -ForegroundColor Green
-docker compose -f backend/docker-compose.prod.yml -f react-frontend/docker-compose.prod.yml ps
+docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml ps
 
 # Wait for services to be ready
 Write-Host "Waiting for services to be ready..." -ForegroundColor Green
@@ -99,4 +99,4 @@ if (-not $frontendOk) {
 
 Write-Host "Production Docker environment test completed!" -ForegroundColor Green
 Write-Host "To stop the containers, run:" -ForegroundColor Yellow
-Write-Host "docker compose -f backend/docker-compose.prod.yml -f react-frontend/docker-compose.prod.yml down" -ForegroundColor Cyan
+Write-Host "docker compose -f backend/docker-compose.prod.yml -f frontend/docker-compose.prod.yml down" -ForegroundColor Cyan

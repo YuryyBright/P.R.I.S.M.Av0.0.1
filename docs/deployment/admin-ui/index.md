@@ -16,7 +16,7 @@ Deploy the **admin UI** as a static SPA on a static host. This package is **not*
 | ------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | [cPanel setup](./cpanel-setup.md)                                                                       | Subdomain, docroot, secrets, first deploy  |
 | [`.github/workflows/admin-ui-cpanel-deploy.yml`](../../../.github/workflows/admin-ui-cpanel-deploy.yml) | Named jobs: build → upload → smoke         |
-| `react-frontend/public/.htaccess`                                                                       | Copied into `dist/` for SPA route fallback |
+| `frontend/public/.htaccess`                                                                             | Copied into `dist/` for SPA route fallback |
 
 ## Quick mental model
 

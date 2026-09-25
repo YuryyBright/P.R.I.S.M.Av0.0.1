@@ -1,6 +1,6 @@
 # Authentication API
 
-This document provides comprehensive information about the authentication endpoints of the FastAPI RBAC API. It is fully aligned with the backend implementation as of July 2025.
+This document provides comprehensive information about the authentication endpoints of the FastAPI PRISMA API. It is fully aligned with the backend implementation as of July 2025.
 
 ---
 

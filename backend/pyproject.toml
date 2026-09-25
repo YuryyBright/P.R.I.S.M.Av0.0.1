@@ -14,7 +14,7 @@ exclude = '''
   | build
   | dist
   | alembic
-  | ../react-frontend
+  | ../frontend
 )/
 '''
 
@@ -73,7 +73,7 @@ include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
-skip = ["../react-frontend", "alembic", ".venv", "venv"]
+skip = ["../frontend", "alembic", ".venv", "venv"]
 
 [tool.mypy]
 python_version = '3.10'
@@ -88,7 +88,7 @@ follow_imports = 'silent'
 ignore_missing_imports = true
 pretty = true
 show_error_codes = true
-exclude = ['^../react-frontend/.*$', '^alembic/.*$']
+exclude = ['^../frontend/.*$', '^alembic/.*$']
 
 [[tool.mypy.overrides]]
 module = 'sqlmodel.*'
@@ -135,7 +135,7 @@ ignore_errors = true
 [tool.poetry]
 name = "prisma-backend"
 version = "0.1.0"
-description = "FastAPI RBAC backend for user management and authentication"
+description = "FastAPI PRISMA backend for user management and authentication"
 authors = ["Naim Faizy <mnaim.faizy@gmail.com>"]
 packages = [
     { include = "app" }

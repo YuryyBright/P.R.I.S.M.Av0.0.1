@@ -105,13 +105,13 @@ Additionally, **two `Limiter` instances** exist (`main.py` vs `auth.py`). [SlowA
 
 | When           | What                                                                                              | Evidence                                                                                                                                                     |
 | -------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **2025-04-25** | Initial scaffold adds `fastapi-limiter>=0.1.6,<0.2.0` and `FastAPILimiter.init/close` in lifespan | Commit `47627b4` — _“Add initial project configuration and dependencies”_; `75c0586` — _“Initialize FastAPI RBAC project structure with Docker support”_     |
+| **2025-04-25** | Initial scaffold adds `fastapi-limiter>=0.1.6,<0.2.0` and `FastAPILimiter.init/close` in lifespan | Commit `47627b4` — _“Add initial project configuration and dependencies”_; `75c0586` — _“Initialize FastAPI PRISMA project structure with Docker support”_   |
 | **2025-06-03** | **slowapi** added for P0 rate limiting on auth; **fastapi-limiter not removed**                   | Commit `7b115d6` — _“feat: restore P0 Item #2 - Rate Limiting implementation”_ (adds `slowapi==0.1.9`, `SlowAPIMiddleware`, `@limiter.limit` on auth routes) |
 | **2025-06-11** | Docs describe slowapi as the completed rate-limiting story                                        | [`docs/internal/ANALYSIS_FINDINGS.md`](../ANALYSIS_FINDINGS.md) — slowapi on login/register/access-token/password-reset                                      |
 | **2026-07-16** | Dependency policy freezes `fastapi-limiter` at 0.1.6                                              | [`docs/development/DEPENDENCY_UPGRADES.md`](../../development/DEPENDENCY_UPGRADES.md) Lane 2 CVE snapshot                                                    |
 | **2026-07-24** | Consolidation tracked as #64                                                                      | [Issue #64](https://github.com/mnaimfaizy/prisma/issues/64)                                                                                                  |
 
-**Interpretation:** `fastapi-limiter` came from the **original FastAPI RBAC template** (Redis cache/limit stack). `slowapi` was a **later, deliberate security addition** documented as production-ready, but the scaffold’s `FastAPILimiter` lifespan hook was never deleted and **no route was ever migrated to `RateLimiter`**.
+**Interpretation:** `fastapi-limiter` came from the **original FastAPI PRISMA template** (Redis cache/limit stack). `slowapi` was a **later, deliberate security addition** documented as production-ready, but the scaffold’s `FastAPILimiter` lifespan hook was never deleted and **no route was ever migrated to `RateLimiter`**.
 
 ---
 

@@ -1,5 +1,5 @@
 """
-Unit test: Import checks for FastAPI RBAC backend models and schemas.
+Unit test: Import checks for FastAPI PRISMA backend models and schemas.
 
 This module provides unit tests to verify that all required imports work as expected.
 Move or copy this file to test/unit/ if you want to keep it as a reference for import checks.

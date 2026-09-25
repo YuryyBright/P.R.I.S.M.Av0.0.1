@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# FastAPI RBAC Docker Environment Manager
+# FastAPI PRISMA Docker Environment Manager
 # Usage: .\docker-env.ps1 -Environment dev|test|prod [-Action up|down|build|status|logs|prune] [-Help]
 
 param(
@@ -21,7 +21,7 @@ function Write-ColorOutput {
 
 function Show-Help {
     Write-ColorOutput ""
-    Write-ColorOutput "FastAPI RBAC Docker Environment Manager" "Cyan"
+    Write-ColorOutput "FastAPI PRISMA Docker Environment Manager" "Cyan"
     Write-ColorOutput "========================================" "Cyan"
     Write-ColorOutput ""
     Write-ColorOutput "Usage:" "Yellow"
@@ -55,9 +55,9 @@ if ($Help) {
 
 # Compose file selection
 switch ($Environment) {
-    "dev"  { $composeFiles = @("backend/docker-compose.dev.yml", "react-frontend/docker-compose.dev.yml"); $projectName = "prisma_dev"; $networkName = "prisma_dev_network" }
-    "test" { $composeFiles = @("backend/docker-compose.test.yml", "react-frontend/docker-compose.test.yml"); $projectName = "prisma_test"; $networkName = "prisma_test_network" }
-    "prod" { $composeFiles = @("backend/docker-compose.prod.yml", "react-frontend/docker-compose.prod.yml"); $projectName = "prisma_production"; $networkName = "prisma_prod_network" }
+    "dev"  { $composeFiles = @("backend/docker-compose.dev.yml", "frontend/docker-compose.dev.yml"); $projectName = "prisma_dev"; $networkName = "prisma_dev_network" }
+    "test" { $composeFiles = @("backend/docker-compose.test.yml", "frontend/docker-compose.test.yml"); $projectName = "prisma_test"; $networkName = "prisma_test_network" }
+    "prod" { $composeFiles = @("backend/docker-compose.prod.yml", "frontend/docker-compose.prod.yml"); $projectName = "prisma_production"; $networkName = "prisma_prod_network" }
     default { Write-ColorOutput "Unknown environment: $Environment" "Red"; exit 1 }
 }
 
@@ -74,7 +74,7 @@ switch ($Action) {
         }
         # Set REACT_FRONTEND_SRC and BACKEND_SRC for dev, prod, and test environments
         if ($Environment -eq "dev" -or $Environment -eq "prod" -or $Environment -eq "test") {
-            $env:REACT_FRONTEND_SRC = "../react-frontend"
+            $env:REACT_FRONTEND_SRC = "../frontend"
             $env:BACKEND_SRC = "../backend"
         }
         $cmd = "docker compose $composeArgs $projectArg up -d --build"
@@ -98,7 +98,7 @@ switch ($Action) {
     "build" {
         Write-ColorOutput "🔨 Building images for $Environment..." "Cyan"
         if ($Environment -eq "dev" -or $Environment -eq "prod" -or $Environment -eq "test") {
-            $env:REACT_FRONTEND_SRC = "../react-frontend"
+            $env:REACT_FRONTEND_SRC = "../frontend"
             $env:BACKEND_SRC = "../backend"
         }
         $cmd = "docker compose $composeArgs $projectArg build --no-cache"

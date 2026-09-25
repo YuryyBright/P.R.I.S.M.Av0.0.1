@@ -47,7 +47,7 @@ ports:
 **Files to review**:
 
 - `backend/.env.production`
-- `react-frontend/.env.production`
+- `frontend/.env.production`
 
 **Action needed**:
 

@@ -1,6 +1,6 @@
 # API Reference
 
-This section provides detailed documentation for the FastAPI RBAC project's API.
+This section provides detailed documentation for the FastAPI PRISMA project's API.
 
 ---
 
@@ -55,7 +55,7 @@ This section provides detailed documentation for the FastAPI RBAC project's API.
 - Use the provided request/response examples in each endpoint doc as a guide.
 - Pagination is supported on most list endpoints via `page` and `size` query parameters.
 - Filtering and search options are available on many endpoints (see docs for details).
-- All endpoints are protected by role-based access control (RBAC); required roles/permissions are listed per endpoint.
+- All endpoints are protected by role-based access control (PRISMA); required roles/permissions are listed per endpoint.
 - For full details on authentication, permissions, and error handling, see the [Authentication API](./api/auth.md) and [Users API](./api/users.md).
 
 ---

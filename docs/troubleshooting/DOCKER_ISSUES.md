@@ -1,6 +1,6 @@
 # Docker Issues & Solutions
 
-This guide covers common Docker-related issues and their solutions for the FastAPI RBAC project.
+This guide covers common Docker-related issues and their solutions for the FastAPI PRISMA project.
 
 ## 🐳 Container Issues
 
@@ -163,7 +163,7 @@ This guide covers common Docker-related issues and their solutions for the FastA
    Get-Content backend/requirements.txt
 
    # Verify Node package.json
-   Get-Content react-frontend/package.json
+   Get-Content frontend/package.json
    ```
 
 2. **Update Base Images**

@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# Build Production Images Script for FastAPI RBAC
+# Build Production Images Script for FastAPI PRISMA
 # This script builds all Docker images for the production environment
 
 param(
@@ -45,19 +45,19 @@ function Push-DockerImage {
 }
 
 # Main build process
-Write-ColorOutput "=== FastAPI RBAC Production Image Builder ===" "Blue"
+Write-ColorOutput "=== FastAPI PRISMA Production Image Builder ===" "Blue"
 Write-ColorOutput "" "White"
 
 # Validate we're in the correct directory
-if (-not (Test-Path "backend" -PathType Container) -or -not (Test-Path "react-frontend" -PathType Container)) {
-    Write-ColorOutput "❌ Error: Must run from project root directory containing 'backend' and 'react-frontend' folders" "Red"
+if (-not (Test-Path "backend" -PathType Container) -or -not (Test-Path "frontend" -PathType Container)) {
+    Write-ColorOutput "❌ Error: Must run from project root directory containing 'backend' and 'frontend' folders" "Red"
     exit 1
 }
 
 # Refactored: Use modular compose files and ensure network for production
 
 # Compose files and network for production
-$composeFiles = @("backend/docker-compose.prod.yml", "react-frontend/docker-compose.prod.yml")
+$composeFiles = @("backend/docker-compose.prod.yml", "frontend/docker-compose.prod.yml")
 $networkName = "prisma_prod_network"
 $projectName = "prisma_production"
 $composeArgs = ($composeFiles | ForEach-Object { "-f $_" }) -join " "
@@ -80,7 +80,7 @@ if ($CleanFirst) {
 }
 
 # Set build context environment variables
-$env:REACT_FRONTEND_SRC = "../react-frontend"
+$env:REACT_FRONTEND_SRC = "../frontend"
 $env:BACKEND_SRC = "../backend"
 
 # Build images using docker compose (modular, both backend and frontend)

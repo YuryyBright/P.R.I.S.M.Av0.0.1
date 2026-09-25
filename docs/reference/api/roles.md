@@ -1,6 +1,6 @@
 # Roles API
 
-This document provides information about the role management endpoints of the FastAPI RBAC API.
+This document provides information about the role management endpoints of the FastAPI PRISMA API.
 
 ## Endpoints
 

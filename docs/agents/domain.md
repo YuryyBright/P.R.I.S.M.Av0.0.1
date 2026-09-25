@@ -14,13 +14,13 @@ How engineering skills should consume domain documentation in this repository.
 
 ## File structure guidance
 
-- Backend domain and RBAC behavior: `backend/app/`
-- Frontend domain and UI behavior: `react-frontend/src/`
+- Backend domain and PRISMA behavior: `backend/app/`
+- Frontend domain and UI behavior: `frontend/src/`
 - Published docs and references: `docs/`
 
 ## Vocabulary rules
 
-- Use RBAC terms consistently: user, role, permission, role group, permission group.
+- Use PRISMA terms consistently: user, role, permission, role group, permission group.
 - Prefer existing project terms over introducing synonyms.
 
 ## ADR and architecture conflicts

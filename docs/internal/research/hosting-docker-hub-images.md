@@ -1,4 +1,4 @@
-# Hosting the FastAPI RBAC Docker Hub images (staging + adopter path)
+# Hosting the FastAPI PRISMA Docker Hub images (staging + adopter path)
 
 **Date:** 2026-07-25
 **Issue:** [#96 — host microservices for production-feel testing](https://github.com/mnaimfaizy/prisma/issues/96)

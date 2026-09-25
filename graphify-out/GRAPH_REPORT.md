@@ -239,14 +239,14 @@
 
 ## Import Cycles
 
-- 3-file cycle: `react-frontend/src/services/api.ts -> react-frontend/src/store/slices/authSlice.ts -> react-frontend/src/services/auth.service.ts -> react-frontend/src/services/api.ts`
-- 4-file cycle: `react-frontend/src/services/api.ts -> react-frontend/src/store/index.ts -> react-frontend/src/store/slices/permissionGroupSlice.ts -> react-frontend/src/services/permission.service.ts -> react-frontend/src/services/api.ts`
-- 4-file cycle: `react-frontend/src/services/api.ts -> react-frontend/src/store/index.ts -> react-frontend/src/store/slices/dashboardSlice.ts -> react-frontend/src/services/dashboard.service.ts -> react-frontend/src/services/api.ts`
-- 4-file cycle: `react-frontend/src/services/api.ts -> react-frontend/src/store/index.ts -> react-frontend/src/store/slices/userSlice.ts -> react-frontend/src/services/user.service.ts -> react-frontend/src/services/api.ts`
-- 4-file cycle: `react-frontend/src/services/api.ts -> react-frontend/src/store/index.ts -> react-frontend/src/store/slices/authSlice.ts -> react-frontend/src/services/auth.service.ts -> react-frontend/src/services/api.ts`
-- 4-file cycle: `react-frontend/src/services/api.ts -> react-frontend/src/store/index.ts -> react-frontend/src/store/slices/permissionSlice.ts -> react-frontend/src/services/permission.service.ts -> react-frontend/src/services/api.ts`
-- 4-file cycle: `react-frontend/src/services/api.ts -> react-frontend/src/store/index.ts -> react-frontend/src/store/slices/roleSlice.ts -> react-frontend/src/services/role.service.ts -> react-frontend/src/services/api.ts`
-- 4-file cycle: `react-frontend/src/services/api.ts -> react-frontend/src/store/index.ts -> react-frontend/src/store/slices/roleGroupSlice.ts -> react-frontend/src/services/roleGroup.service.ts -> react-frontend/src/services/api.ts`
+- 3-file cycle: `frontend/src/services/api.ts -> frontend/src/store/slices/authSlice.ts -> frontend/src/services/auth.service.ts -> frontend/src/services/api.ts`
+- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/permissionGroupSlice.ts -> frontend/src/services/permission.service.ts -> frontend/src/services/api.ts`
+- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/dashboardSlice.ts -> frontend/src/services/dashboard.service.ts -> frontend/src/services/api.ts`
+- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/userSlice.ts -> frontend/src/services/user.service.ts -> frontend/src/services/api.ts`
+- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/authSlice.ts -> frontend/src/services/auth.service.ts -> frontend/src/services/api.ts`
+- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/permissionSlice.ts -> frontend/src/services/permission.service.ts -> frontend/src/services/api.ts`
+- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/roleSlice.ts -> frontend/src/services/role.service.ts -> frontend/src/services/api.ts`
+- 4-file cycle: `frontend/src/services/api.ts -> frontend/src/store/index.ts -> frontend/src/store/slices/roleGroupSlice.ts -> frontend/src/services/roleGroup.service.ts -> frontend/src/services/api.ts`
 
 ## Communities (238 total, 42 thin omitted)
 
@@ -583,7 +583,7 @@ Nodes (24): background_tasks_mock(), celery_mock(), celery_task_mock(), database
 ### Community 66 - "Community 66"
 
 Cohesion: 0.11
-Nodes (22): main(), retry, Check if the database is ready for connections., Check if Redis is ready for connections., wait_for_database(), wait_for_redis(), Centralized Celery configuration for the FastAPI RBAC system. This module…, Scheduled tasks configuration for Celery Beat. This module defines recurring… (+14 more)
+Nodes (22): main(), retry, Check if the database is ready for connections., Check if Redis is ready for connections., wait_for_database(), wait_for_redis(), Centralized Celery configuration for the FastAPI PRISMA system. This module…, Scheduled tasks configuration for Celery Beat. This module defines recurring… (+14 more)
 
 ### Community 67 - "Community 67"
 

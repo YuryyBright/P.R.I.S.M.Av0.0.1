@@ -6,7 +6,7 @@ Related: [Architecture](./architecture.md), [Setup](./setup.md).
 
 ## Configuration
 
-`react-frontend/components.json` configures ShadCN:
+`frontend/components.json` configures ShadCN:
 
 - Style: `new-york`
 - TSX: enabled
@@ -15,18 +15,18 @@ Related: [Architecture](./architecture.md), [Setup](./setup.md).
 
 ## Where components live
 
-| Path | Role |
-| --- | --- |
-| `src/components/ui/` | Generated / shared ShadCN primitives (button, dialog, table, …) |
-| `src/components/layout/` | Shell layouts (`MainLayout`, `AuthLayout`, route protection) |
-| `src/components/auth/` | Shared auth UI pieces |
-| `src/features/*/…` | Feature-specific screens and forms |
+| Path                     | Role                                                            |
+| ------------------------ | --------------------------------------------------------------- |
+| `src/components/ui/`     | Generated / shared ShadCN primitives (button, dialog, table, …) |
+| `src/components/layout/` | Shell layouts (`MainLayout`, `AuthLayout`, route protection)    |
+| `src/components/auth/`   | Shared auth UI pieces                                           |
+| `src/features/*/…`       | Feature-specific screens and forms                              |
 
 Prefer composing feature UI from `ui/` primitives. Promote to `components/` only when reused across features.
 
 ## Adding a ShadCN component
 
-From `react-frontend/`, use the project’s ShadCN workflow (CLI / copy pattern consistent with existing `components/ui` files). Keep naming lowercase with hyphens to match the current library.
+From `frontend/`, use the project’s ShadCN workflow (CLI / copy pattern consistent with existing `components/ui` files). Keep naming lowercase with hyphens to match the current library.
 
 ## Forms and validation
 

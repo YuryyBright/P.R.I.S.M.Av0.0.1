@@ -1,8 +1,8 @@
-# FastAPI RBAC Backend Test Suite Refactor: Comprehensive API/Integration Testing
+# FastAPI PRISMA Backend Test Suite Refactor: Comprehensive API/Integration Testing
 
 ## Context & Motivation
 
-The current test suite for the FastAPI RBAC backend is functional but mixes unit and integration tests, underutilizes available fixtures and factories, and lacks a clear separation for comprehensive API flow testing. This document summarizes the findings, best practices, and a step-by-step plan for refactoring the test suite to improve maintainability, scalability, and coverage.
+The current test suite for the FastAPI PRISMA backend is functional but mixes unit and integration tests, underutilizes available fixtures and factories, and lacks a clear separation for comprehensive API flow testing. This document summarizes the findings, best practices, and a step-by-step plan for refactoring the test suite to improve maintainability, scalability, and coverage.
 
 ---
 

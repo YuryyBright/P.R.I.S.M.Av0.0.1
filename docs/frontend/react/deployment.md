@@ -9,7 +9,7 @@ For maintainer dogfood and the adopter static-host path, prefer **[Admin UI host
 ## Production build
 
 ```bash
-cd react-frontend
+cd frontend
 npm run build
 ```
 
@@ -25,17 +25,17 @@ Set production env via `.env.production` (from `.env.example`) so `VITE_API_BASE
 
 Modular Compose files:
 
-| Scope | Files |
-| --- | --- |
-| Root stack | `docker-compose.dev.yml`, `docker-compose.test.yml`, `docker-compose.prod-test.yml` (repo root) |
-| Frontend-only | `react-frontend/docker-compose.dev.yml`, `docker-compose.test.yml`, `docker-compose.prod.yml` |
+| Scope         | Files                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------- |
+| Root stack    | `docker-compose.dev.yml`, `docker-compose.test.yml`, `docker-compose.prod-test.yml` (repo root) |
+| Frontend-only | `frontend/docker-compose.dev.yml`, `docker-compose.test.yml`, `docker-compose.prod.yml`         |
 
 Frontend images use `Dockerfile` / `Dockerfile.prod` and serve static assets with **Nginx** (`nginx.conf`).
 
 ### Frontend only
 
 ```bash
-cd react-frontend
+cd frontend
 docker compose -f docker-compose.dev.yml up -d
 # or the prod compose file for a production-like image
 ```

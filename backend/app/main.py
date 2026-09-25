@@ -161,11 +161,11 @@ async def lifespan(fastapi_instance: FastAPI) -> AsyncGenerator[None, None]:
 
 # Core Application Instance
 fastapi_app = FastAPI(
-    title=settings.PROJECT_NAME or "FastAPI RBAC",
+    title=settings.PROJECT_NAME or "FastAPI PRISMA",
     version=settings.API_VERSION,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url=None,
-    description=("FastAPI RBAC system with comprehensive " "authentication and authorization features"),
+    description=("FastAPI PRISMA system with comprehensive " "authentication and authorization features"),
     lifespan=lifespan,
 )
 
@@ -258,7 +258,7 @@ async def custom_swagger_ui_html() -> HTMLResponse:
         <html>
         <head>
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
-            <title>{settings.PROJECT_NAME or "FastAPI RBAC"} - Swagger UI</title>
+            <title>{settings.PROJECT_NAME or "FastAPI PRISMA"} - Swagger UI</title>
         </head>
         <body>
             <div id="swagger-ui"></div>

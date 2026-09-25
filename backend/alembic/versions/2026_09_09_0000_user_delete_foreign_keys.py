@@ -1,7 +1,7 @@
 """Align User FKs with the deletion policy in ADR 0013.
 
 Password history cascades. Assigned roles restrict (admin delete refuses
-with 409). Creator attribution on RBAC artifacts and AuditLog.created_by_id
+with 409). Creator attribution on PRISMA artifacts and AuditLog.created_by_id
 is SET NULL. AuditLog.actor_id keeps the UUID and loses its foreign key so
 deleting a user cannot rewrite or destroy the audit trail (#238).
 """

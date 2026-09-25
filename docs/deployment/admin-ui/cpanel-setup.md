@@ -93,7 +93,7 @@ curl -fsSI "https://rbac.mnfprofile.com/"
 # Trigger a password-reset email and confirm the link uses rbac.mnfprofile.com
 ```
 
-Client-side routes (e.g. `/login`, `/reset-password`) must not show the host/LiteSpeed 404 page on refresh — that is what `react-frontend/public/.htaccess` is for (rewrite to `index.html`, `ErrorDocument 404`, LiteSpeed `CacheDisable`).
+Client-side routes (e.g. `/login`, `/reset-password`) must not show the host/LiteSpeed 404 page on refresh — that is what `frontend/public/.htaccess` is for (rewrite to `index.html`, `ErrorDocument 404`, LiteSpeed `CacheDisable`).
 
 If a deep link still shows a **cached** LiteSpeed 404 after deploy: in cPanel → **LiteSpeed Web Cache Manager** (or Cache), purge that subdomain, then hard-refresh. Confirm `.htaccess` exists in the subdomain document root (FTP must upload dotfiles).
 
@@ -104,7 +104,7 @@ If a deep link still shows a **cached** LiteSpeed 404 after deploy: in cPanel �
 If Actions secrets are not ready:
 
 ```bash
-cd react-frontend
+cd frontend
 export VITE_API_BASE_URL=https://rbac-api.mnfprofile.com/api/v1
 npm ci --legacy-peer-deps
 npm run build

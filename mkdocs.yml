@@ -1,6 +1,6 @@
-site_name: FastAPI RBAC Documentation
-site_description: "Comprehensive documentation for the FastAPI RBAC project, covering setup, development, deployment, and API reference."
-site_author: "FastAPI RBAC Team"
+site_name: FastAPI PRISMA Documentation
+site_description: "Comprehensive documentation for the FastAPI PRISMA project, covering setup, development, deployment, and API reference."
+site_author: "FastAPI PRISMA Team"
 repo_url: "https://github.com/mnaimfaizy/prisma"
 repo_name: "mnaimfaizy/prisma"
 

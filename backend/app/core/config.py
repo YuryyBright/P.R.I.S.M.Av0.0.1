@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     MODE: ModeEnum = ModeEnum.development
     API_VERSION: str = "v1"
     API_V1_STR: str = f"/api/{API_VERSION}"
-    PROJECT_NAME: Optional[str] = "FastAPI RBAC"
+    PROJECT_NAME: Optional[str] = "FastAPI PRISMA"
     DEBUG: bool = False
 
     # Security Settings
@@ -117,7 +117,7 @@ class Settings(BaseSettings):
     SMTP_USER: str | None = None
     SMTP_PASSWORD: str | None = None
     EMAILS_FROM_EMAIL: str = "info@prisma.com"
-    EMAILS_FROM_NAME: str = "FastAPI RBAC"
+    EMAILS_FROM_NAME: str = "FastAPI PRISMA"
     EMAIL_TEMPLATES_DIR: str = os.path.join(project_root, "app", "email-templates")
 
     # Database Settings

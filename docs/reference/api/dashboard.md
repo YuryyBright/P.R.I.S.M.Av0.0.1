@@ -1,6 +1,6 @@
 # Dashboard API
 
-This document provides information about the dashboard endpoints of the FastAPI RBAC API.
+This document provides information about the dashboard endpoints of the FastAPI PRISMA API.
 
 ## Endpoints
 

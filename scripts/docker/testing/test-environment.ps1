@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 # Comprehensive Test Environment Testing and Validation Script
-# This script provides all testing functionality for the FastAPI RBAC environment
+# This script provides all testing functionality for the FastAPI PRISMA environment
 
 param(
     [Parameter(Mandatory=$false)]
@@ -401,7 +401,7 @@ function Show-TestSummary {
 if ($Help) {
     Write-ColorOutput "🧪 Environment Testing Suite - Help" "Cyan"
     Write-ColorOutput "====================================" "Cyan"
-    Write-ColorOutput "`nThis script provides comprehensive testing for FastAPI RBAC environments.`n" "White"
+    Write-ColorOutput "`nThis script provides comprehensive testing for FastAPI PRISMA environments.`n" "White"
 
     Write-ColorOutput "📋 Parameters:" "Yellow"
     Write-ColorOutput "  -Environment     : Target environment (test, dev, prod)" "White"
@@ -430,7 +430,7 @@ if ($Help) {
     exit 0
 }
 
-Write-ColorOutput "🚀 FastAPI RBAC Environment Testing Suite" "Blue"
+Write-ColorOutput "🚀 FastAPI PRISMA Environment Testing Suite" "Blue"
 Write-ColorOutput "=========================================" "Blue"
 Write-ColorOutput "Environment: $Environment" "White"
 Write-ColorOutput "Test Type: $TestType" "White"

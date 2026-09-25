@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# Test Environment Cleanup Script for FastAPI RBAC
+# Test Environment Cleanup Script for FastAPI PRISMA
 # This script completely cleans up the test environment including containers, images, volumes, and networks
 
 param(
@@ -32,7 +32,7 @@ function Write-ColorOutput {
 function Show-Help {
     Write-ColorOutput "`n🧹 Environment Cleanup Script" "Cyan"
     Write-ColorOutput "==============================" "Cyan"
-    Write-ColorOutput "`nThis script provides comprehensive cleanup for FastAPI RBAC Docker environments.`n" "White"
+    Write-ColorOutput "`nThis script provides comprehensive cleanup for FastAPI PRISMA Docker environments.`n" "White"
       Write-ColorOutput "📋 Parameters:" "Yellow"
     Write-ColorOutput "  -Environment     : Target environment to clean (test, dev, prod-test, all)" "White"
     Write-ColorOutput "  -IncludeVolumes  : Also remove Docker volumes (data will be lost!)" "White"
@@ -444,7 +444,7 @@ if ($GlobalPrune) {
     Write-ColorOutput "" "White"
     Write-ColorOutput "🚨 GLOBAL DOCKER PRUNE MODE 🚨" "Red"
     Write-ColorOutput "This will remove ALL Docker containers, images, volumes, networks, and build cache on this system!" "Red"
-    Write-ColorOutput "This is NOT limited to FastAPI RBAC resources." "Red"
+    Write-ColorOutput "This is NOT limited to FastAPI PRISMA resources." "Red"
     if (-not $Force -and -not $DryRun) {
         $confirm = Read-Host "Are you absolutely sure you want to prune ALL Docker resources? (y/N)"
         if ($confirm -ne "y" -and $confirm -ne "Y") {
@@ -466,7 +466,7 @@ if ($GlobalPrune) {
     exit 0
 }
 
-Write-ColorOutput "=== FastAPI RBAC Environment Cleanup ===" "Blue"
+Write-ColorOutput "=== FastAPI PRISMA Environment Cleanup ===" "Blue"
 Write-ColorOutput "Environment: $Environment" "Green"
 Write-ColorOutput "Dry Run: $DryRun" "White"
 Write-ColorOutput ""

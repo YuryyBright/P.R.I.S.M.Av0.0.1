@@ -235,7 +235,7 @@ Before using these scripts, ensure:
 - [Docker Build Summary](../../DOCKER_BUILD_SUMMARY.md) - Complete build results
 - [Main Scripts README](../README.md) - All script categories
 - [Backend Docker README](../../backend/README.dockerhub.md) - Backend-specific Docker info
-- [Frontend Docker README](../../react-frontend/README.dockerhub.md) - Frontend-specific Docker info
+- [Frontend Docker README](../../frontend/README.dockerhub.md) - Frontend-specific Docker info
 
 ## 🆘 Troubleshooting
 

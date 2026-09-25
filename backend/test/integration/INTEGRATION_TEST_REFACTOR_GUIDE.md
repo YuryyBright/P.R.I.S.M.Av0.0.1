@@ -1,4 +1,4 @@
-# Integration Test Refactor Guide for FastAPI RBAC
+# Integration Test Refactor Guide for FastAPI PRISMA
 
 This guide outlines the step-by-step process for refactoring and aligning integration tests to be fully API-driven, robust, and consistent with backend business rules. Use this as a template for updating any integration test file in this project.
 

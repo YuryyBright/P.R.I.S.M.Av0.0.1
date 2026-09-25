@@ -1,6 +1,6 @@
 # System Architecture
 
-Canonical architecture narrative for FastAPI RBAC. AI harness files and agent guides should **link here** instead of duplicating this content.
+Canonical architecture narrative for FastAPI PRISMA. AI harness files and agent guides should **link here** instead of duplicating this content.
 
 Related:
 
@@ -32,11 +32,11 @@ Related:
 
 The project is a user-management microservice: authentication and authorization for other services.
 
-| Layer | Stack |
-| --- | --- |
-| Backend | FastAPI, SQLAlchemy/SQLModel, Redis, Celery |
-| Frontend | React, TypeScript, Redux Toolkit, ShadCN UI |
-| Data | PostgreSQL (persistent), Redis (sessions / cache / broker) |
+| Layer    | Stack                                                      |
+| -------- | ---------------------------------------------------------- |
+| Backend  | FastAPI, SQLAlchemy/SQLModel, Redis, Celery                |
+| Frontend | React, TypeScript, Redux Toolkit, ShadCN UI                |
+| Data     | PostgreSQL (persistent), Redis (sessions / cache / broker) |
 
 ## Backend layers
 
@@ -63,12 +63,12 @@ The project is a user-management microservice: authentication and authorization 
 
 ## Frontend layers
 
-- Feature modules: `react-frontend/src/features/` (auth, users, roles, permissions, …)
-- Shared UI: `react-frontend/src/components/` (auth, layout, ShadCN `ui/`)
-- API clients: `react-frontend/src/services/`
-- Redux store: `react-frontend/src/store/`
-- Types: `react-frontend/src/models/`
-- Hooks: `react-frontend/src/hooks/` (`useAuth`, `usePermissions`, …)
+- Feature modules: `frontend/src/features/` (auth, users, roles, permissions, …)
+- Shared UI: `frontend/src/components/` (auth, layout, ShadCN `ui/`)
+- API clients: `frontend/src/services/`
+- Redux store: `frontend/src/store/`
+- Types: `frontend/src/models/`
+- Hooks: `frontend/src/hooks/` (`useAuth`, `usePermissions`, …)
 
 See [Frontend — React architecture](../frontend/react/architecture.md) for patterns.
 
@@ -98,7 +98,7 @@ backend/
 ### Frontend
 
 ```
-react-frontend/
+frontend/
 ├── src/
 │   ├── components/          # auth, layout, ui
 │   ├── features/            # domain feature modules
@@ -114,23 +114,23 @@ react-frontend/
 
 ## Domain model
 
-Core RBAC terms (see [domain docs](../agents/domain.md)): **user**, **role**, **permission**, **role group**, **permission group**.
+Core PRISMA terms (see [domain docs](../agents/domain.md)): **user**, **role**, **permission**, **role group**, **permission group**.
 
-| Concept | Backend model | Notes |
-| --- | --- | --- |
-| User | `user_model.py` | Credentials, profile, lockout / verification fields; roles via `UserRole` |
-| Role | `role_model.py` | Named roles; permissions via `RolePermission`; optional role group |
-| Permission | `permission_model.py` | Granular actions (`user.create`, …); belongs to a permission group |
-| Role group | `role_group_model.py` | Hierarchical grouping via `RoleGroupMap` |
-| Permission group | `permission_group_model.py` | Logical grouping of permissions |
-| Password history | `password_history_model.py` | Reuse prevention / audit |
-| Audit log | `audit_log_model.py` | Security / activity events |
+| Concept          | Backend model               | Notes                                                                     |
+| ---------------- | --------------------------- | ------------------------------------------------------------------------- |
+| User             | `user_model.py`             | Credentials, profile, lockout / verification fields; roles via `UserRole` |
+| Role             | `role_model.py`             | Named roles; permissions via `RolePermission`; optional role group        |
+| Permission       | `permission_model.py`       | Granular actions (`user.create`, …); belongs to a permission group        |
+| Role group       | `role_group_model.py`       | Hierarchical grouping via `RoleGroupMap`                                  |
+| Permission group | `permission_group_model.py` | Logical grouping of permissions                                           |
+| Password history | `password_history_model.py` | Reuse prevention / audit                                                  |
+| Audit log        | `audit_log_model.py`        | Security / activity events                                                |
 
 Mapping tables: `UserRole`, `RolePermission`, `RoleGroupMap`.
 
-Deleting a user is decided per reference, not by a blanket cascade: password history goes with the user, assigned roles are refused with 409, audit `actor_id` is kept without a foreign key, and `created_by_id` on RBAC artifacts is set null. See [ADR 0013](../adr/0013-user-deletion-foreign-keys.md).
+Deleting a user is decided per reference, not by a blanket cascade: password history goes with the user, assigned roles are refused with 409, audit `actor_id` is kept without a foreign key, and `created_by_id` on PRISMA artifacts is set null. See [ADR 0013](../adr/0013-user-deletion-foreign-keys.md).
 
-Frontend mirrors these in `react-frontend/src/models/` (`user.ts`, `role.ts`, `permission.ts`, `roleGroup.ts`, `auth.ts`, …).
+Frontend mirrors these in `frontend/src/models/` (`user.ts`, `role.ts`, `permission.ts`, `roleGroup.ts`, `auth.ts`, …).
 
 ## Authentication flow
 
@@ -152,7 +152,7 @@ Frontend storage strategy:
 
 - JWT access/refresh with Redis allowlist invalidation
 - bcrypt passwords, history, lockout
-- RBAC via roles and permissions on protected routes
+- PRISMA via roles and permissions on protected routes
 - CSRF, rate limiting, input sanitization, security headers
 - Client address resolved once at the edge (`app/utils/client_address.py`), from forwarded headers only when the peer is a `TRUSTED_PROXIES` member — rate limiting, security events and origin-network detection all read that one answer ([ADR 0011](../adr/0011-session-security-model.md) decision 8)
 

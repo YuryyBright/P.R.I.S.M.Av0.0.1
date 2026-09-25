@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for FastAPI RBAC Backend
+# Multi-stage Dockerfile for FastAPI PRISMA Backend
 # Supports development, testing, and production environments
 
 # Base stage with common dependencies

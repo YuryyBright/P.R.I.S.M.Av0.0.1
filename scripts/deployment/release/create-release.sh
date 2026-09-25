@@ -1,11 +1,11 @@
 #!/bin/bash
-# create-release.sh - FastAPI RBAC Release Automation Script
+# create-release.sh - FastAPI PRISMA Release Automation Script
 #
 # Default: Release PR mode (branch release/vX.Y.Z, VERSION + notes, push, gh pr create).
 # Emergency: --direct-tag tags from main (discouraged).
 # Kept in parity with Create-Release.ps1 (Phase C1).
 #
-# Author: FastAPI RBAC Team
+# Author: FastAPI PRISMA Team
 # Created: July 2, 2025
 
 set -e
@@ -40,7 +40,7 @@ WHITE='\033[1;37m'
 NC='\033[0m'
 
 function show_help {
-    echo -e "${CYAN}\nFastAPI RBAC Release Automation Script"
+    echo -e "${CYAN}\nFastAPI PRISMA Release Automation Script"
     echo -e "======================================${NC}"
     echo -e "\nDefault mode opens a Release PR (release/vX.Y.Z). Use --direct-tag only for emergencies.\n"
 
@@ -679,4 +679,4 @@ clear_changelog_artifact
 # Disable EXIT cleanup of changelog after successful non-dry path already cleared it
 trap - EXIT
 
-echo -e "\n${CYAN}Thank you for using the FastAPI RBAC Release Automation Script!${NC}"
+echo -e "\n${CYAN}Thank you for using the FastAPI PRISMA Release Automation Script!${NC}"

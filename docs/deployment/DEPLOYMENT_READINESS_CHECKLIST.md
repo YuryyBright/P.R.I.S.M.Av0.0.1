@@ -1,4 +1,4 @@
-# FastAPI RBAC Production Deployment Readiness Checklist
+# FastAPI PRISMA Production Deployment Readiness Checklist
 
 ## ✅ Completed Configuration Items
 
@@ -6,7 +6,7 @@
 
 - [x] **Root orchestration file**: `docker-compose.prod-test.yml` properly configured
 - [x] **Backend services**: All backend services defined in `backend/docker-compose.prod.yml`
-- [x] **Frontend service**: Frontend service defined in `react-frontend/docker-compose.prod.yml`
+- [x] **Frontend service**: Frontend service defined in `frontend/docker-compose.prod.yml`
 - [x] **PgAdmin service**: Database management interface configured
 - [x] **Network configuration**: Consistent network setup across all compose files
 - [x] **Volume management**: Persistent volumes for data storage
@@ -75,7 +75,7 @@ cd backend && ./certs/generate-certs.sh
 
 # 4. Update environment files with production values
 # Edit backend/.env.production
-# Edit react-frontend/.env.production
+# Edit frontend/.env.production
 
 # 5. Deploy the stack
 docker-compose -f docker-compose.prod-test.yml up -d
@@ -208,7 +208,7 @@ python backend/test/test_sanitization.py
 
 # Run comprehensive test suites
 cd backend && python run_tests.py --coverage
-cd react-frontend && npm test
+cd frontend && npm test
 ```
 
 ## 🎯 Success Criteria

@@ -306,7 +306,7 @@ def run_demo_suite() -> int:
             "description": "Simple User Model Unit Test",
         },
     ]
-    print("\n🚀 FastAPI RBAC Comprehensive Test Suite Demonstration")
+    print("\n🚀 FastAPI PRISMA Comprehensive Test Suite Demonstration")
     print("=" * 70)
     passed_tests = 0
     total_tests = 0
@@ -349,7 +349,7 @@ def run_demo_suite() -> int:
         print("   ✅ Authentication mocking framework in place")
         print("   ✅ Multiple test classes with proper inheritance")
         print("   ✅ Graceful handling of authentication challenges")
-        print("   ✅ Foundation ready for full RBAC testing")
+        print("   ✅ Foundation ready for full PRISMA testing")
         return 0
     else:
         print(f"❌ {total_tests - passed_tests} tests failed. Check output above.")
@@ -383,7 +383,7 @@ def cleanup_coverage_files() -> None:
 
 def main() -> int:
     """Main entry point for the test runner."""
-    parser = argparse.ArgumentParser(description="Unified test runner for FastAPI RBAC backend.")
+    parser = argparse.ArgumentParser(description="Unified test runner for FastAPI PRISMA backend.")
     parser.add_argument(
         "command",
         choices=[

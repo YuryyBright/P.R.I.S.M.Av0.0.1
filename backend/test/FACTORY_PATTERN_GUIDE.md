@@ -1,4 +1,4 @@
-# RBAC Test Factory Pattern Guide - CURRENT STATUS
+# PRISMA Test Factory Pattern Guide - CURRENT STATUS
 
 This document provides guidance on the test factory patterns available in this project and their current usage status.
 
@@ -29,7 +29,7 @@ Located in `test/factories/`:
 
 - `async_factories.py` - **AsyncUserFactory** (currently used in comprehensive tests)
 - `user_factory.py` - **UserFactory** (available, using factory_boy)
-- `rbac_factory.py` - **RoleFactory, PermissionFactory** (used in RBAC tests)
+- `rbac_factory.py` - **RoleFactory, PermissionFactory** (used in PRISMA tests)
 - `auth_factory.py` - **AuthFactory** (available for auth scenarios)
 - `audit_factory.py` - **AuditLogFactory** (available for audit testing)
 
@@ -118,7 +118,7 @@ Fixtures for creating model instances:
 
 - `BaseTestCase`: Base class with common testing functionality
 - `APITestCase`: Base class for testing API endpoints
-- `RBACTestCase`: Base class for testing RBAC features
+- `RBACTestCase`: Base class for testing PRISMA features
 
 ## Usage Examples
 
@@ -285,32 +285,26 @@ async def test_with_mocked_user(client, app):
 ## Best Practices
 
 1. **Use Factory Traits for Common Patterns**
-
    - Use `UserFactory.admin()` instead of `UserFactory(is_superuser=True)`
    - Create your own traits for common test scenarios
 
 2. **Centralize Complex Setup Logic**
-
    - Put complex setup in the factory classes
    - Use helper methods in test base classes
 
 3. **Use Faker for Realistic Data**
-
    - Use `Faker` providers for realistic test data
    - Add custom providers for domain-specific data
 
 4. **Keep Tests Focused**
-
    - Create only the data you need for each test
    - Use the base test cases to reduce boilerplate
 
 5. **Add Post-Generation Hooks**
-
    - Use `@factory.post_generation` for related objects
    - Handle cleanup in factory fixtures with `yield`
 
 6. **Standardize API Testing**
-
    - Use `APITestCase.send_request()` for consistent API testing
    - Verify response formats consistently
 

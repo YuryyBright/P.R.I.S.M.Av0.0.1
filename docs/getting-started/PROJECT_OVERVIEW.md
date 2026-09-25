@@ -4,7 +4,7 @@
 
 > **Canonical architecture:** [docs/reference/architecture.md](../reference/architecture.md) — layers, directory layout, domain model, and Redis allowlist auth flow. This page keeps a product-oriented summary.
 
-The FastAPI RBAC project is designed as a modern, scalable user management microservice with a clear separation of concerns between backend API services and frontend user interface.
+The FastAPI PRISMA project is designed as a modern, scalable user management microservice with a clear separation of concerns between backend API services and frontend user interface.
 
 ### High-Level Architecture
 

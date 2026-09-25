@@ -174,7 +174,7 @@ def _mail_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "SMTP_TLS", False)
     monkeypatch.setattr(settings, "SMTP_USER", None)
     monkeypatch.setattr(settings, "SMTP_PASSWORD", None)
-    monkeypatch.setattr(settings, "EMAILS_FROM_NAME", "FastAPI RBAC")
+    monkeypatch.setattr(settings, "EMAILS_FROM_NAME", "FastAPI PRISMA")
     monkeypatch.setattr(settings, "EMAILS_FROM_EMAIL", "noreply@example.com")
 
 
@@ -186,7 +186,7 @@ def send(**overrides: Any) -> None:
         "subject_template": "{{ project_name }} - Verify Your Email Address",
         "html_template": html.replace("LINK", VERIFY_LINK),
         "environment": {
-            "project_name": "FastAPI RBAC",
+            "project_name": "FastAPI PRISMA",
             "username": "recipient@example.com",
         },
     }
@@ -233,7 +233,7 @@ def test_subject_is_rendered_from_the_environment(smtp: SMTPRecorder) -> None:
     """
     send()
 
-    assert header_text(smtp.only.parsed["Subject"]) == "FastAPI RBAC - Verify Your Email Address"
+    assert header_text(smtp.only.parsed["Subject"]) == "FastAPI PRISMA - Verify Your Email Address"
 
 
 def test_from_header_carries_name_and_address(smtp: SMTPRecorder) -> None:
@@ -241,7 +241,7 @@ def test_from_header_carries_name_and_address(smtp: SMTPRecorder) -> None:
 
     from_header = header_text(smtp.only.parsed["From"])
     assert "noreply@example.com" in from_header
-    assert "FastAPI RBAC" in from_header
+    assert "FastAPI PRISMA" in from_header
 
 
 def test_recipient_reaches_the_envelope_and_the_header(smtp: SMTPRecorder) -> None:
@@ -421,7 +421,7 @@ def test_a_refused_connection_is_logged_not_raised(
         (
             "email-verification.html",
             {
-                "project_name": "FastAPI RBAC",
+                "project_name": "FastAPI PRISMA",
                 "username": "recipient@example.com",
                 "verification_url": VERIFY_LINK,
                 "valid_for": "24 hours",
@@ -431,7 +431,7 @@ def test_a_refused_connection_is_logged_not_raised(
         (
             "password-reset.html",
             {
-                "project_name": "FastAPI RBAC",
+                "project_name": "FastAPI PRISMA",
                 "email": "recipient@example.com",
                 "reset_password_url": "https://rbac.example.com/reset-password?token=xyz",
                 "valid_for": "24 hours",
@@ -452,7 +452,7 @@ def test_shipped_templates_deliver_a_clickable_link_in_both_parts(
     """
     email_module.send_email_with_template(
         email_to="recipient@example.com",
-        subject="FastAPI RBAC - Action required",
+        subject="FastAPI PRISMA - Action required",
         template_name=template_name,
         context=context,
     )
@@ -478,8 +478,8 @@ def test_render_template_renders_a_real_template_file() -> None:
     """
     html = email_module.render_template(
         "registration-notice.html",
-        {"project_name": "FastAPI RBAC", "email": "recipient@example.com"},
+        {"project_name": "FastAPI PRISMA", "email": "recipient@example.com"},
     )
 
-    assert "FastAPI RBAC" in html
+    assert "FastAPI PRISMA" in html
     assert "{{" not in html

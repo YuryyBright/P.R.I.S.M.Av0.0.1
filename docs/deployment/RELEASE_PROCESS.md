@@ -1,6 +1,6 @@
 # Release Process
 
-This document outlines the steps to create and publish a new release for the FastAPI RBAC project. Releases are versioned using Git tags, which automatically trigger a GitHub Actions workflow to build and push Docker images to Docker Hub.
+This document outlines the steps to create and publish a new release for the FastAPI PRISMA project. Releases are versioned using Git tags, which automatically trigger a GitHub Actions workflow to build and push Docker images to Docker Hub.
 
 ## Prerequisites
 
@@ -10,7 +10,7 @@ This document outlines the steps to create and publish a new release for the Fas
     - `DOCKERHUB_USERNAME`: Your Docker Hub username.
     - `DOCKERHUB_TOKEN`: A Docker Hub access token with read/write permissions.
 
-**Release history SSOT:** [`docs/release-notes.md`](../release-notes.md). There is no root `CHANGELOG.md`. Docker Hub repository descriptions are updated from `backend/README.dockerhub.md`, `react-frontend/README.dockerhub.md`, and `backend/README.worker.dockerhub.md` via `.github/workflows/docker-publish.yml` — not from release notes.
+**Release history SSOT:** [`docs/release-notes.md`](../release-notes.md). There is no root `CHANGELOG.md`. Docker Hub repository descriptions are updated from `backend/README.dockerhub.md`, `frontend/README.dockerhub.md`, and `backend/README.worker.dockerhub.md` via `.github/workflows/docker-publish.yml` — not from release notes.
 
 ## Versioning Strategy
 
@@ -72,7 +72,7 @@ The GitHub Actions workflow is configured to trigger on any tag starting with `v
 2.  **Prepare:** Resolves `IMAGE_TAG` / metadata and validates Dockerfiles plus Hub README paths before any multi-arch build starts.
 3.  **Parallel image builds (matrix):** Backend, frontend, and worker build in parallel (`fail-fast: false` so every shard finishes for diagnosis). Each image is pushed to Docker Hub as `:${IMAGE_TAG}` only (e.g. `yourusername/prisma-backend:v1.0.0`) — not `:latest` yet.
 4.  **Promote `:latest`:** Only if all three builds succeed, a promote job retags each image’s `:latest` from the version tag via `docker buildx imagetools create` (no rebuild). See [`docs/adr/0002-docker-publish-job-dag.md`](../adr/0002-docker-publish-job-dag.md).
-5.  **Hub descriptions:** After promote, repository long descriptions are updated from `backend/README.dockerhub.md`, `react-frontend/README.dockerhub.md`, and `backend/README.worker.dockerhub.md` (not from `docs/release-notes.md`). That job soft-fails so Hub API flake does not fail the release.
+5.  **Hub descriptions:** After promote, repository long descriptions are updated from `backend/README.dockerhub.md`, `frontend/README.dockerhub.md`, and `backend/README.worker.dockerhub.md` (not from `docs/release-notes.md`). That job soft-fails so Hub API flake does not fail the release.
 6.  **Failed runs:** The workflow fails if prepare, any build shard, or promote fails. A failed run may leave some `:${IMAGE_TAG}` tags on Hub; `:latest` stays on the previous good release until promote succeeds. Re-run overwrites the same version tags.
 
 ## Verifying the Release

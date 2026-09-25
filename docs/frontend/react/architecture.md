@@ -1,6 +1,6 @@
 # React architecture
 
-Canonical React / TypeScript layout and coding patterns for FastAPI RBAC.
+Canonical React / TypeScript layout and coding patterns for FastAPI PRISMA.
 
 Related: [System Architecture](../../reference/architecture.md), [Setup](./setup.md), [State](./state.md), [UI](./ui.md).
 
@@ -14,7 +14,7 @@ Related: [System Architecture](../../reference/architecture.md), [Setup](./setup
 ## Project structure
 
 ```
-react-frontend/
+frontend/
 ├── public/
 ├── src/
 │   ├── assets/
@@ -53,10 +53,7 @@ const { user, isAuthenticated, hasPermission } = useAuth();
 ### Protected routes
 
 ```tsx
-<ProtectedRoute
-  requiredRoles={["admin"]}
-  requiredPermissions={["user.read"]}
->
+<ProtectedRoute requiredRoles={["admin"]} requiredPermissions={["user.read"]}>
   <UserManagement />
 </ProtectedRoute>
 ```
@@ -65,7 +62,9 @@ const { user, isAuthenticated, hasPermission } = useAuth();
 
 ```tsx
 const { hasPermission } = usePermissions();
-{hasPermission("user.create") && <CreateUserButton />}
+{
+  hasPermission("user.create") && <CreateUserButton />;
+}
 ```
 
 ### Service layer
@@ -88,7 +87,7 @@ export const fetchUsers = createAsyncThunk(
     } catch (error) {
       return rejectWithValue((error as Error).message);
     }
-  }
+  },
 );
 ```
 

@@ -1,4 +1,4 @@
-# FastAPI RBAC
+# FastAPI PRISMA
 
 Role-based access control API and admin UI: users, roles, permissions, and auth session controls.
 
@@ -77,10 +77,10 @@ An authorization atom granted via roles (and related grouping constructs).
 _Avoid_: Entitlement, capability
 
 **Role group**:
-A grouping construct for roles in this product's RBAC model.
+A grouping construct for roles in this product's PRISMA model.
 
 **Permission group**:
-A grouping construct for permissions in this product's RBAC model.
+A grouping construct for permissions in this product's PRISMA model.
 
 **Hub runtime**:
 The deployable API package: published Docker Hub backend and worker images (including the Beat scheduler process), plus Postgres, Redis, and external SMTP. Does not include the admin UI. Default topology is one Compose host; an optional split uses separate Always Free VMs and hobby managed Postgres/Redis.

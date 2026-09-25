@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document summarizes the implementation of the MkDocs documentation system for the FastAPI RBAC project, as outlined in the technical specification.
+This document summarizes the implementation of the MkDocs documentation system for the FastAPI PRISMA project, as outlined in the technical specification.
 
 ## Implementation Steps Completed
 

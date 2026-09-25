@@ -31,26 +31,26 @@ Incorrect: `✨ feat(auth): add two-factor authentication`
 
 ## Types
 
-| Type | Use for | In release notes? | Release-notes section |
-| --- | --- | --- | --- |
-| `feat` | New user-facing or API capability | Yes | New Features |
-| `fix` | Bug fix | Yes | Bug Fixes |
-| `perf` | Performance improvement | Yes | Performance |
-| `security` | Security fix or hardening | Yes | Security |
-| `docs` | Documentation only | Often | Documentation |
-| `refactor` | Internal restructuring, no behavior change | Sometimes | Code Improvements / Technical Details |
-| `test` | Tests only | Rarely | Testing / Technical Details |
-| `build` | Build system, packaging, dependencies tooling | Rarely | Build System / Technical Details |
-| `ci` | CI/CD workflows and config | Rarely | CI/CD / Technical Details |
-| `chore` | Maintenance that does not fit above | Rarely | Maintenance / omit if internal-only |
-| `style` | Formatting, whitespace, lint-only (no logic) | No | — (omit from user-facing notes) |
-| `revert` | Revert a previous commit | Yes if user-facing | Match the reverted change’s section |
+| Type       | Use for                                       | In release notes?  | Release-notes section                 |
+| ---------- | --------------------------------------------- | ------------------ | ------------------------------------- |
+| `feat`     | New user-facing or API capability             | Yes                | New Features                          |
+| `fix`      | Bug fix                                       | Yes                | Bug Fixes                             |
+| `perf`     | Performance improvement                       | Yes                | Performance                           |
+| `security` | Security fix or hardening                     | Yes                | Security                              |
+| `docs`     | Documentation only                            | Often              | Documentation                         |
+| `refactor` | Internal restructuring, no behavior change    | Sometimes          | Code Improvements / Technical Details |
+| `test`     | Tests only                                    | Rarely             | Testing / Technical Details           |
+| `build`    | Build system, packaging, dependencies tooling | Rarely             | Build System / Technical Details      |
+| `ci`       | CI/CD workflows and config                    | Rarely             | CI/CD / Technical Details             |
+| `chore`    | Maintenance that does not fit above           | Rarely             | Maintenance / omit if internal-only   |
+| `style`    | Formatting, whitespace, lint-only (no logic)  | No                 | — (omit from user-facing notes)       |
+| `revert`   | Revert a previous commit                      | Yes if user-facing | Match the reverted change’s section   |
 
 Breaking changes always surface under **Breaking Changes** in release notes regardless of type (see below).
 
 ## Scopes (component / domain)
 
-Use a **component or domain** scope, not a top-level directory name (`backend`, `react-frontend`). Prefer the lists below; omit scope only when the change is truly repo-wide and no component fits.
+Use a **component or domain** scope, not a top-level directory name (`backend`, `frontend`). Prefer the lists below; omit scope only when the change is truly repo-wide and no component fits.
 
 ### Backend
 
