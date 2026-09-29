@@ -191,7 +191,22 @@ services:
     depends_on:
       prisma_db_dev:
         condition: service_healthy
-
+  prisma_qdrant_dev:
+    image: qdrant/qdrant:latest
+    container_name: prisma_qdrant_dev
+    restart: always
+    ports:
+      - "6333:6333" # HTTP API
+      - "6334:6334" # gRPC API
+    volumes:
+      - prisma_qdrant_dev_data:/qdrant/storage
+    networks:
+      - prisma_dev_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   # Redis for development
   prisma_redis_dev:
     image: redis:7.2-alpine

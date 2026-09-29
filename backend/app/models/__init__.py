@@ -8,3 +8,4 @@ from .users.role_model import Role
 from .users.role_permission_model import RolePermission
 from .users.user_model import User
 from .users.user_role_model import UserRole
+from .rag.rag_base import RagBaseModel
