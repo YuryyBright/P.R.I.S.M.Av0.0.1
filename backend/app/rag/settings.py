@@ -1,6 +1,9 @@
 """RAG settings. Ізольовані від settings RBAC: префікс RAG_, вкладені групи через "__".
 
-Приклад: RAG_VECTOR__BACKEND=qdrant, RAG_LLM__MODEL=gpt-4o-mini
+Приклад: RAG_VECTOR__BACKEND=qdrant, RAG_LLM__MODEL=Qwen/Qwen2.5-7B-Instruct
+
+ІНВАРІАНТ: значення Literal у полях `backend` == ключі container._REGISTRY[kind]
+(перевіряє tests/rag/test_registry_consistency.py). Додаєте бекенд — додайте в обидва місця.
 """
 from __future__ import annotations
 
@@ -13,7 +16,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class VectorSettings(BaseModel):
-    backend: Literal["qdrant", "pgvector"] = "qdrant"
+    backend: Literal["qdrant"] = "qdrant"
     collection_prefix: str = "rag"
     distance: Literal["cosine", "dot", "euclid"] = "cosine"
     # qdrant
@@ -27,23 +30,23 @@ class VectorSettings(BaseModel):
 
 
 class EmbeddingSettings(BaseModel):
-    backend: Literal["litellm", "sentence_transformers", "fake"] = "litellm"
-    model: str = "text-embedding-3-small"
-    dim: int = Field(1536, gt=0)
+    backend: Literal["vllm"] = "vllm"
+    model: str = "BAAI/bge-m3"
+    dim: int = Field(1024, gt=0)                      # МАЄ збігатися з моделлю
     batch_size: int = Field(64, gt=0)
-    api_base: str | None = None
+    api_base: str | None = "http://vllm-embed:8000/v1"
     api_key: SecretStr | None = None
     timeout_s: float = 30.0
     # sparse (для hybrid)
-    sparse_enabled: bool = True
-    sparse_backend: Literal["bm25", "splade", "fake"] = "bm25"
+    sparse_enabled: bool = False
+    sparse_backend: Literal["none"] = "none"
     sparse_model: str = "Qdrant/bm25"
 
 
 class LLMSettings(BaseModel):
-    backend: Literal["litellm", "vllm", "fake"] = "litellm"
-    model: str = "gpt-4o-mini"
-    api_base: str | None = None  # напр. http://vllm:8000/v1
+    backend: Literal["vllm"] = "vllm"
+    model: str = "Qwen/Qwen2.5-7B-Instruct"           # назва, з якою запущено vLLM
+    api_base: str | None = "http://vllm:8000/v1"
     api_key: SecretStr | None = None
     temperature: float = Field(0.0, ge=0.0, le=2.0)
     max_output_tokens: int = Field(1024, gt=0)
@@ -52,10 +55,10 @@ class LLMSettings(BaseModel):
 
 
 class RerankerSettings(BaseModel):
-    # Додано "api" як один з варіантів бекенду
-    backend: Literal["none", "bge", "cohere", "api", "fake"] = "none"
+    # "api" — будь-який HTTP /rerank (Cohere v2, Jina, Voyage, власний); "bge" — локальний
+    backend: Literal["none"] = "none"
     model: str = "BAAI/bge-reranker-v2-m3"
-    api_base: str | None = None  # Додано для підтримки зовнішніх API або локальних endpoint-ів
+    api_base: str | None = None
     api_key: SecretStr | None = None
     top_k: int = Field(8, gt=0)
 
@@ -87,7 +90,7 @@ class ChunkingSettings(BaseModel):
 
 
 class StorageSettings(BaseModel):
-    backend: Literal["local", "s3"] = "local"
+    backend: Literal["local"] = "local"
     local_root: Path = Path("/data/rag_blobs")
     s3_endpoint: str | None = None
     s3_bucket: str = "rag-documents"
@@ -97,17 +100,25 @@ class StorageSettings(BaseModel):
 
 
 class IngestionSettings(BaseModel):
-    queue: str = "ingestion"
+    """Єдине джерело для черги, retry і перепостановки (tasks.py/dispatch.py читають звідси).
+    Time-limit-и етапів задані в декораторах задач."""
+    queue: str = "rag_ingestion"
     max_file_mb: int = Field(50, gt=0)
     allowed_mime: list[str] = [
         "application/pdf",
         "text/plain",
         "text/markdown",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "text/html",
+        "application/xhtml+xml",
+        "application/json",
+        "application/x-ndjson",
     ]
-    task_max_retries: int = 3
-    retry_backoff_s: int = 30
-    task_time_limit_s: int = 900
+    task_max_retries: int = Field(3, ge=0)
+    retry_backoff_s: int = Field(30, gt=0)
+    # перепостановка job-ів, чий dispatch впав (QUEUED без celery_task_id)
+    redispatch_interval_s: int = Field(60, gt=0)
+    redispatch_min_age_s: int = Field(60, ge=0)       # не чіпати щойно створені
 
 
 class ChatSettings(BaseModel):
@@ -137,12 +148,13 @@ class RagSettings(BaseSettings):
 
     @model_validator(mode="after")
     def _cross_checks(self) -> "RagSettings":
-        if self.storage.backend == "s3" and not (
-            self.storage.s3_access_key and self.storage.s3_secret_key
-        ):
-            raise ValueError("S3 storage requires access/secret keys")
+        if not self.enabled:
+            return self
         if self.retrieval.fused_top_n < self.reranker.top_k:
             raise ValueError("retrieval.fused_top_n must be >= reranker.top_k")
+        for name, cfg in (("EMBEDDING", self.embedding), ("LLM", self.llm)):
+            if cfg.backend == "vllm" and not cfg.api_base:
+                raise ValueError(f"RAG_{name}__API_BASE is required for backend 'vllm'")
         return self
 
 

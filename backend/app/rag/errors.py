@@ -1,37 +1,67 @@
-"""Класифікація помилок. Celery-таска ретраїть лише TransientError."""
+"""Помилки ingestion-парсингу.
+
+ParseError і нащадки — ПОСТІЙНІ: файл зіпсований/непідтримуваний/завеликий,
+повтор нічого не змінить, тому Celery-задача їх НЕ ретраїть, а позначає job
+як failed із `error_code`. Усе інше (I/O, БД) вважається тимчасовим.
+
+(Назва ParseError історична: базовий клас усіх постійних помилок pipeline,
+у тому числі етапів embed/index.)
+"""
+
+from typing import Any
 
 
-class RagError(Exception):
-    pass
+class ParseError(Exception):
+    code: str = "parse_failed"
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str | None = None,
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.message = message
+        if code:
+            self.code = code
+        self.details = details or {}
 
 
-class TransientError(RagError):
-    """Тимчасова: мережа, 429/5xx від vLLM, таймаут. -> retry з backoff."""
+class UnsupportedFormatError(ParseError):
+    code = "unsupported_format"
 
 
-class PermanentError(RagError):
-    """Ретрай не допоможе. -> статус failed."""
+class CorruptFileError(ParseError):
+    code = "corrupt_file"
 
 
-class UnsupportedMimeError(PermanentError):
-    pass
+class EncryptedFileError(ParseError):
+    code = "encrypted_file"
 
 
-class CorruptDocumentError(PermanentError):
-    pass
+class EmptyContentError(ParseError):
+    code = "empty_content"
 
 
-class EncryptedDocumentError(PermanentError):
-    pass
+class LimitExceededError(ParseError):
+    code = "limit_exceeded"
 
 
-class ScannedPdfError(PermanentError):
-    """PDF без текстового шару (потрібен OCR — окрема фаза)."""
+class MissingFileError(ParseError):
+    code = "missing_file"
 
 
-class EmptyDocumentError(PermanentError):
-    pass
+# ---- embed / index -----------------------------------------------------------
 
 
-class ProviderError(PermanentError):
-    """4xx від LLM/embedding провайдера (невірна модель, схема, запит)."""
+class ProviderError(ParseError):
+    """4xx від embedding-провайдера / vector store: невірна модель, схема, запит."""
+
+    code = "provider_error"
+
+
+class DimensionMismatchError(ProviderError):
+    """Розмірність вектора не збігається з embedding.dim / схемою колекції."""
+
+    code = "embedding_dim_mismatch"

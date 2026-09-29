@@ -23,6 +23,22 @@ from app.schemas.common_schema import TokenType
 from app.utils.sanitization import InputSanitizer
 from app.utils.token import get_valid_tokens, token_is_allowlisted
 
+ 
+from app.api.deps import get_current_user, get_db      # noqa: F401  (get_current_user реекспортується)
+from app.rag.container import get_container
+from app.rag.domain.ports import BlobStorage
+from app.rag.domain.access import AccessPolicy
+from app.rag.services.collections import CollectionService
+from app.rag.services.documents import DocumentService, JobService
+ 
+# Назви permission-ів у RBAC (створіть їх у сидах/міграції та призначте ролям).
+PERM_COLLECTIONS_READ = "rag.collections.read"
+PERM_COLLECTIONS_CREATE = "rag.collections.create"
+PERM_COLLECTIONS_MANAGE = "rag.collections.manage"
+PERM_DOCUMENTS_READ = "rag.documents.read"
+PERM_DOCUMENTS_WRITE = "rag.documents.write"
+
+
 # Import CSRF protection for dependency injection
 csrf_protect = None  # Will be set by main.py during startup
 
@@ -201,3 +217,29 @@ async def validate_csrf_token(request: Request, csrf: CsrfProtect = Depends(get_
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"CSRF token validation failed: {str(e)}",
         )
+
+
+ 
+def get_storage() -> BlobStorage:
+    return get_container().blobs
+ 
+ 
+def get_policy(db: AsyncSession = Depends(get_db)) -> AccessPolicy:
+    return AccessPolicy(db)
+ 
+ 
+def get_collection_service(db: AsyncSession = Depends(get_db),
+                           policy: AccessPolicy = Depends(get_policy)) -> CollectionService:
+    return CollectionService(db, policy)
+ 
+ 
+def get_document_service(db: AsyncSession = Depends(get_db),
+                         policy: AccessPolicy = Depends(get_policy),
+                         storage: BlobStorage = Depends(get_storage)) -> DocumentService:
+    return DocumentService(db, policy, storage)
+ 
+ 
+def get_job_service(db: AsyncSession = Depends(get_db),
+                    policy: AccessPolicy = Depends(get_policy)) -> JobService:
+    return JobService(db, policy)
+ 

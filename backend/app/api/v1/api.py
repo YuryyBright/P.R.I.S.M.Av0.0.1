@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import dashboard  # Add dashboard
 from app.api.v1.endpoints import auth, health, permission, permission_group, role, role_group, user
-
+from app.api.v1.endpoints import collections, documents, jobs
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(health.router, prefix="", tags=["health"])
@@ -15,4 +15,12 @@ api_router.include_router(
     prefix="/permission-groups",
     tags=["permission-groups"],
 )
+ 
+
+ 
+rag_router = APIRouter(prefix="/rag")
+rag_router.include_router(collections.router)
+rag_router.include_router(documents.router)
+rag_router.include_router(jobs.router)
+
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])  # Add this line
