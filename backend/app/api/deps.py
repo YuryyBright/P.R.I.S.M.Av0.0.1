@@ -24,7 +24,6 @@ from app.utils.sanitization import InputSanitizer
 from app.utils.token import get_valid_tokens, token_is_allowlisted
 
  
-from app.api.deps import get_current_user, get_db      # noqa: F401  (get_current_user реекспортується)
 from app.rag.container import get_container
 from app.rag.domain.ports import BlobStorage
 from app.rag.domain.access import AccessPolicy

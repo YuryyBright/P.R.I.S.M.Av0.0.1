@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.rag.container import build_container
-from app.rag.domain.enums import DocumentStatus, IngestionStageName
+from app.rag.domain.enums import DocumentStatus, IngestionStageName, JobStatus
 from app.rag.domain.ports import Embedder, SparseEmbedder, VectorPoint, VectorStore
 from app.rag.errors import DimensionMismatchError, ParseError
 from app.rag.ingestion.stage_common import (
@@ -148,14 +148,26 @@ async def _run(session_factory: SessionFactory, job_id: uuid.UUID,
                 for c, d, s in zip(batch, dense, sparse)
             ])
             done += len(batch)
-            await _record_batch(session_factory, job_id, [c.id for c in batch],
-                                deps.embedder.model, done, total)
+            reason = await _record_batch(session_factory, job_id, info.id,
+                                         [c.id for c in batch], deps.embedder.model, done, total)
+            if reason:
+                return await _abort(deps, info, job_id, reason)
 
+        reason = None
         async with session_factory() as db:
             jobs, docs = IngestionJobRepository(db), DocumentRepository(db)
-            docs.set_status(await docs.get(info.id), DocumentStatus.INDEXING)
-            jobs.mark_processing(await jobs.get(job_id), INDEX)
-            await db.commit()
+            job = await jobs.get(job_id)
+            doc = await docs.get_active(info.id)
+            if job is None or job.status == JobStatus.CANCELLED:
+                reason = "job_cancelled"
+            elif doc is None:
+                reason = "document_deleted"
+            else:
+                docs.set_status(doc, DocumentStatus.INDEXING)
+                jobs.mark_processing(job, INDEX)
+                await db.commit()
+        if reason:
+            return await _abort(deps, info, job_id, reason)
         removed = await deps.store.delete_stale(str(info.id), [str(c.id) for c in chunks])
     except ParseError as exc:
         logger.warning("embed failed job=%s code=%s: %s", job_id, exc.code, exc.message)
@@ -181,15 +193,32 @@ async def _run(session_factory: SessionFactory, job_id: uuid.UUID,
             "chunks": total, "stale_removed": removed}
 
 
-async def _record_batch(session_factory: SessionFactory, job_id: uuid.UUID,
-                        chunk_ids: list[uuid.UUID], model: str, done: int, total: int) -> None:
+async def _record_batch(session_factory: SessionFactory, job_id: uuid.UUID, document_id: uuid.UUID,
+                        chunk_ids: list[uuid.UUID], model: str, done: int, total: int) -> str | None:
+    """Записати прогрес батча. Повертає причину переривання ("job_cancelled"/"document_deleted")
+    або None — так скасування/видалення помічаються між батчами, а не лише на старті етапу."""
     async with session_factory() as db:
-        jobs = IngestionJobRepository(db)
+        jobs, docs = IngestionJobRepository(db), DocumentRepository(db)
         await DocumentChunkRepository(db).mark_indexed(chunk_ids, model, EMBEDDING_VERSION)
         await jobs.set_stage_items(job_id, (EMBED, INDEX), done)
-        jobs.bump_progress(await jobs.get(job_id),
-                           PROGRESS_START + (PROGRESS_END - PROGRESS_START) * done // total)
+        job = await jobs.get(job_id)
+        jobs.bump_progress(job, PROGRESS_START + (PROGRESS_END - PROGRESS_START) * done // total)
+        reason = None
+        if job.status == JobStatus.CANCELLED:
+            reason = "job_cancelled"
+        elif await docs.get_active(document_id) is None:
+            reason = "document_deleted"
         await db.commit()
+        return reason
+
+
+async def _abort(deps: EmbedDeps, info: _DocInfo, job_id: uuid.UUID, reason: str) -> dict[str, Any]:
+    """Етап перервано ззовні. Для видаленого документа прибираємо вже записані вектори
+    (purge міг відпрацювати раніше за цей upsert); статус job-а/документа не чіпаємо."""
+    if reason == "document_deleted":
+        await deps.store.delete_document(str(info.id))
+    logger.info("embed aborted job=%s reason=%s", job_id, reason)
+    return {"status": "skipped", "reason": reason, "job_id": str(job_id), "document_id": str(info.id)}
 
 
 async def fail_embed_job(session_factory: SessionFactory, job_id: uuid.UUID,

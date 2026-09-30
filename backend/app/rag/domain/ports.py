@@ -84,7 +84,8 @@ class BlobStorage(Protocol):
     def read_bytes(self, path: str) -> bytes: ...
 
     def write_bytes(self, path: str, data: bytes) -> None: ...
-
+    
+    def delete(self, path: str) -> None: ...
 
 # ---- LLM / reranker (заготовки до фази Chat; контракт уточнюється там) ------------
 

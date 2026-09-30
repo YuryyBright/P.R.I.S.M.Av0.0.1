@@ -1,10 +1,12 @@
 """Доступ до БД для Document. Soft-delete (deleted_at) інкапсульований тут.
 
-Без commit. Методи set_*/merge_*/fill_*/mark_* лише змінюють об'єкт у сесії.
+Без commit. Методи set_*/merge_*/fill_*/mark_*/soft_delete* лише змінюють стан у сесії.
 """
 import uuid
+from datetime import datetime
 from typing import Any
 
+from sqlalchemy import delete, or_, update
 from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -74,3 +76,35 @@ class DocumentRepository:
         for name, value in values.items():
             if not getattr(doc, name):
                 setattr(doc, name, value)
+
+    # ---- видалення ---------------------------------------------------------
+
+    def soft_delete(self, doc: Document) -> None:
+        doc.status, doc.deleted_at = DocumentStatus.DELETED, utcnow()
+
+    async def soft_delete_in_collection(self, collection_id: uuid.UUID) -> int:
+        """Масово позначити всі живі документи колекції видаленими (ідемпотентно)."""
+        res = await self.db.exec(update(Document).where(*_alive(collection_id)).values(
+            status=DocumentStatus.DELETED, deleted_at=utcnow()))
+        return getattr(res, "rowcount", 0) or 0
+
+    async def list_pending_cleanup(self, *, older_than: datetime, limit: int
+                                   ) -> list[tuple[uuid.UUID, uuid.UUID]]:
+        """(document_id, collection_id) видалених документів, чиє очищення ще не завершене."""
+        rows = await self.db.exec(
+            select(Document.id, Document.collection_id).where(
+                Document.status == DocumentStatus.DELETED,
+                ~Document.meta.has_key("cleanup"),
+                or_(Document.deleted_at.is_(None), Document.deleted_at <= older_than),
+            ).limit(limit))
+        return [(r[0], r[1]) for r in rows.all()]
+
+    async def ids_in_collection(self, collection_id: uuid.UUID) -> list[uuid.UUID]:
+        """Усі документи колекції, включно з видаленими."""
+        rows = await self.db.exec(
+            select(Document.id).where(Document.collection_id == collection_id))
+        return list(rows.all())
+
+    async def hard_delete_in_collection(self, collection_id: uuid.UUID) -> None:
+        """Фізичне видалення (chunks/acl зникають каскадом БД). Лише після purge векторів."""
+        await self.db.exec(delete(Document).where(Document.collection_id == collection_id))

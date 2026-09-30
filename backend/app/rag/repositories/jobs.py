@@ -1,18 +1,23 @@
 """Доступ до БД для IngestionJob / IngestionStage.
 
 Без commit: транзакцією керує caller (stage або сервіс). Методи `mark_*`,
-`bump_progress` лише змінюють стан об'єктів у сесії.
+`bump_progress`, `cancel` лише змінюють стан об'єктів у сесії.
 """
 import uuid
 from datetime import datetime
+from typing import Sequence
 
+from sqlalchemy import update
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.models.rag.document import Document
 from app.models.rag.ingestion_job import IngestionJob
 from app.models.rag.ingestion_stage import IngestionStage
 from app.models.rag.rag_base import utcnow
 from app.rag.domain.enums import IngestionStageName, JobStatus, StageStatus
+
+ACTIVE_JOB_STATUSES = (JobStatus.QUEUED, JobStatus.PROCESSING)
 
 
 class IngestionJobRepository:
@@ -26,6 +31,19 @@ class IngestionJobRepository:
 
     async def get(self, job_id: uuid.UUID) -> IngestionJob | None:
         return await self.db.get(IngestionJob, job_id)          # stages — selectin
+
+    async def find_active_for_document(self, document_id: uuid.UUID) -> IngestionJob | None:
+        return (await self.db.exec(
+            select(IngestionJob)
+            .where(IngestionJob.document_id == document_id,
+                   IngestionJob.status.in_(ACTIVE_JOB_STATUSES))
+            .order_by(IngestionJob.created_at.desc()))).first()
+
+    async def list_for_document(self, document_id: uuid.UUID, *, limit: int = 20) -> list[IngestionJob]:
+        rows = await self.db.exec(
+            select(IngestionJob).where(IngestionJob.document_id == document_id)
+            .order_by(IngestionJob.created_at.desc()).limit(limit))
+        return list(rows.all())
 
     async def set_celery_task_id(self, job_id: uuid.UUID, task_id: str | None) -> None:
         job = await self.db.get(IngestionJob, job_id)
@@ -65,6 +83,10 @@ class IngestionJobRepository:
         job.status, job.progress, job.finished_at = JobStatus.COMPLETED, 100, utcnow()
         job.error_code = job.error_message = None
 
+    def cancel(self, job: IngestionJob) -> None:
+        job.status, job.finished_at = JobStatus.CANCELLED, utcnow()
+        job.error_code, job.error_message = "cancelled", "Cancelled by user"
+
     async def mark_failed(self, job: IngestionJob, code: str, message: str,
                           *stage_names: IngestionStageName) -> None:
         """job → FAILED; вказані stage-и (крім COMPLETED) → FAILED."""
@@ -82,6 +104,25 @@ class IngestionJobRepository:
         if job is not None:
             job.retry_count = retries
             job.status = JobStatus.QUEUED
+
+    # ---- масове скасування (видалення документів/колекцій) -----------------
+
+    async def cancel_active_for_documents(self, document_ids: Sequence[uuid.UUID]) -> int:
+        if not document_ids:
+            return 0
+        res = await self.db.exec(update(IngestionJob).where(
+            IngestionJob.document_id.in_(document_ids),
+            IngestionJob.status.in_(ACTIVE_JOB_STATUSES),
+        ).values(status=JobStatus.CANCELLED, finished_at=utcnow(), error_code="cancelled"))
+        return getattr(res, "rowcount", 0) or 0
+
+    async def cancel_active_in_collection(self, collection_id: uuid.UUID) -> int:
+        doc_ids = select(Document.id).where(Document.collection_id == collection_id)
+        res = await self.db.exec(update(IngestionJob).where(
+            IngestionJob.document_id.in_(doc_ids),
+            IngestionJob.status.in_(ACTIVE_JOB_STATUSES),
+        ).values(status=JobStatus.CANCELLED, finished_at=utcnow(), error_code="cancelled"))
+        return getattr(res, "rowcount", 0) or 0
 
     # ---- stages ------------------------------------------------------------
 

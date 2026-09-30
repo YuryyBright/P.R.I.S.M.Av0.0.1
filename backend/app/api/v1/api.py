@@ -15,9 +15,7 @@ api_router.include_router(
     prefix="/permission-groups",
     tags=["permission-groups"],
 )
- 
 
- 
 rag_router = APIRouter(prefix="/rag")
 rag_router.include_router(collections.router)
 rag_router.include_router(documents.router)

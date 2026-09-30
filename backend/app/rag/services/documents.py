@@ -1,10 +1,16 @@
-"""DocumentService (upload/list/get) і JobService.
+"""DocumentService (upload/list/get/rename/delete/reindex) і JobService (get/list/cancel/retry).
 
 Upload: перевірки → читання з лімітом і sha256 → дедуплікація → файл у storage →
 Document+Job в ОДНІЙ транзакції → commit → dispatch у Celery. Dispatch після commit,
 щоб worker не отримав job, якого ще нема в БД. Якщо dispatch впав, job лишається
 QUEUED без celery_task_id (його підхопить періодична перепостановка —
 IngestionJobRepository.claim_undispatched).
+
+Delete: soft-delete + скасування активних job-ів + commit; фізичне очищення (вектори,
+чанки, blob-и) — у Celery (rag.purge_document), з sweep як страховкою.
+
+Reindex/retry: завжди НОВИЙ job (історія зберігається); pipeline ідемпотентний,
+старі вектори лишаються доступними до завершення нового індексування (delete_stale в кінці).
 """
 import asyncio
 import logging
@@ -20,33 +26,57 @@ from app.models.rag.document import Document
 from app.models.rag.ingestion_job import IngestionJob
 from app.models.users.user_model import User
 from app.rag.domain.access import AccessPolicy, Action
-from app.rag.domain.enums import DocumentSourceType, DocumentStatus, JobType
+from app.rag.domain.enums import DocumentSourceType, DocumentStatus, JobStatus, JobType
 from app.rag.domain.exceptions import (
-    ConflictError, InvalidInputError, NotFoundError, PayloadTooLargeError, UnsupportedMediaError,
+    ConflictError, ForbiddenError, InvalidInputError, NotFoundError,
+    PayloadTooLargeError, UnsupportedMediaError,
 )
 from app.rag.domain.ports import BlobStorage
 from app.rag.domain.uploads import clean_filename, resolve_mime, title_from_filename
 from app.rag.repositories import DocumentRepository, IngestionJobRepository
-from app.rag.schemas import UploadResponse
-from app.rag.services.dispatch import dispatch_parse
+from app.rag.schemas import DocumentUpdate, UploadResponse
+from app.rag.services.dispatch import dispatch_parse, dispatch_purge_document
 from app.rag.settings import IngestionSettings, get_rag_settings
 
 logger = logging.getLogger(__name__)
 
 _READ_CHUNK = 1024 * 1024
+_ACTIVE = (JobStatus.QUEUED, JobStatus.PROCESSING)
+_SETTLED_DOC = (DocumentStatus.READY, DocumentStatus.FAILED, DocumentStatus.DELETED)
 
 
 class DocumentService:
     def __init__(self, db: AsyncSession, policy: AccessPolicy, storage: BlobStorage, *,
                  cfg: IngestionSettings | None = None,
                  dispatcher: Callable[[uuid.UUID], str | None] = dispatch_parse,
+                 purge_dispatcher: Callable[[uuid.UUID], str | None] = dispatch_purge_document,
                  docs: DocumentRepository | None = None,
                  jobs: IngestionJobRepository | None = None) -> None:
         self.db, self.policy, self.storage = db, policy, storage
         self.cfg = cfg or get_rag_settings().ingestion
         self.dispatcher = dispatcher
+        self.purge_dispatcher = purge_dispatcher
         self.docs = docs or DocumentRepository(db)
         self.jobs = jobs or IngestionJobRepository(db)
+
+    # ---- helpers ---------------------------------------------------------------
+
+    async def _enqueue(self, job_id: uuid.UUID) -> None:
+        """Dispatch ПІСЛЯ commit. Збій не піднімається: job лишається QUEUED без
+        celery_task_id, і його перепоставить планувальник."""
+        try:
+            task_id = await asyncio.to_thread(self.dispatcher, job_id)
+            await self.jobs.set_celery_task_id(job_id, task_id)
+            await self.db.commit()
+        except Exception:
+            logger.exception("dispatch failed for job=%s (will stay QUEUED)", job_id)
+            await self.db.rollback()
+
+    async def _get_active_or_404(self, document_id: uuid.UUID) -> Document:
+        doc = await self.docs.get_active(document_id)
+        if doc is None:
+            raise NotFoundError("Document not found")
+        return doc
 
     # ---- upload ----------------------------------------------------------------
 
@@ -93,22 +123,13 @@ class DocumentService:
             job_type=JobType.DOCUMENT_INGEST, payload={"filename": filename}))
         await self.db.commit()
 
-        try:
-            task_id = await asyncio.to_thread(self.dispatcher, job_id)
-            await self.jobs.set_celery_task_id(job_id, task_id)
-            await self.db.commit()
-        except Exception:                      # job лишається QUEUED — перепоставить планувальник
-            logger.exception("dispatch failed for job=%s (will stay QUEUED)", job_id)
-            await self.db.rollback()
-
+        await self._enqueue(job_id)
         return UploadResponse(document_id=doc_id, job_id=job_id)
 
     # ---- read ------------------------------------------------------------------
 
     async def get(self, user: User, document_id: uuid.UUID) -> Document:
-        doc = await self.docs.get_active(document_id)
-        if doc is None:
-            raise NotFoundError("Document not found")
+        doc = await self._get_active_or_404(document_id)
         await self.policy.require(user, doc.collection_id, Action.READ)   # 404, якщо колекція недоступна
         return doc
 
@@ -116,6 +137,51 @@ class DocumentService:
                    status: DocumentStatus | None = None) -> tuple[list[Document], int]:
         await self.policy.require(user, collection_id, Action.READ)
         return await self.docs.list_page(collection_id, limit=limit, offset=offset, status=status)
+
+    # ---- update / delete / reindex ---------------------------------------------
+
+    async def rename(self, user: User, document_id: uuid.UUID, data: DocumentUpdate) -> Document:
+        doc = await self._get_active_or_404(document_id)
+        await self.policy.require(user, doc.collection_id, Action.WRITE)
+        doc.title = data.title
+        await self.db.commit()
+        await self.db.refresh(doc)
+        return doc
+
+    async def delete(self, user: User, document_id: uuid.UUID) -> None:
+        """Soft-delete одразу, фізичне очищення (вектори/чанки/blob-и) — у Celery.
+
+        Активні job-и скасовуються; embed-етап помічає це між батчами й сам прибирає
+        вектори, що встигли записатись.
+        """
+        doc = await self._get_active_or_404(document_id)
+        await self.policy.require(user, doc.collection_id, Action.WRITE)
+        self.docs.soft_delete(doc)
+        await self.jobs.cancel_active_for_documents([doc.id])
+        await self.db.commit()
+        try:
+            await asyncio.to_thread(self.purge_dispatcher, doc.id)
+        except Exception:
+            logger.exception("purge dispatch failed document=%s (sweep will pick it up)", doc.id)
+
+    async def reindex(self, user: User, document_id: uuid.UUID) -> UploadResponse:
+        """Новий job для існуючого документа (перепарсинг → чанкінг → ембединг).
+        Використовується і для retry невдалого/скасованого job-а."""
+        doc = await self._get_active_or_404(document_id)
+        await self.policy.require(user, doc.collection_id, Action.WRITE)
+        if not doc.storage_path:
+            raise InvalidInputError("Document has no original file to reindex")
+        if await self.jobs.find_active_for_document(doc.id) is not None:
+            raise ConflictError("Document is already being processed")
+
+        job_id = uuid.uuid4()
+        self.jobs.add(IngestionJob(
+            id=job_id, user_id=user.id, document_id=doc.id,
+            job_type=JobType.REINDEX, payload={"reason": "manual"}))
+        await self.db.commit()
+
+        await self._enqueue(job_id)
+        return UploadResponse(document_id=doc.id, job_id=job_id)
 
 
 class JobService:
@@ -137,3 +203,49 @@ class JobService:
         if not allowed:
             raise NotFoundError("Job not found")
         return job
+
+    async def list_for_document(self, user: User, document_id: uuid.UUID, *,
+                                limit: int = 20) -> list[IngestionJob]:
+        doc = await self.docs.get_active(document_id)
+        if doc is None:
+            raise NotFoundError("Document not found")
+        await self.policy.require(user, doc.collection_id, Action.READ)
+        return await self.jobs.list_for_document(document_id, limit=limit)
+
+    async def _can_write(self, user: User, job: IngestionJob) -> bool:
+        if getattr(user, "is_superuser", False):
+            return True
+        if job.document_id:
+            doc = await self.docs.get(job.document_id)
+            return doc is not None and await self.policy.can(user, doc.collection_id, Action.WRITE)
+        return job.user_id == user.id
+
+    async def cancel(self, user: User, job_id: uuid.UUID) -> IngestionJob:
+        """QUEUED/PROCESSING → CANCELLED. Етапи перевіряють статус на старті, embed — між батчами.
+
+        Незавершений документ (ще не READY) позначається FAILED, щоб не «висів» у проміжному
+        статусі; READY-документ, чий reindex скасовано до старту, лишається READY.
+        """
+        job = await self.get(user, job_id)
+        if not await self._can_write(user, job):
+            raise ForbiddenError("Insufficient permissions")
+        if job.status not in _ACTIVE:
+            raise ConflictError("Job is not active")
+        self.jobs.cancel(job)
+        if job.document_id:
+            doc = await self.docs.get(job.document_id)
+            if doc is not None and doc.status not in _SETTLED_DOC:
+                self.docs.set_status(doc, DocumentStatus.FAILED)
+        await self.db.commit()
+        await self.db.refresh(job)
+        return job
+
+    async def ensure_retryable(self, user: User, job_id: uuid.UUID) -> uuid.UUID:
+        """Перевіряє, що job можна повторити, і повертає document_id.
+        Сам повтор = DocumentService.reindex(document_id) (новий job)."""
+        job = await self.get(user, job_id)
+        if job.status not in (JobStatus.FAILED, JobStatus.CANCELLED):
+            raise ConflictError("Only failed or cancelled jobs can be retried")
+        if job.document_id is None:
+            raise InvalidInputError("Job has no document to retry")
+        return job.document_id

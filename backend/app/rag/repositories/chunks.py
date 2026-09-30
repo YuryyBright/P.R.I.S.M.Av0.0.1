@@ -18,8 +18,11 @@ class DocumentChunkRepository:
                                    chunks: Sequence[DocumentChunk]) -> None:
         """Видалити старі чанки й додати нові. Атомарність — за рахунок
         транзакції caller-а (один commit після виклику)."""
-        await self.db.exec(delete(DocumentChunk).where(DocumentChunk.document_id == document_id))
+        await self.delete_for_document(document_id)
         self.db.add_all(chunks)
+
+    async def delete_for_document(self, document_id: uuid.UUID) -> None:
+        await self.db.exec(delete(DocumentChunk).where(DocumentChunk.document_id == document_id))
 
     async def list_for_embedding(self, document_id: uuid.UUID) -> list[Row]:
         """(id, chunk_index, content, page_number, meta) у порядку chunk_index."""

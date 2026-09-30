@@ -42,3 +42,13 @@ def load_canonical(storage: BlobStorage, document_id: str) -> CanonicalDocument:
         return CanonicalDocument.from_dict(payload)
     except (UnicodeDecodeError, json.JSONDecodeError, TypeError, KeyError, ValueError) as exc:
         raise CorruptFileError(f"Invalid canonical document: {document_id}") from exc
+
+
+def delete_canonical(storage: BlobStorage, document_id: str) -> None:
+    """Ідемпотентно: відсутній файл — не помилка."""
+    storage.delete(_canonical_path(document_id))
+
+
+def delete_original(storage: BlobStorage, path: str) -> None:
+    """Ідемпотентно: відсутній файл — не помилка."""
+    storage.delete(path)

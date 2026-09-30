@@ -24,6 +24,15 @@ class Page(BaseModel, Generic[T]):
     offset: int
 
 
+def _strip_nonblank(v: str | None) -> str | None:
+    if v is None:
+        return v
+    v = v.strip()
+    if not v:
+        raise ValueError("must not be blank")
+    return v
+
+
 # ---- collections -------------------------------------------------------------
 
 class CollectionCreate(BaseModel):
@@ -38,6 +47,18 @@ class CollectionCreate(BaseModel):
         if not v:
             raise ValueError("name must not be blank")
         return v
+
+
+class CollectionUpdate(BaseModel):
+    """PATCH: змінюються лише передані поля (`description: null` — очистити опис)."""
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=5000)
+    visibility: CollectionVisibility | None = None
+
+    @field_validator("name")
+    @classmethod
+    def _strip(cls, v: str | None) -> str | None:
+        return _strip_nonblank(v)
 
 
 class CollectionRead(_ORM):
@@ -88,7 +109,17 @@ class DocumentRead(_ORM):
     indexed_at: datetime | None
 
 
+class DocumentUpdate(BaseModel):
+    title: str = Field(min_length=1, max_length=512)
+
+    @field_validator("title")
+    @classmethod
+    def _strip(cls, v: str) -> str:
+        return _strip_nonblank(v)  # type: ignore[return-value]
+
+
 class UploadResponse(BaseModel):
+    """Також відповідь на reindex/retry: документ + щойно створений job."""
     document_id: uuid.UUID
     job_id: uuid.UUID
     status: JobStatus = JobStatus.QUEUED

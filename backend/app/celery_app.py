@@ -7,6 +7,7 @@ from celery import Celery
 
 from app.core.celery_config import get_cached_celery_config
 from app.core.config import ModeEnum, settings
+from app.rag.settings import get_rag_settings
 
 # Initialize the main Celery app instance
 celery_app = Celery("prisma")
@@ -29,6 +30,13 @@ celery_app.conf.update(celery_config)
 # empty schedule and no periodic task fired at all (#136).
 from app import celery_beat_schedule as _beat_schedule  # noqa: E402, F401
 from app import worker as _worker_tasks  # noqa: E402, F401
+
+# RAG ingestion: без цього імпорту `celery -A app.celery_app worker` не знає задач rag.*
+# (Received unregistered task → повідомлення відкидається), а beat не має їх розкладу.
+# Задачі самі додають свої записи до conf.beat_schedule (merge, не заміна).
+if get_rag_settings().enabled:
+    from app.rag.ingestion import cleanup_tasks as _rag_cleanup_tasks  # noqa: E402, F401
+    from app.rag.ingestion import tasks as _rag_tasks  # noqa: E402, F401
 
 # Conditional configuration for development mode
 if settings.MODE == ModeEnum.development:
