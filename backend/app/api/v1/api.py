@@ -16,9 +16,8 @@ api_router.include_router(
     tags=["permission-groups"],
 )
 
-rag_router = APIRouter(prefix="/rag")
-rag_router.include_router(collections.router)
-rag_router.include_router(documents.router)
-rag_router.include_router(jobs.router)
+api_router.include_router(collections.router)
+api_router.include_router(documents.router)
+api_router.include_router(jobs.router)
 
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])  # Add this line

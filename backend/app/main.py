@@ -248,7 +248,7 @@ async def root() -> Dict[str, str]:
 
 @fastapi_app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html() -> HTMLResponse:
-    """Serve Swagger UI with CSRF support for state-changing requests."""
+    """Serve Swagger UI with CSRF support and a manual Bearer token field."""
     csrf_token_url = f"{settings.API_V1_STR}/auth/csrf-token"
     openapi_url = f"{settings.API_V1_STR}/openapi.json"
 
@@ -261,9 +261,38 @@ async def custom_swagger_ui_html() -> HTMLResponse:
             <title>{settings.PROJECT_NAME or "FastAPI PRISMA"} - Swagger UI</title>
         </head>
         <body>
+            <div style="padding:8px 16px;background:#f5f5f5;font-family:sans-serif">
+                <input id="tokenInput" type="text" placeholder="Вставте access_token"
+                       style="width:60%;padding:6px">
+                <button onclick="saveToken()">Set token</button>
+                <button onclick="clearToken()">Clear</button>
+                <span id="tokenStatus" style="margin-left:8px;font-size:12px"></span>
+            </div>
             <div id="swagger-ui"></div>
             <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
             <script>
+            const TOKEN_KEY = "swagger_access_token";
+            const tokenInput = document.getElementById("tokenInput");
+            const tokenStatus = document.getElementById("tokenStatus");
+
+            function normalizeToken(value) {{
+                return value.trim().replace(/^Bearer\\s+/i, "");
+            }}
+            function refreshStatus() {{
+                tokenStatus.textContent = localStorage.getItem(TOKEN_KEY) ? "токен встановлено" : "токена немає";
+            }}
+            function saveToken() {{
+                localStorage.setItem(TOKEN_KEY, normalizeToken(tokenInput.value));
+                refreshStatus();
+            }}
+            function clearToken() {{
+                localStorage.removeItem(TOKEN_KEY);
+                tokenInput.value = "";
+                refreshStatus();
+            }}
+            tokenInput.value = localStorage.getItem(TOKEN_KEY) || "";
+            refreshStatus();
+
             const csrfTokenUrl = "{csrf_token_url}";
             const unsafeMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
             let csrfToken = null;
@@ -300,8 +329,15 @@ async def custom_swagger_ui_html() -> HTMLResponse:
                     const isApiRequest = request.url.includes("{settings.API_V1_STR}/");
                     const isCsrfRequest = request.url.includes(csrfTokenUrl);
 
+                    request.headers = request.headers || {{}};
+
+                    // Ручний токен перезаписує "Bearer undefined" від кнопки Authorize
+                    const savedToken = localStorage.getItem(TOKEN_KEY);
+                    if (savedToken && isApiRequest) {{
+                        request.headers["Authorization"] = `Bearer ${{savedToken}}`;
+                    }}
+
                     if (unsafeMethods.has(method) && isApiRequest && !isCsrfRequest) {{
-                        request.headers = request.headers || {{}};
                         request.headers["X-CSRF-Token"] = await ensureCsrfToken();
                     }}
 
@@ -314,7 +350,6 @@ async def custom_swagger_ui_html() -> HTMLResponse:
         </html>
         """
     )
-
 
 # Exception handlers for consistent error responses
 @fastapi_app.exception_handler(RequestValidationError)

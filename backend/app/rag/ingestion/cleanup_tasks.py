@@ -17,7 +17,7 @@ from typing import Any
 from app.models.rag.rag_base import utcnow
 from app.rag.domain.enums import DocumentStatus
 from app.rag.domain.ports import BlobStorage, VectorStore
-from app.rag.ingestion.sincludetage_common import SessionFactory
+from app.rag.ingestion.stage_common import SessionFactory
 from app.rag.ingestion.storage import delete_canonical, delete_original
 from app.rag.repositories import CollectionRepository, DocumentChunkRepository, DocumentRepository
 

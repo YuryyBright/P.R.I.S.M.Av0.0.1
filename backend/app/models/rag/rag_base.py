@@ -18,7 +18,7 @@ from sqlalchemy import Column, ForeignKey, text
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlmodel import Field
-
+from datetime import datetime, timezone
 from app.models.base_uuid_model import BaseUUIDModel
 
 
@@ -160,3 +160,7 @@ def meta_field() -> Any:
         default_factory=dict,
         sa_column=jsonb_column("metadata"),
     )
+
+def utcnow() -> datetime:
+    """Naive UTC datetime, узгоджений з BaseUUIDModel (created_at / updated_at)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
