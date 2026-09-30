@@ -3,6 +3,10 @@ from typing import Any
 from app.models.users.user_model import User
 
 
+def _ref(obj):
+    return {"id": str(obj.id), "name": obj.name} if obj else None
+
+
 def serialize_user(user: User) -> dict[str, Any]:
     """
     Serialize a user object into a standardized dictionary format.
@@ -34,11 +38,25 @@ def serialize_user(user: User) -> dict[str, Any]:
         "is_locked": user.is_locked,
         "locked_until": user.locked_until,
         "verified": user.verified,
-        "roles": (
-            [{"id": str(role.id), "name": role.name, "description": role.description} for role in user.roles]
-            if user.roles
-            else []
-        ),
+        "roles": [
+            {
+                "id": str(role.id),
+                "name": role.name,
+                "description": role.description,
+                "role_group": _ref(getattr(role, "role_group", None)),
+                "permissions": [
+                    {
+                        "name": p.name,
+                        "description": getattr(p, "description", None),
+                        "group": _ref(getattr(p, "group", None)),
+                    }
+                    for p in (role.permissions or [])
+                ],
+            }
+            for role in (user.roles or [])
+        ],
+        
+        
         "permissions": sorted(list(user_permissions_set)),  # Add sorted list of unique permissions
         "created_at": user.created_at,
         "updated_at": user.updated_at,
