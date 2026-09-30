@@ -1,4 +1,4 @@
-"""Етап CHUNK ingestion-pipeline: БД + storage + chunker. Без Celery.
+"""Етап CHUNK ingestion-pipeline: репозиторії + storage + chunker. Без Celery.
 
 Той самий патерн, що й у parse_stage: стан → commit → (CPU) чанкінг без
 відкритої транзакції → запис результату → commit. Етап ідемпотентний:
@@ -9,18 +9,14 @@ import logging
 import uuid
 from typing import Any
 
-from sqlalchemy import delete
-
-from app.models.rag.document import Document
 from app.models.rag.document_chunk import DocumentChunk
-from app.models.rag.ingestion_job import IngestionJob
-from app.models.rag.rag_base import utcnow
-from app.rag.domain.enums import DocumentStatus, IngestionStageName, JobStatus, StageStatus
+from app.rag.domain.enums import DocumentStatus, IngestionStageName
+from app.rag.errors import EmptyContentError, ParseError
 from app.rag.ingestion.canonical import CanonicalDocument
 from app.rag.ingestion.chunker import ChunkDraft, TokenCounter, chunk_document, default_token_counter
-from app.rag.errors import EmptyContentError, ParseError
-from app.rag.ingestion.stage_common import SessionFactory, fail_job_stages, fail_stages, get_stage
+from app.rag.ingestion.stage_common import SessionFactory, fail_job_stages, load_context
 from app.rag.ingestion.storage import BlobStorage, get_blob_storage, load_canonical
+from app.rag.repositories import DocumentChunkRepository, DocumentRepository, IngestionJobRepository
 from app.rag.settings import ChunkingSettings, get_rag_settings
 
 logger = logging.getLogger(__name__)
@@ -58,27 +54,13 @@ async def run_chunk_stage(
 
     # 1) стан
     async with session_factory() as db:
-        job = await db.get(IngestionJob, job_id)
-        if job is None:
-            return {"status": "skipped", "reason": "job_not_found", "job_id": str(job_id)}
-        if job.status in (JobStatus.CANCELLED, JobStatus.COMPLETED):
-            return {"status": "skipped", "reason": f"job_{job.status.value}", "job_id": str(job_id)}
-
-        doc = await db.get(Document, job.document_id) if job.document_id else None
-        if doc is None or doc.status == DocumentStatus.DELETED or doc.deleted_at is not None:
-            await fail_stages(db, job, None, "document_not_found", "Document not found or deleted", STAGE)
-            return {"status": "failed", "error_code": "document_not_found", "job_id": str(job_id)}
-
-        now = utcnow()
-        job.status = JobStatus.PROCESSING
-        job.current_stage = STAGE
-        job.error_code = job.error_message = None
-        doc.status = DocumentStatus.CHUNKING
-        stage = await get_stage(db, job_id, STAGE)
-        stage.status, stage.started_at, stage.finished_at = StageStatus.PROCESSING, now, None
-        stage.items_total = stage.items_processed = 0
-        stage.error_message = None
-        document_id = doc.id
+        ctx = await load_context(db, job_id, STAGE)
+        if isinstance(ctx, dict):
+            return ctx
+        ctx.jobs.mark_processing(ctx.job, STAGE)
+        ctx.docs.set_status(ctx.doc, DocumentStatus.CHUNKING)
+        await ctx.jobs.begin_stage(job_id, STAGE)
+        document_id = ctx.doc.id
         await db.commit()
 
     # 2) читання canonical + чанкінг (без відкритої транзакції)
@@ -89,21 +71,18 @@ async def run_chunk_stage(
         code = getattr(exc, "code", "canonical_invalid")
         message = getattr(exc, "message", None) or str(exc)
         logger.warning("chunk failed job=%s code=%s: %s", job_id, code, message)
-        async with session_factory() as db:
-            job = await db.get(IngestionJob, job_id)
-            doc = await db.get(Document, document_id)
-            await fail_stages(db, job, doc, code, message, STAGE)
+        await fail_job_stages(session_factory, job_id, code, message, STAGE)
         return {"status": "failed", "error_code": code, "error_message": message,
                 "job_id": str(job_id), "document_id": str(document_id)}
 
     # 3) запис: видалити старі чанки + вставити нові (одна транзакція)
     async with session_factory() as db:
-        job = await db.get(IngestionJob, job_id)
-        doc = await db.get(Document, document_id)
-        stage = await get_stage(db, job_id, STAGE)
+        jobs, docs, chunks = (IngestionJobRepository(db), DocumentRepository(db),
+                              DocumentChunkRepository(db))
+        job = await jobs.get(job_id)
+        doc = await docs.get(document_id)
 
-        await db.exec(delete(DocumentChunk).where(DocumentChunk.document_id == document_id))
-        db.add_all(
+        await chunks.replace_for_document(document_id, [
             DocumentChunk(
                 id=chunk_id(document_id, cfg.version, d.index, d.content_hash),
                 document_id=document_id,
@@ -118,16 +97,15 @@ async def run_chunk_stage(
                 chunking_version=cfg.version,
             )
             for d in drafts
-        )
+        ])
 
-        stage.status, stage.finished_at = StageStatus.COMPLETED, utcnow()
-        stage.items_total = stage.items_processed = len(drafts)
-        job.progress = max(job.progress, CHUNK_PROGRESS)
-        doc.meta = {**doc.meta, "chunk": {
+        await jobs.complete_stage(job_id, STAGE, items=len(drafts))
+        jobs.bump_progress(job, CHUNK_PROGRESS)
+        docs.merge_meta(doc, "chunk", {
             "chunks": len(drafts),
             "tokens": sum(d.token_count for d in drafts),
             "version": cfg.version,
-        }}
+        })
         await db.commit()
 
     return {"status": "chunked", "job_id": str(job_id), "document_id": str(document_id),
@@ -137,9 +115,4 @@ async def run_chunk_stage(
 async def fail_chunk_job(session_factory: SessionFactory, job_id: uuid.UUID,
                          code: str, message: str) -> None:
     """Фінальний фейл після вичерпання retry / таймауту (для етапу CHUNK)."""
-    async with session_factory() as db:
-        job = await db.get(IngestionJob, job_id)
-        if job is None:
-            return
-        doc = await db.get(Document, job.document_id) if job.document_id else None
-        await fail_stages(db, job, doc, code, message, STAGE)
+    await fail_job_stages(session_factory, job_id, code, message, STAGE)

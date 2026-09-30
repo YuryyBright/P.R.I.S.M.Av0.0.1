@@ -1,4 +1,4 @@
-"""Етап PARSE ingestion-pipeline: БД + storage + парсер. Без Celery.
+"""Етап PARSE ingestion-pipeline: репозиторії + storage + парсер. Без Celery.
 
 Транзакції короткі: стан → commit → (довгий) парсинг без відкритої
 транзакції → результат → commit.
@@ -10,20 +10,20 @@ from dataclasses import dataclass
 from hashlib import sha256
 from typing import Any
 
-
-from app.models.rag.document import Document
-from app.models.rag.ingestion_job import IngestionJob
-from app.models.rag.rag_base import utcnow
-from app.rag.domain.enums import DocumentStatus, IngestionStageName, JobStatus, StageStatus
-from app.rag.ingestion.canonical import CanonicalDocument
-from app.rag.errors import MissingFileError, ParseError
-from app.rag.ingestion.parsers import ParseLimits, parse_document_bytes
+from app.rag.domain.enums import DocumentStatus, IngestionStageName
 from app.rag.domain.ports import BlobStorage
-from app.rag.ingestion.stage_common import SessionFactory, fail_job_stages, fail_stages, get_stage
+from app.rag.errors import MissingFileError, ParseError
+from app.rag.ingestion.canonical import CanonicalDocument
+from app.rag.ingestion.parsers import ParseLimits, parse_document_bytes
+from app.rag.ingestion.stage_common import (
+    SessionFactory, fail_job_stages, load_context,
+)
 from app.rag.ingestion.storage import get_blob_storage, read_original, save_canonical
+from app.rag.repositories import DocumentRepository, IngestionJobRepository
 
 logger = logging.getLogger(__name__)
 
+STAGE = IngestionStageName.PARSE
 PARSE_PROGRESS = 20   # % прогресу job-а після завершення PARSE
 
 
@@ -52,27 +52,13 @@ async def run_parse_stage(
 
     # 1) взяти job/document, позначити стан
     async with session_factory() as db:
-        job = await db.get(IngestionJob, job_id)
-        if job is None:
-            return {"status": "skipped", "reason": "job_not_found", "job_id": str(job_id)}
-        if job.status in (JobStatus.CANCELLED, JobStatus.COMPLETED):
-            return {"status": "skipped", "reason": f"job_{job.status.value}", "job_id": str(job_id)}
-
-        doc = await db.get(Document, job.document_id) if job.document_id else None
-        if doc is None or doc.status == DocumentStatus.DELETED or doc.deleted_at is not None:
-            await fail_stages(db, job, None, "document_not_found", "Document not found or deleted", IngestionStageName.PARSE)
-            return {"status": "failed", "error_code": "document_not_found", "job_id": str(job_id)}
-
-        now = utcnow()
-        job.status = JobStatus.PROCESSING
-        job.current_stage = IngestionStageName.PARSE
-        job.started_at = job.started_at or now
-        job.error_code = job.error_message = None
-        doc.status = DocumentStatus.PROCESSING
-        stage = await get_stage(db, job_id, IngestionStageName.PARSE)
-        stage.status, stage.started_at, stage.finished_at = StageStatus.PROCESSING, now, None
-        stage.items_total = stage.items_processed = 0
-        stage.error_message = None
+        ctx = await load_context(db, job_id, STAGE)
+        if isinstance(ctx, dict):
+            return ctx
+        doc = ctx.doc
+        ctx.jobs.mark_processing(ctx.job, STAGE)
+        ctx.docs.set_status(doc, DocumentStatus.PROCESSING)
+        await ctx.jobs.begin_stage(job_id, STAGE)
         src = _Source(doc.id, doc.storage_path, doc.filename, doc.mime_type,
                       str(doc.source_id) if doc.source_id else None, doc.external_id, doc.url)
         await db.commit()
@@ -90,35 +76,35 @@ async def run_parse_stage(
         await asyncio.to_thread(save_canonical, storage, str(src.document_id), canonical)
     except ParseError as exc:
         logger.warning("parse failed job=%s code=%s: %s", job_id, exc.code, exc.message)
-        async with session_factory() as db:
-            job = await db.get(IngestionJob, job_id)
-            doc = await db.get(Document, src.document_id)
-            await fail_stages(db, job, doc, exc.code, exc.message, IngestionStageName.PARSE)
+        await fail_job_stages(session_factory, job_id, exc.code, exc.message, STAGE)
         return {"status": "failed", "error_code": exc.code, "error_message": exc.message,
                 "job_id": str(job_id), "document_id": str(src.document_id)}
 
     # 3) зафіксувати успіх
     async with session_factory() as db:
-        job = await db.get(IngestionJob, job_id)
-        doc = await db.get(Document, src.document_id)
-        stage = await get_stage(db, job_id, IngestionStageName.PARSE)
-        stage.status, stage.finished_at = StageStatus.COMPLETED, utcnow()
-        stage.items_total = stage.items_processed = len(canonical.blocks)
-        job.progress = max(job.progress, PARSE_PROGRESS)
+        jobs, docs = IngestionJobRepository(db), DocumentRepository(db)
+        job = await jobs.get(job_id)
+        doc = await docs.get(src.document_id)
 
-        doc.size_bytes = doc.size_bytes or len(data)
-        doc.content_hash = doc.content_hash or sha256(data).hexdigest()
-        doc.author = doc.author or canonical.author
-        doc.published_at = doc.published_at or canonical.published_at
-        doc.language = doc.language or canonical.language
-        doc.url = doc.url or canonical.url
-        doc.meta = {**doc.meta, "parse": {
+        await jobs.complete_stage(job_id, STAGE, items=len(canonical.blocks))
+        jobs.bump_progress(job, PARSE_PROGRESS)
+
+        docs.fill_missing(
+            doc,
+            size_bytes=len(data),
+            content_hash=sha256(data).hexdigest(),
+            author=canonical.author,
+            published_at=canonical.published_at,
+            language=canonical.language,
+            url=canonical.url,
+        )
+        docs.merge_meta(doc, "parse", {
             "parser": canonical.metadata.get("parser"),
             "title": canonical.title,
             "blocks": len(canonical.blocks),
             "chars": len(canonical.content),
             "pages": canonical.metadata.get("page_count"),
-        }}
+        })
         await db.commit()
 
     return {"status": "parsed", "job_id": str(job_id), "document_id": str(src.document_id),
@@ -127,13 +113,10 @@ async def run_parse_stage(
 
 async def record_retry(session_factory: SessionFactory, job_id: uuid.UUID, retries: int) -> None:
     async with session_factory() as db:
-        job = await db.get(IngestionJob, job_id)
-        if job is not None:
-            job.retry_count = retries
-            job.status = JobStatus.QUEUED
-            await db.commit()
+        await IngestionJobRepository(db).record_retry(job_id, retries)
+        await db.commit()
 
 
 async def fail_job(session_factory: SessionFactory, job_id: uuid.UUID, code: str, message: str) -> None:
     """Фінальний фейл після вичерпання retry / таймауту."""
-    await fail_job_stages(session_factory, job_id, code, message, IngestionStageName.PARSE)
+    await fail_job_stages(session_factory, job_id, code, message, STAGE)

@@ -14,18 +14,14 @@ import uuid
 from dataclasses import dataclass
 from typing import Any
 
-from sqlalchemy import update
-from sqlmodel import select
-
-from app.models.rag.document import Document
-from app.models.rag.document_chunk import DocumentChunk
-from app.models.rag.ingestion_job import IngestionJob
-from app.models.rag.rag_base import utcnow
 from app.rag.container import build_container
-from app.rag.domain.enums import DocumentStatus, IngestionStageName, JobStatus, StageStatus
-from app.rag.errors import DimensionMismatchError, ParseError
-from app.rag.ingestion.stage_common import SessionFactory, fail_job_stages, fail_stages, get_stage
+from app.rag.domain.enums import DocumentStatus, IngestionStageName
 from app.rag.domain.ports import Embedder, SparseEmbedder, VectorPoint, VectorStore
+from app.rag.errors import DimensionMismatchError, ParseError
+from app.rag.ingestion.stage_common import (
+    SessionFactory, fail_job_stages, fail_stages, load_context,
+)
+from app.rag.repositories import DocumentChunkRepository, DocumentRepository, IngestionJobRepository
 
 logger = logging.getLogger(__name__)
 
@@ -107,34 +103,18 @@ async def _run(session_factory: SessionFactory, job_id: uuid.UUID,
 
     # 1) стан + читання чанків
     async with session_factory() as db:
-        job = await db.get(IngestionJob, job_id)
-        if job is None:
-            return {"status": "skipped", "reason": "job_not_found", "job_id": str(job_id)}
-        if job.status in (JobStatus.CANCELLED, JobStatus.COMPLETED):
-            return {"status": "skipped", "reason": f"job_{job.status.value}", "job_id": str(job_id)}
-
-        doc = await db.get(Document, job.document_id) if job.document_id else None
-        if doc is None or doc.status == DocumentStatus.DELETED or doc.deleted_at is not None:
-            await fail_stages(db, job, None, "document_not_found",
-                              "Document not found or deleted", EMBED, INDEX)
-            return {"status": "failed", "error_code": "document_not_found", "job_id": str(job_id)}
-
-        now = utcnow()
-        job.status, job.current_stage = JobStatus.PROCESSING, EMBED
-        job.error_code = job.error_message = None
-        doc.status = DocumentStatus.EMBEDDING
-        rows = (await db.exec(
-            select(DocumentChunk.id, DocumentChunk.chunk_index, DocumentChunk.content,
-                   DocumentChunk.page_number, DocumentChunk.meta)
-            .where(DocumentChunk.document_id == doc.id)
-            .order_by(DocumentChunk.chunk_index))).all()
+        ctx = await load_context(db, job_id, EMBED, INDEX)
+        if isinstance(ctx, dict):
+            return ctx
+        doc = ctx.doc
+        ctx.jobs.mark_processing(ctx.job, EMBED)
+        ctx.docs.set_status(doc, DocumentStatus.EMBEDDING)
+        rows = await DocumentChunkRepository(db).list_for_embedding(doc.id)
         for name in (EMBED, INDEX):
-            st = await get_stage(db, job_id, name)
-            st.status, st.started_at, st.finished_at = StageStatus.PROCESSING, now, None
-            st.items_total, st.items_processed, st.error_message = len(rows), 0, None
+            await ctx.jobs.begin_stage(job_id, name, items_total=len(rows))
         info = _DocInfo(doc.id, doc.collection_id, doc.source_id, doc.title, doc.language)
         if not rows:
-            await fail_stages(db, job, doc, "no_chunks", "Document has no chunks", EMBED, INDEX)
+            await fail_stages(db, ctx.job, doc, "no_chunks", "Document has no chunks", EMBED, INDEX)
             return {"status": "failed", "error_code": "no_chunks", "job_id": str(job_id)}
         await db.commit()
 
@@ -172,35 +152,29 @@ async def _run(session_factory: SessionFactory, job_id: uuid.UUID,
                                 deps.embedder.model, done, total)
 
         async with session_factory() as db:
-            doc = await db.get(Document, info.id)
-            doc.status = DocumentStatus.INDEXING
-            job = await db.get(IngestionJob, job_id)
-            job.current_stage = INDEX
+            jobs, docs = IngestionJobRepository(db), DocumentRepository(db)
+            docs.set_status(await docs.get(info.id), DocumentStatus.INDEXING)
+            jobs.mark_processing(await jobs.get(job_id), INDEX)
             await db.commit()
         removed = await deps.store.delete_stale(str(info.id), [str(c.id) for c in chunks])
     except ParseError as exc:
         logger.warning("embed failed job=%s code=%s: %s", job_id, exc.code, exc.message)
-        async with session_factory() as db:
-            job = await db.get(IngestionJob, job_id)
-            doc = await db.get(Document, info.id)
-            await fail_stages(db, job, doc, exc.code, exc.message, EMBED, INDEX)
+        await fail_job_stages(session_factory, job_id, exc.code, exc.message, EMBED, INDEX)
         return {"status": "failed", "error_code": exc.code, "error_message": exc.message,
                 "job_id": str(job_id), "document_id": str(info.id)}
 
     # 3) зафіксувати успіх
     async with session_factory() as db:
-        job = await db.get(IngestionJob, job_id)
-        doc = await db.get(Document, info.id)
-        now = utcnow()
+        jobs, docs = IngestionJobRepository(db), DocumentRepository(db)
+        job = await jobs.get(job_id)
+        doc = await docs.get(info.id)
         for name in (EMBED, INDEX):
-            st = await get_stage(db, job_id, name)
-            st.status, st.finished_at = StageStatus.COMPLETED, now
-            st.items_total = st.items_processed = total
-        job.progress = max(job.progress, PROGRESS_END)
-        doc.meta = {**doc.meta, "index": {
+            await jobs.complete_stage(job_id, name, items=total)
+        jobs.bump_progress(job, PROGRESS_END)
+        docs.merge_meta(doc, "index", {
             "points": total, "stale_removed": removed,
             "embedding_model": deps.embedder.model, "sparse": deps.sparse is not None,
-        }}
+        })
         await db.commit()
 
     return {"status": "embedded", "job_id": str(job_id), "document_id": str(info.id),
@@ -210,13 +184,10 @@ async def _run(session_factory: SessionFactory, job_id: uuid.UUID,
 async def _record_batch(session_factory: SessionFactory, job_id: uuid.UUID,
                         chunk_ids: list[uuid.UUID], model: str, done: int, total: int) -> None:
     async with session_factory() as db:
-        await db.exec(update(DocumentChunk).where(DocumentChunk.id.in_(chunk_ids)).values(
-            embedding_model=model, embedding_version=EMBEDDING_VERSION, indexed_at=utcnow()))
-        for name in (EMBED, INDEX):
-            st = await get_stage(db, job_id, name)
-            st.items_processed = done
-        job = await db.get(IngestionJob, job_id)
-        job.progress = max(job.progress,
+        jobs = IngestionJobRepository(db)
+        await DocumentChunkRepository(db).mark_indexed(chunk_ids, model, EMBEDDING_VERSION)
+        await jobs.set_stage_items(job_id, (EMBED, INDEX), done)
+        jobs.bump_progress(await jobs.get(job_id),
                            PROGRESS_START + (PROGRESS_END - PROGRESS_START) * done // total)
         await db.commit()
 

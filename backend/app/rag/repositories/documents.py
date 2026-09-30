@@ -1,10 +1,15 @@
-"""Доступ до БД для Document. Soft-delete (deleted_at) інкапсульований тут."""
+"""Доступ до БД для Document. Soft-delete (deleted_at) інкапсульований тут.
+
+Без commit. Методи set_*/merge_*/fill_*/mark_* лише змінюють об'єкт у сесії.
+"""
 import uuid
+from typing import Any
 
 from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.rag.document import Document
+from app.models.rag.rag_base import utcnow
 from app.rag.domain.enums import DocumentStatus
 
 
@@ -51,3 +56,21 @@ class DocumentRepository:
             select(Document).where(*conds)
             .order_by(Document.created_at.desc()).limit(limit).offset(offset))
         return list(rows.all()), total
+
+    # ---- зміна стану (для ingestion-етапів) --------------------------------
+
+    def set_status(self, doc: Document, status: DocumentStatus) -> None:
+        doc.status = status
+
+    def mark_ready(self, doc: Document) -> None:
+        doc.status, doc.indexed_at = DocumentStatus.READY, utcnow()
+
+    def merge_meta(self, doc: Document, key: str, value: Any) -> None:
+        """Нове значення dict (а не in-place), щоб SQLAlchemy помітила зміну JSONB."""
+        doc.meta = {**doc.meta, key: value}
+
+    def fill_missing(self, doc: Document, **values: Any) -> None:
+        """Записати лише ті поля, які ще порожні (не перезатираємо задане користувачем)."""
+        for name, value in values.items():
+            if not getattr(doc, name):
+                setattr(doc, name, value)
