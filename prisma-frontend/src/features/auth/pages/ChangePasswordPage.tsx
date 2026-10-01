@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from "react";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Alert } from "@/shared/ui/Alert";
-import { btnPrimary, inputClass } from "@/shared/ui/classes";
 import { Field } from "@/shared/ui/Field";
+import { PasswordInput } from "@/shared/ui/PasswordInput";
+import { AuthSubmit } from "../components/AuthUi";
 import { useAuthActions } from "../hooks/useAuthActions";
 
-/** Protected. On success every OTHER session is ended and this one gets a fresh token (handled in the endpoint). */
+/** Protected, rendered inside the app layout. On success every OTHER session is ended and this one gets a fresh token (handled in the endpoint). */
 export default function ChangePasswordPage() {
   const { changePassword, isPending } = useAuthActions();
   const [current, setCurrent] = useState("");
@@ -18,9 +20,15 @@ export default function ChangePasswordPage() {
     e.preventDefault();
     setError(null);
     setDone(null);
-    if (next !== confirm) return setError("Passwords do not match");
+    if (next !== confirm) {
+      setError("Passwords do not match");
+      return;
+    }
     try {
-      const res = await changePassword({ current_password: current, new_password: next });
+      const res = await changePassword({
+        current_password: current,
+        new_password: next,
+      });
       setDone(res.message);
       setCurrent("");
       setNext("");
@@ -31,24 +39,64 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="max-w-md space-y-5">
-      <h1 className="text-title-sm font-semibold text-gray-800 dark:text-white/90">Change password</h1>
-      <form onSubmit={submit} className="space-y-4">
-        {error && <Alert>{error}</Alert>}
-        {done && <Alert variant="success">{done}</Alert>}
-        <Field label="Current password">
-          <input className={inputClass} type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
-        </Field>
-        <Field label="New password">
-          <input className={inputClass} type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} required />
-        </Field>
-        <Field label="Confirm new password">
-          <input className={inputClass} type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
-        </Field>
-        <button className={btnPrimary} disabled={isPending}>
-          {isPending ? "Saving…" : "Change password"}
-        </button>
-      </form>
-    </div>
+    <>
+      <PageBreadcrumb pageTitle="Change password" />
+
+      <div className="max-w-xl rounded-2xl border border-gray-200 bg-white p-5 lg:p-7 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-950 dark:text-white">
+            Update your password
+          </h2>
+          <p className="mt-1.5 text-sm leading-6 text-gray-500 dark:text-gray-400">
+            After the change, all your other sessions will be signed out.
+          </p>
+        </div>
+
+        <form onSubmit={submit} className="space-y-5">
+          <div aria-live="polite" className="space-y-3 empty:hidden">
+            {error && <Alert>{error}</Alert>}
+            {done && <Alert variant="success">{done}</Alert>}
+          </div>
+
+          <Field label="Current password">
+            <PasswordInput
+              autoComplete="current-password"
+              placeholder="Enter your current password"
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+              required
+            />
+          </Field>
+
+          <Field label="New password">
+            <PasswordInput
+              autoComplete="new-password"
+              placeholder="Create a new password"
+              value={next}
+              onChange={(e) => setNext(e.target.value)}
+              required
+            />
+          </Field>
+
+          <Field label="Confirm new password">
+            <PasswordInput
+              autoComplete="new-password"
+              placeholder="Repeat the new password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              required
+            />
+          </Field>
+
+          <AuthSubmit
+            pending={isPending}
+            pendingLabel="Saving…"
+            className="sm:w-auto sm:min-w-48"
+          >
+            Change password
+          </AuthSubmit>
+        </form>
+      </div>
+    </>
   );
 }

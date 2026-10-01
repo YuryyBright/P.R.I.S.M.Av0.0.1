@@ -2,12 +2,20 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Alert } from "@/shared/ui/Alert";
-import { btnPrimary, inputClass, linkClass } from "@/shared/ui/classes";
 import { Field } from "@/shared/ui/Field";
-import { AuthLayout } from "../components/AuthLayout";
+import { AuthHeading } from "../components/AuthShell";
+import {
+  AuthFooter,
+  AuthStatusIcon,
+  AuthSubmit,
+  BackLink,
+  authInputClass,
+  authPrimaryBtnClass,
+} from "../components/AuthUi";
 import { AUTH_ROUTES } from "../constants/auth.constants";
 import { useAuthActions } from "../hooks/useAuthActions";
 
+/** Rendered inside <AuthShell/> (layout route), so no wrapper here. */
 export default function ForgotPasswordPage() {
   const { requestPasswordReset, isPending } = useAuthActions();
   const [email, setEmail] = useState("");
@@ -24,22 +32,51 @@ export default function ForgotPasswordPage() {
     }
   }
 
+  if (done) {
+    return (
+      <div className="text-center">
+        <AuthStatusIcon kind="mail" />
+        <AuthHeading align="center" title="Check your email" subtitle={done} />
+        <Link to={AUTH_ROUTES.signIn} className={authPrimaryBtnClass}>
+          Back to sign in
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <AuthLayout title="Forgot password" subtitle="We will email you a reset link">
-      {done ? (
-        <Alert variant="success">{done}</Alert>
-      ) : (
-        <form onSubmit={submit} className="space-y-4">
+    <>
+      <AuthHeading
+        title="Forgot password?"
+        subtitle="Enter your email and we will send you a reset link."
+      />
+
+      <form onSubmit={submit} className="space-y-5">
+        <div aria-live="polite" className="empty:hidden">
           {error && <Alert>{error}</Alert>}
-          <Field label="Email">
-            <input className={inputClass} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </Field>
-          <button className={`${btnPrimary} w-full`} disabled={isPending}>
-            {isPending ? "Sending…" : "Send reset link"}
-          </button>
-        </form>
-      )}
-      <Link className={`${linkClass} mt-4 inline-block text-sm`} to={AUTH_ROUTES.signIn}>Back to sign in</Link>
-    </AuthLayout>
+        </div>
+
+        <Field label="Email">
+          <input
+            className={authInputClass}
+            type="email"
+            autoComplete="username"
+            placeholder="you@example.com"
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </Field>
+
+        <AuthSubmit pending={isPending} pendingLabel="Sending…">
+          Send reset link
+        </AuthSubmit>
+      </form>
+
+      <AuthFooter>
+        <BackLink to={AUTH_ROUTES.signIn}>Back to sign in</BackLink>
+      </AuthFooter>
+    </>
   );
 }

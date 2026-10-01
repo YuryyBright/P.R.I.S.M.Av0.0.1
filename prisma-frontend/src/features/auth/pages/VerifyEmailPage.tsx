@@ -1,20 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { isNormalizedApiError } from "@/shared/api/normalizeError";
-import { Alert } from "@/shared/ui/Alert";
-import { linkClass } from "@/shared/ui/classes";
-import { AuthLayout } from "../components/AuthLayout";
+import { AuthHeading } from "../components/AuthShell";
+import { AuthStatusIcon, authPrimaryBtnClass } from "../components/AuthUi";
 import { AUTH_ROUTES } from "../constants/auth.constants";
 import { useAuthActions } from "../hooks/useAuthActions";
 
-type State = { kind: "loading" } | { kind: "ok"; message: string } | { kind: "error"; message: string };
+type State =
+  | { kind: "loading" }
+  | { kind: "ok"; message: string }
+  | { kind: "error"; message: string };
 
-/** Landing page of the emailed link: /verify-email?token=... (link format assumed, check the mail template). */
+/**
+ * Landing page of the emailed link: /verify-email?token=... (link format assumed, check the mail template).
+ * Rendered inside <AuthShell/> (layout route), so no wrapper here.
+ */
 export default function VerifyEmailPage() {
   const [params] = useSearchParams();
   const token = params.get("token");
   const { verifyEmail } = useAuthActions();
-  const [state, setState] = useState<State>(token ? { kind: "loading" } : { kind: "error", message: "The link is missing its token." });
+  const [state, setState] = useState<State>(
+    token
+      ? { kind: "loading" }
+      : { kind: "error", message: "The link is missing its token." },
+  );
   const sent = useRef(false);
 
   useEffect(() => {
@@ -22,18 +31,44 @@ export default function VerifyEmailPage() {
     sent.current = true;
     verifyEmail(token)
       .then((r) => setState({ kind: "ok", message: r.message }))
-      .catch((e) => setState({ kind: "error", message: isNormalizedApiError(e) ? e.message : "Unexpected error" }));
+      .catch((e) =>
+        setState({
+          kind: "error",
+          message: isNormalizedApiError(e) ? e.message : "Unexpected error",
+        }),
+      );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  const view =
+    state.kind === "loading"
+      ? {
+          icon: "loading" as const,
+          title: "Verifying your email",
+          text: "This will only take a moment.",
+        }
+      : state.kind === "ok"
+        ? {
+            icon: "success" as const,
+            title: "Email verified",
+            text: state.message,
+          }
+        : {
+            icon: "error" as const,
+            title: "Verification failed",
+            text: state.message,
+          };
+
   return (
-    <AuthLayout title="Email verification">
-      {state.kind === "loading" && <Alert variant="info">Verifying…</Alert>}
-      {state.kind === "ok" && <Alert variant="success">{state.message}</Alert>}
-      {state.kind === "error" && <Alert>{state.message}</Alert>}
+    <div className="text-center" aria-live="polite">
+      <AuthStatusIcon kind={view.icon} />
+      <AuthHeading align="center" title={view.title} subtitle={view.text} />
+
       {state.kind !== "loading" && (
-        <Link className={`${linkClass} mt-4 inline-block text-sm`} to={AUTH_ROUTES.signIn}>Go to sign in</Link>
+        <Link to={AUTH_ROUTES.signIn} className={authPrimaryBtnClass}>
+          Go to sign in
+        </Link>
       )}
-    </AuthLayout>
+    </div>
   );
 }

@@ -4,6 +4,9 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* =========================================================
+   1. THEME TOKENS
+   ========================================================= */
 @theme {
   --font-*: initial;
   --font-outfit: Outfit, sans-serif;
@@ -133,9 +136,9 @@
   --color-warning-950: #4e1d09;
 
   --color-theme-pink-500: #ee46bc;
-
   --color-theme-purple-500: #7a5af8;
 
+  /* Shadows */
   --shadow-theme-md:
     0px 4px 8px -2px rgba(16, 24, 40, 0.1),
     0px 2px 4px -2px rgba(16, 24, 40, 0.06);
@@ -157,8 +160,20 @@
     0px 4px 6px -2px rgba(16, 24, 40, 0.05),
     -8px 0px 20px 8px rgba(16, 24, 40, 0.05);
 
+  /* NEW: layered card shadows */
+  --shadow-card:
+    0 0 0 1px rgba(16, 24, 40, 0.04), 0 1px 2px rgba(16, 24, 40, 0.04),
+    0 8px 24px -8px rgba(16, 24, 40, 0.08);
+  --shadow-card-hover:
+    0 0 0 1px rgba(70, 95, 255, 0.12), 0 2px 4px rgba(16, 24, 40, 0.04),
+    0 16px 32px -12px rgba(70, 95, 255, 0.22);
+
   --drop-shadow-4xl:
     0 35px 35px rgba(0, 0, 0, 0.25), 0 45px 65px rgba(0, 0, 0, 0.15);
+
+  /* NEW: motion + radius */
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --radius-card: 1rem;
 
   --z-index-1: 1;
   --z-index-9: 9;
@@ -169,13 +184,13 @@
   --z-index-999999: 999999;
 }
 
+/* =========================================================
+   2. BASE
+   ========================================================= */
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
   looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
 */
 @layer base {
   *,
@@ -186,6 +201,13 @@
     border-color: var(--color-gray-200, currentColor);
   }
 
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
@@ -193,19 +215,176 @@
 
   body {
     @apply relative z-1 bg-gray-50 font-outfit font-normal;
+    background-image:
+      radial-gradient(
+        60rem 30rem at 85% -10%,
+        rgba(70, 95, 255, 0.07),
+        transparent 60%
+      ),
+      radial-gradient(
+        40rem 24rem at -10% 10%,
+        rgba(11, 165, 236, 0.05),
+        transparent 60%
+      );
+    background-attachment: fixed;
+  }
+
+  .dark body {
+    background-color: var(--color-gray-950);
+    background-image:
+      radial-gradient(
+        60rem 30rem at 85% -10%,
+        rgba(70, 95, 255, 0.16),
+        transparent 60%
+      ),
+      radial-gradient(
+        40rem 24rem at -10% 10%,
+        rgba(11, 165, 236, 0.08),
+        transparent 60%
+      );
+  }
+
+  ::selection {
+    background: var(--color-brand-500);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-brand-500);
+    border-radius: 0.5rem;
+  }
+  .dark :focus-visible {
+    box-shadow:
+      0 0 0 2px var(--color-gray-900),
+      0 0 0 4px var(--color-brand-400);
+  }
+
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
   }
 }
 
+/* =========================================================
+   3. SURFACES & BRAND UTILITIES (NEW)
+   ========================================================= */
+@utility surface {
+  @apply shadow-card rounded-(--radius-card) border border-gray-200/80 bg-white;
+  @apply dark:border-white/[0.06] dark:bg-gray-900 dark:shadow-none;
+  transition:
+    box-shadow 250ms var(--ease-soft),
+    border-color 250ms var(--ease-soft),
+    transform 250ms var(--ease-soft);
+}
+
+@utility surface-interactive {
+  @apply surface cursor-pointer;
+  &:hover {
+    @apply shadow-card-hover;
+    transform: translateY(-2px);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+@utility surface-glass {
+  @apply border border-white/60 bg-white/70 shadow-theme-lg;
+  @apply dark:border-white/[0.06] dark:bg-gray-900/70;
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+}
+
+@utility gradient-brand {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-brand-500) 0%,
+    var(--color-brand-600) 55%,
+    var(--color-theme-purple-500) 130%
+  );
+}
+
+@utility gradient-text {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-brand-500),
+    var(--color-theme-purple-500)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Skeleton loader */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+@utility skeleton {
+  @apply relative overflow-hidden rounded-lg bg-gray-100 dark:bg-white/5;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.55),
+      transparent
+    );
+    animation: shimmer 1.4s infinite;
+  }
+}
+.dark .skeleton::after {
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.06),
+    transparent
+  );
+}
+
+/* =========================================================
+   4. SIDEBAR / MENU
+   ========================================================= */
 @utility menu-item {
   @apply relative flex w-full items-center gap-3 rounded-lg px-3 py-2 text-theme-sm font-medium;
+  transition:
+    background-color 180ms var(--ease-soft),
+    color 180ms var(--ease-soft),
+    transform 180ms var(--ease-soft);
 }
 
 @utility menu-item-active {
-  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  @apply bg-brand-50 font-semibold text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  box-shadow: inset 3px 0 0 var(--color-brand-500);
+  background-image: linear-gradient(
+    90deg,
+    rgba(70, 95, 255, 0.1),
+    rgba(70, 95, 255, 0.02)
+  );
 }
 
 @utility menu-item-inactive {
   @apply text-gray-700 group-hover:text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300;
+  &:hover {
+    transform: translateX(2px);
+  }
 }
 
 @utility menu-item-icon {
@@ -222,6 +401,7 @@
 
 @utility menu-item-arrow {
   @apply relative;
+  transition: transform 250ms var(--ease-soft);
 }
 
 @utility menu-item-arrow-active {
@@ -234,10 +414,14 @@
 
 @utility menu-dropdown-item {
   @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium;
+  transition:
+    background-color 180ms var(--ease-soft),
+    color 180ms var(--ease-soft);
 }
 
 @utility menu-dropdown-item-active {
   @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  box-shadow: inset 2px 0 0 var(--color-brand-500);
 }
 
 @utility menu-dropdown-item-inactive {
@@ -268,6 +452,65 @@
   @apply bg-brand-50 group-hover:bg-brand-100 dark:bg-brand-500/15 dark:group-hover:bg-brand-500/20;
 }
 
+/* Sidebar accordion animation using CSS Grid */
+.menu-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms var(--ease-soft);
+}
+.menu-accordion.open {
+  grid-template-rows: 1fr;
+}
+.menu-accordion > div {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Sidebar Three & Five (merged — were duplicated) */
+@utility docs-menu-item {
+  @apply block rounded-lg px-3 py-1.5 text-sm transition-colors duration-150;
+}
+
+@utility docs-menu-item-active {
+  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+}
+
+@utility docs-menu-item-inactive {
+  @apply text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white;
+}
+
+@utility docs-border-item {
+  @apply -ms-[1.5px] block border-s ps-4 text-sm font-normal transition-colors duration-200;
+}
+
+@utility docs-border-item-active {
+  @apply border-brand-500 text-brand-500;
+}
+
+@utility docs-border-item-inactive {
+  @apply border-transparent text-gray-500 hover:border-gray-800 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:text-gray-200;
+}
+
+/* Sidebar Six */
+@utility nav-icon-item {
+  @apply flex size-10 items-center justify-center rounded-full;
+  transition:
+    background-color 180ms var(--ease-soft),
+    border-color 180ms var(--ease-soft),
+    color 180ms var(--ease-soft);
+}
+
+@utility nav-icon-item-active {
+  @apply border border-gray-200 bg-white text-brand-500 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900;
+}
+
+@utility nav-icon-item-inactive {
+  @apply border border-transparent text-gray-500 hover:border-gray-200 hover:bg-white hover:text-brand-500 dark:text-gray-400 dark:hover:border-gray-800 dark:hover:bg-gray-900 dark:hover:text-brand-500;
+}
+
+/* =========================================================
+   5. SCROLLBARS & MISC UTILITIES
+   ========================================================= */
 @utility no-scrollbar {
   /* Chrome, Safari and Opera */
   &::-webkit-scrollbar {
@@ -279,6 +522,9 @@
 }
 
 @utility custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-300) transparent;
+
   &::-webkit-scrollbar {
     @apply size-1.5;
   }
@@ -289,6 +535,10 @@
 
   &::-webkit-scrollbar-thumb {
     @apply rounded-full bg-gray-200 dark:bg-gray-700;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-300 dark:bg-gray-600;
   }
 }
 
@@ -307,9 +557,11 @@
   }
 }
 
-/* third-party libraries CSS */
+/* =========================================================
+   6. THIRD-PARTY: APEXCHARTS
+   ========================================================= */
 .apexcharts-legend-text {
-  @apply text-gray-700! dark:text-gray-400!;
+  @apply pl-5! text-gray-700! dark:text-gray-400!;
 }
 
 .apexcharts-text {
@@ -317,16 +569,13 @@
 }
 
 .apexcharts-tooltip.apexcharts-theme-light {
-  @apply gap-1 rounded-lg! border-gray-200! p-3 shadow-theme-sm! dark:border-gray-800! dark:bg-gray-900!;
+  @apply gap-1 rounded-lg! border-gray-200! p-3 shadow-theme-lg! backdrop-blur-md dark:border-gray-800! dark:bg-gray-900!;
 }
 
 .apexcharts-tooltip-marker {
   margin-right: 6px;
   height: 6px;
   width: 6px;
-}
-.apexcharts-legend-text {
-  @apply pl-5! text-gray-700! dark:text-gray-400!;
 }
 .apexcharts-tooltip-series-group {
   @apply p-0!;
@@ -346,7 +595,12 @@
 
 .apexcharts-gridline {
   @apply stroke-gray-100! dark:stroke-gray-800!;
+  stroke-dasharray: 4 4;
 }
+.apexcharts-xcrosshairs {
+  opacity: 0.4;
+}
+
 #chartTwo .apexcharts-datalabels-group {
   @apply -translate-y-24!;
 }
@@ -362,6 +616,15 @@
   @apply fill-gray-800! font-semibold! dark:fill-white/90!;
 }
 
+.api-token-chart .apexcharts-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   7. THIRD-PARTY: INPUTS, SWIPER, FORMS
+   ========================================================= */
 .input-date-icon::-webkit-inner-spin-button,
 .input-date-icon::-webkit-calendar-picker-indicator {
   opacity: 0;
@@ -449,27 +712,6 @@
   @apply w-6.5 rounded-xl;
 }
 
-.jvectormap-container {
-  @apply bg-gray-50! dark:bg-gray-900!;
-}
-
-.jvectormap-region.jvectormap-element {
-  @apply fill-gray-300! hover:fill-brand-500! dark:fill-gray-700! dark:hover:fill-brand-500!;
-}
-
-.jvectormap-marker.jvectormap-element {
-  @apply stroke-gray-200! dark:stroke-gray-800!;
-}
-
-.jvectormap-tip {
-  @apply border-none! bg-brand-500! px-2! py-1!;
-}
-
-.jvectormap-zoomin,
-.jvectormap-zoomout {
-  @apply hidden!;
-}
-
 .form-check-input:checked ~ span {
   @apply border-[6px] border-brand-500 bg-brand-500 dark:border-brand-500;
 }
@@ -487,14 +729,9 @@
 }
 
 .task {
-  transition: all 0.2s ease; /* Smooth transition for visual effects */
-}
-
-.task {
+  transition: all 0.2s var(--ease-soft);
   border-radius: 0.75rem;
-  box-shadow:
-    0px 1px 3px 0px rgba(16, 24, 40, 0.1),
-    0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+  box-shadow: var(--shadow-theme-sm);
   opacity: 0.8;
   cursor: grabbing; /* Changes the cursor to indicate dragging */
 }
@@ -516,6 +753,42 @@
   left: 0;
 }
 
+.ai-settings-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+}
+.ai-settings-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid var(--color-brand-500);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 150ms var(--ease-soft);
+}
+.ai-settings-range::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+}
+.ai-settings-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid var(--color-brand-500);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* =========================================================
+   8. THIRD-PARTY: FLATPICKR
+   ========================================================= */
 .flatpickr-wrapper {
   @apply w-full;
 }
@@ -558,6 +831,12 @@
 
 .flatpickr-day {
   @apply flex! items-center! text-theme-sm! font-medium! text-gray-800! dark:text-white/90! dark:hover:border-gray-300! dark:hover:bg-gray-900!;
+  border-radius: 0.625rem !important;
+  transition: background-color 150ms var(--ease-soft);
+}
+
+.flatpickr-day.today:not(.selected) {
+  border-color: var(--color-brand-300) !important;
 }
 
 .flatpickr-day.nextMonthDay,
@@ -621,8 +900,8 @@ span.flatpickr-weekday,
 
 .flatpickr-day.inRange {
   box-shadow:
-    -5px 0 0 #f9fafb,
-    5px 0 0 #f9fafb !important;
+    -5px 0 0 var(--color-gray-50),
+    5px 0 0 var(--color-gray-50) !important;
   @apply dark:!shadow-datepicker;
 }
 
@@ -666,14 +945,14 @@ span.flatpickr-weekday,
 .flatpickr-day.selected.nextMonthDay,
 .flatpickr-day.startRange.nextMonthDay,
 .flatpickr-day.endRange.nextMonthDay {
-  background: #465fff;
+  background: var(--color-brand-500);
   @apply !border-brand-500 !bg-brand-500 hover:!border-brand-500 hover:!bg-brand-500;
 }
 
 .flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n + 1)) {
-  box-shadow: -10px 0 0 #465fff;
+  box-shadow: -10px 0 0 var(--color-brand-500);
 }
 
 .flatpickr-months .flatpickr-prev-month svg,
@@ -713,7 +992,97 @@ span.flatpickr-weekday,
   }
 }
 
-/* Code Editor */
+/* =========================================================
+   9. THIRD-PARTY: JVECTORMAP
+   ========================================================= */
+.jvectormap-container {
+  @apply bg-gray-50! dark:bg-gray-900!;
+}
+
+.jvectormap-region.jvectormap-element {
+  @apply fill-gray-300! hover:fill-brand-500! dark:fill-gray-700! dark:hover:fill-brand-500!;
+}
+
+.jvectormap-marker.jvectormap-element {
+  @apply stroke-gray-200! dark:stroke-gray-800!;
+}
+
+.jvectormap-tip {
+  @apply rounded-md! border-none! bg-brand-500! px-2! py-1! shadow-theme-md!;
+}
+
+.jvectormap-zoomin,
+.jvectormap-zoomout {
+  @apply hidden!;
+}
+
+/* Map two */
+#mapTwo .jvectormap-container {
+  @apply !bg-transparent;
+}
+.jvm-region.jvm-element {
+  @apply !fill-gray-300 hover:!fill-brand-500 dark:!fill-gray-700 dark:hover:!fill-brand-500;
+}
+#mapTwo .jvectormap-region.jvectormap-element {
+  fill: #9cb9ff !important;
+  stroke: transparent !important;
+}
+#mapTwo .jvectormap-region.jvectormap-element:hover {
+  fill: #8098f9 !important;
+}
+.dark #mapTwo .jvectormap-region.jvectormap-element {
+  fill: #9cb9ff !important;
+}
+#mapTwo .jvectormap-region[data-code="US"] {
+  fill: #465fff !important;
+}
+
+/* Customer Pin-Point Map */
+#mapCustomerPinPoint .jvectormap-region.jvm-element {
+  fill: #c5d8ff !important;
+  stroke: white !important;
+  stroke-width: 2 !important;
+}
+#mapCustomerPinPoint .jvectormap-region[data-code="US-CA"],
+#mapCustomerPinPoint .jvectormap-region[data-code="US-NV"] {
+  fill: #465fff !important;
+}
+#mapCustomerPinPoint .jvectormap-region[data-code="US-NY"],
+#mapCustomerPinPoint .jvectormap-region[data-code="US-FL"],
+#mapCustomerPinPoint .jvectormap-region[data-code="US-MI"],
+#mapCustomerPinPoint .jvectormap-region[data-code="US-WA"] {
+  fill: #3538cd !important;
+}
+#mapCustomerPinPoint .jvectormap-region[data-code="US-TX"],
+#mapCustomerPinPoint .jvectormap-region[data-code="US-IL"],
+#mapCustomerPinPoint .jvectormap-region[data-code="US-PA"],
+#mapCustomerPinPoint .jvectormap-region[data-code="US-OH"],
+#mapCustomerPinPoint .jvectormap-region[data-code="US-GA"],
+#mapCustomerPinPoint .jvectormap-region[data-code="US-NC"] {
+  fill: #8098f9 !important;
+}
+#mapCustomerPinPoint .jvectormap-region[data-code="US-CO"],
+#mapCustomerPinPoint .jvectormap-region[data-code="US-AZ"] {
+  fill: #9cb9ff !important;
+}
+#mapCustomerPinPoint .jvectormap-region.jvectormap-element:hover {
+  fill: #465fff !important;
+}
+.dark #mapCustomerPinPoint .jvectormap-region.jvectormap-element {
+  stroke: #1f2937 !important;
+}
+
+/* Customer map markers: solid filled circles with white ring */
+#mapCustomerPinPoint .jvectormap-marker.jvectormap-element {
+  fill: #465fff !important;
+  stroke: white !important;
+  stroke-width: 2 !important;
+  fill-opacity: 1 !important;
+}
+
+/* =========================================================
+   10. CODE EDITOR (PRISM)
+   ========================================================= */
 code[class*="language-"],
 pre[class*="language-"] {
   text-shadow: none;
@@ -778,190 +1147,9 @@ pre[class*="language-"].line-numbers {
   padding-left: 2.8em !important;
 }
 
-/* Sidebar accordion animation using CSS Grid */
-.menu-accordion {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 300ms ease-in-out;
-}
-.menu-accordion.open {
-  grid-template-rows: 1fr;
-}
-.menu-accordion > div {
-  overflow: hidden;
-  min-height: 0;
-}
-
-/* Sidebar Three */
-@utility docs-menu-item {
-  @apply block rounded-lg px-3 py-1.5 text-sm transition-colors duration-150;
-}
-
-@utility docs-menu-item-active {
-  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
-}
-
-@utility docs-menu-item-inactive {
-  @apply text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white;
-}
-
-@utility docs-border-item {
-  @apply -ms-[1.5px] block border-s ps-4 text-sm font-normal transition-colors duration-200;
-}
-
-@utility docs-border-item-active {
-  @apply border-brand-500 text-brand-500;
-}
-
-@utility docs-border-item-inactive {
-  @apply border-transparent text-gray-500 hover:border-gray-800 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:text-gray-200;
-}
-
-/* Sidebar Five */
-@utility docs-border-item {
-  @apply -ms-[1.5px] block border-s ps-4 text-sm font-normal transition-colors duration-200;
-}
-
-@utility docs-border-item-active {
-  @apply border-brand-500 text-brand-500;
-}
-
-@utility docs-border-item-inactive {
-  @apply border-transparent text-gray-500 hover:border-gray-800 hover:text-gray-800 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:text-gray-200;
-}
-
-/* Sidebar Six */
-@utility nav-icon-item {
-  @apply flex size-10 items-center justify-center rounded-full;
-}
-
-@utility nav-icon-item-active {
-  @apply border border-gray-200 bg-white text-brand-500 dark:border-gray-800 dark:bg-gray-900;
-}
-
-@utility nav-icon-item-inactive {
-  @apply border border-transparent text-gray-500 hover:border-gray-200 hover:bg-white hover:text-brand-500 dark:text-gray-400 dark:hover:border-gray-800 dark:hover:bg-gray-900 dark:hover:text-brand-500;
-}
-
-/* Map two */
-#mapTwo .jvectormap-container {
-  @apply !bg-transparent;
-}
-.jvm-region.jvm-element {
-  @apply !fill-gray-300 hover:!fill-brand-500 dark:!fill-gray-700 dark:hover:!fill-brand-500;
-}
-#mapTwo .jvectormap-region.jvectormap-element {
-  fill: #9cb9ff !important;
-  stroke: transparent !important;
-}
-#mapTwo .jvectormap-region.jvectormap-element:hover {
-  fill: #8098f9 !important;
-}
-.dark #mapTwo .jvectormap-region.jvectormap-element {
-  fill: #9cb9ff !important;
-}
-#mapTwo .jvectormap-region[data-code="US"] {
-  fill: #465fff !important;
-}
-
-.api-token-chart .apexcharts-tooltip {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-/* Customer Pin-Point Map */
-#mapCustomerPinPoint .jvectormap-region.jvm-element {
-  fill: #c5d8ff !important;
-  stroke: white !important;
-  stroke-width: 2 !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-CA"] {
-  fill: #465fff !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-NV"] {
-  fill: #465fff !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-NY"] {
-  fill: #3538cd !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-FL"] {
-  fill: #3538cd !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-MI"] {
-  fill: #3538cd !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-WA"] {
-  fill: #3538cd !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-TX"] {
-  fill: #8098f9 !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-IL"] {
-  fill: #8098f9 !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-PA"] {
-  fill: #8098f9 !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-OH"] {
-  fill: #8098f9 !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-GA"] {
-  fill: #8098f9 !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-NC"] {
-  fill: #8098f9 !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-CO"] {
-  fill: #9cb9ff !important;
-}
-#mapCustomerPinPoint .jvectormap-region[data-code="US-AZ"] {
-  fill: #9cb9ff !important;
-}
-#mapCustomerPinPoint .jvectormap-region.jvectormap-element:hover {
-  fill: #465fff !important;
-}
-.dark #mapCustomerPinPoint .jvectormap-region.jvectormap-element {
-  stroke: #1f2937 !important;
-}
-
-/* Customer map markers: solid filled circles with white ring */
-#mapCustomerPinPoint .jvectormap-marker.jvectormap-element {
-  fill: #465fff !important;
-  stroke: white !important;
-  stroke-width: 2 !important;
-  fill-opacity: 1 !important;
-}
-.ai-settings-range {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 8px;
-  border-radius: 9999px;
-  outline: none;
-  cursor: pointer;
-}
-.ai-settings-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 9999px;
-  background: #ffffff;
-  border: 2px solid #465fff;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-}
-.ai-settings-range::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 9999px;
-  background: #ffffff;
-  border: 2px solid #465fff;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-}
-
-/* FullCalendar Style Overrides */
+/* =========================================================
+   11. FULLCALENDAR OVERRIDES
+   ========================================================= */
 :root {
   --fc-classic-border: var(--color-gray-200);
 }
@@ -1125,5 +1313,19 @@ pre[class*="language-"].line-numbers {
 @media (max-width: 640px) {
   .custom-calendar .fc-timegrid {
     min-width: 580px;
+  }
+}
+
+/* =========================================================
+   12. ACCESSIBILITY: REDUCED MOTION
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
