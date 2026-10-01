@@ -33,11 +33,12 @@ export const router = createBrowserRouter([
           {
             element: <AppLayout />,
             children: [
-              ...homeRoutes, //            "/"  welcome page (placeholder dashboard)
-              ...accountRoutes, //         "/profile", "/settings"
-              ...authProtectedRoutes, //   "/change-password"
-              ...usersRoutes, //           "/users" (needs users.read)
-              ...collectionsRoutes, //     "/collections" (needs collections.read)
+              ...homeRoutes,
+              ...accountRoutes,
+              ...authProtectedRoutes,
+              ...usersRoutes,
+              ...collectionsRoutes,
+
               {
                 path: "/403",
                 lazy: async () => ({
@@ -45,8 +46,7 @@ export const router = createBrowserRouter([
                     .default,
                 }),
               },
-              // Unknown URL: show 404 inside the layout. Anonymous visitors never reach it,
-              // <RequireAuth/> sends them to sign-in first.
+
               {
                 path: "*",
                 lazy: async () => ({

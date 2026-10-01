@@ -182,7 +182,7 @@ export function MembersModal({ collectionId, onClose }: Props) {
         {/* =========================
             ADD MEMBER
         ========================= */}
-        <div className="rounded-xl border border-gray-100 bg-gray-50/70 p-4 dark:border-white/5 dark:bg-white/[0.02]">
+        <div className="rounded-xl border border-gray-100 bg-gray-50/70 p-4 dark:border-white/5 dark:bg-white/2">
           <h4 className="mb-3 text-theme-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
             {t("collections.members.addNew", "Додати учасника")}
           </h4>
@@ -347,7 +347,7 @@ export function MembersModal({ collectionId, onClose }: Props) {
             </span>
 
             {collection && (
-              <span className="max-w-[200px] truncate">
+              <span className="max-w-50 truncate">
                 {t("collections.members.owner", "Власник")}:{" "}
                 <span className="font-mono text-gray-700 dark:text-gray-300">
                   {collection.owner_id}
@@ -376,7 +376,7 @@ export function MembersModal({ collectionId, onClose }: Props) {
               members.map((member) => (
                 <div
                   key={member.user_id}
-                  className="flex items-center justify-between gap-3 p-3 transition-colors hover:bg-gray-50/50 dark:hover:bg-white/[0.02]"
+                  className="flex items-center justify-between gap-3 p-3 transition-colors hover:bg-gray-50/50 dark:hover:bg-white/2"
                 >
                   {/* User */}
                   <div className="flex min-w-0 items-center gap-3">

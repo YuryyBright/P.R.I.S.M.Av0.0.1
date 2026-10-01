@@ -1,14 +1,22 @@
 import type { RouteObject } from "react-router";
-import { RequirePermission } from "@/features/auth";
-import { COLLECTIONS_ROUTES, COLLECTION_PERMISSIONS } from "./constants/collections.constants";
+import { COLLECTIONS_ROUTES } from "./constants/collections.constants";
 
-/** The feature hands its routes to app/router; app never needs to know its pages. */
+/**
+ * Collections are available to every authenticated user.
+ *
+ * Access to individual collections is enforced by the backend
+ * according to visibility and ownership/sharing rules.
+ */
 export const collectionsRoutes: RouteObject[] = [
   {
     path: COLLECTIONS_ROUTES.list,
-    element: <RequirePermission permission={COLLECTION_PERMISSIONS.read} />,
     children: [
-      { index: true, lazy: async () => ({ Component: (await import("./pages/CollectionsPage")).default }) },
+      {
+        index: true,
+        lazy: async () => ({
+          Component: (await import("./pages/CollectionsPage")).default,
+        }),
+      },
     ],
   },
 ];

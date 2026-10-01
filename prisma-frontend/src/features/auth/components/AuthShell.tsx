@@ -39,9 +39,9 @@ export function AuthShell() {
       <aside className="relative hidden min-h-screen w-1/2 overflow-hidden bg-gray-950 lg:flex lg:items-center lg:justify-center dark:bg-black">
         {/* Ambient glow */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute top-1/2 left-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.04] blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 h-150 w-150 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/4 blur-3xl" />
 
-          <div className="absolute top-1/2 left-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gray-400/[0.08] blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 h-80 w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gray-400/8 blur-3xl" />
         </div>
 
         {/* Existing background decoration */}
@@ -63,7 +63,7 @@ export function AuthShell() {
           </Link>
 
           {/* Badge */}
-          <div className="mb-6 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2">
+          <div className="mb-6 rounded-full border border-white/10 bg-white/4 px-4 py-2">
             <span className="text-[10px] font-semibold tracking-[0.28em] text-white/50 uppercase">
               {t("auth.brand.tagline")}
             </span>
@@ -102,7 +102,6 @@ export function AuthShell() {
     </div>
   );
 }
-
 /**
  * Замініть цією версією AuthHeading в AuthShell.tsx (решту AuthShell не чіпайте).
  * `align="center"` — для екранів-результатів з AuthStatusIcon.

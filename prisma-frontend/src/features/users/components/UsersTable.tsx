@@ -17,25 +17,40 @@ interface Props {
   onDelete: (id: UUID) => void;
 }
 
-const th = "px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400";
+const th =
+  "px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400";
 const td = "px-5 py-4 text-theme-sm text-gray-700 dark:text-gray-300";
 
-export function UsersTable({ rows, isLoading, selectedIds, onToggle, onToggleAll, onEdit, onDelete }: Props) {
+export function UsersTable({
+  rows,
+  isLoading,
+  selectedIds,
+  onToggle,
+  onToggleAll,
+  onEdit,
+  onDelete,
+}: Props) {
   const { t } = useTranslation();
-  const allChecked = rows.length > 0 && rows.every((r) => selectedIds.includes(r.id));
+  const allChecked =
+    rows.length > 0 && rows.every((r) => selectedIds.includes(r.id));
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/3">
       <div className="max-w-full overflow-x-auto">
         <table className="min-w-full">
-          <thead className="border-b border-gray-100 dark:border-white/[0.05]">
+          <thead className="border-b border-gray-100 dark:border-white/5">
             <tr>
               <th className={th}>
                 <input
                   type="checkbox"
                   aria-label={t("users.table.selectAll")}
                   checked={allChecked}
-                  onChange={(e) => onToggleAll(rows.map((r) => r.id), e.target.checked)}
+                  onChange={(e) =>
+                    onToggleAll(
+                      rows.map((r) => r.id),
+                      e.target.checked,
+                    )
+                  }
                 />
               </th>
               <th className={th}>{t("users.table.columns.user")}</th>
@@ -46,15 +61,19 @@ export function UsersTable({ rows, isLoading, selectedIds, onToggle, onToggleAll
               <th className={th} />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          <tbody className="divide-y divide-gray-100 dark:divide-white/5">
             {isLoading && (
               <tr>
-                <td className={td} colSpan={7}>{t("common.loading")}</td>
+                <td className={td} colSpan={7}>
+                  {t("common.loading")}
+                </td>
               </tr>
             )}
             {!isLoading && rows.length === 0 && (
               <tr>
-                <td className={td} colSpan={7}>{t("users.table.empty")}</td>
+                <td className={td} colSpan={7}>
+                  {t("users.table.empty")}
+                </td>
               </tr>
             )}
             {rows.map((u) => (
@@ -68,14 +87,21 @@ export function UsersTable({ rows, isLoading, selectedIds, onToggle, onToggleAll
                   />
                 </td>
                 <td className={td}>
-                  <div className="font-medium text-gray-800 dark:text-white/90">{userFullName(u)}</div>
-                  <div className="text-theme-xs text-gray-500 dark:text-gray-400">{u.email}</div>
+                  <div className="font-medium text-gray-800 dark:text-white/90">
+                    {userFullName(u)}
+                  </div>
+                  <div className="text-theme-xs text-gray-500 dark:text-gray-400">
+                    {u.email}
+                  </div>
                 </td>
                 <td className={td}>
                   <div className="flex flex-wrap gap-1">
                     {u.roles.length === 0 && "—"}
                     {u.roles.map((r) => (
-                      <span key={r.id} className="rounded-md bg-brand-50 px-2 py-0.5 text-theme-xs text-brand-500 dark:bg-brand-500/15 dark:text-brand-400">
+                      <span
+                        key={r.id}
+                        className="rounded-md bg-brand-50 px-2 py-0.5 text-theme-xs text-brand-500 dark:bg-brand-500/15 dark:text-brand-400"
+                      >
                         {r.name}
                       </span>
                     ))}
@@ -86,15 +112,21 @@ export function UsersTable({ rows, isLoading, selectedIds, onToggle, onToggleAll
                 </td>
                 <td className={td}>{formatDate(u.expiry_date)}</td>
                 <td className={td}>{formatDateTime(u.created_at)}</td>
-                <td className={`${td} whitespace-nowrap text-end`}>
+                <td className={`${td} text-end whitespace-nowrap`}>
                   <Can permission={USER_PERMISSIONS.update}>
-                    <button className="mr-3 text-brand-500 hover:underline" onClick={() => onEdit(u.id)}>
+                    <button
+                      className="mr-3 text-brand-500 hover:underline"
+                      onClick={() => onEdit(u.id)}
+                    >
                       {t("common.edit")}
                     </button>
                   </Can>
                   <Can permission={USER_PERMISSIONS.delete}>
-                    <button className="text-error-500 hover:underline" onClick={() => onDelete(u.id)}>
-                      {t("common.delete")}
+                    <button
+                      className="text-error-500 hover:underline"
+                      onClick={() => onDelete(u.id)}
+                    >
+                      {t("common.delete")}{" "}
                     </button>
                   </Can>
                 </td>

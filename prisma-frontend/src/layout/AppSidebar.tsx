@@ -65,7 +65,7 @@ export default function AppSidebar() {
       ───────────────────────────────────────────── */}
       <div
         className={cn(
-          "relative flex h-[88px] shrink-0 items-center",
+          "relative flex h-22 shrink-0 items-center",
           "px-5",
           !showLabels && "xl:justify-center xl:px-0",
         )}
@@ -76,10 +76,10 @@ export default function AppSidebar() {
         <div
           aria-hidden
           className={cn(
-            "pointer-events-none absolute start-5 end-5 bottom-0 h-px",
-            "bg-gradient-to-r from-transparent via-gray-200 to-transparent",
+            "inset-e-5bottom-0 pointer-events-none absolute inset-s-5 h-px",
+            "bg-linear-to-r from-transparent via-gray-200 to-transparent",
             "dark:via-gray-800",
-            !showLabels && "xl:start-3 xl:end-3",
+            !showLabels && "xl:inset-s-3 xl:inset-e-3",
           )}
         />
       </div>
@@ -149,7 +149,7 @@ export default function AppSidebar() {
                                   "text-gray-600",
                                   "hover:bg-gray-50 hover:text-gray-900",
                                   "dark:text-gray-400",
-                                  "dark:hover:bg-white/[0.04]",
+                                  "dark:hover:bg-white/4",
                                   "dark:hover:text-gray-100",
                                 ],
 
@@ -165,7 +165,7 @@ export default function AppSidebar() {
                             <span
                               aria-hidden
                               className={cn(
-                                "absolute start-0 top-1/2 h-6 w-0.5",
+                                "absolute inset-s-0 top-1/2 h-6 w-0.5",
                                 "-translate-y-1/2 rounded-full",
                                 "bg-brand-500",
                                 "transition-all duration-200",
@@ -189,7 +189,7 @@ export default function AppSidebar() {
                                       "group-hover:bg-gray-100",
                                       "group-hover:text-gray-700",
                                       "dark:text-gray-500",
-                                      "dark:group-hover:bg-white/[0.06]",
+                                      "dark:group-hover:bg-white/6",
                                       "dark:group-hover:text-gray-200",
                                     ],
                               )}
@@ -228,7 +228,7 @@ export default function AppSidebar() {
       ───────────────────────────────────────────── */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white to-transparent dark:from-gray-950"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-white to-transparent dark:from-gray-950"
       />
     </aside>
   );

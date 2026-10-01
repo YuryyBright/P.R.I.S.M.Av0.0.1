@@ -23,7 +23,7 @@ export default function BrandLogo({ showText, className }: BrandLogoProps) {
         className={cn(
           "relative flex size-10 shrink-0 items-center justify-center",
           "overflow-hidden rounded-xl",
-          "bg-gradient-to-br from-brand-500 via-brand-600 to-purple-600",
+          "bg-linear-to-br from-brand-500 via-brand-600 to-purple-600",
           "text-lg font-bold text-white",
           "shadow-[0_8px_24px_-8px_rgba(99,102,241,0.65)]",
           "transition-all duration-300",
@@ -36,7 +36,7 @@ export default function BrandLogo({ showText, className }: BrandLogoProps) {
         {/* Subtle shine */}
         <span
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-transparent"
+          className="absolute inset-0 bg-linear-to-br from-white/25 via-transparent to-transparent"
         />
 
         <span className="relative font-bold tracking-tight">P</span>

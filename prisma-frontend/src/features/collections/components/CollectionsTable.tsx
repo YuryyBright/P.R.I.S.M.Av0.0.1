@@ -28,19 +28,23 @@ export function CollectionsTable({
 }: Props) {
   const { t } = useTranslation();
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/3">
       <div className="max-w-full overflow-x-auto">
         <table className="min-w-full">
-          <thead className="border-b border-gray-100 dark:border-white/[0.05]">
+          <thead className="border-b border-gray-100 dark:border-white/5">
             <tr>
-              <th className={th}>{t("collections.table.columns.collection")}</th>
-              <th className={th}>{t("collections.table.columns.visibility")}</th>
+              <th className={th}>
+                {t("collections.table.columns.collection")}
+              </th>
+              <th className={th}>
+                {t("collections.table.columns.visibility")}
+              </th>
               <th className={th}>{t("collections.table.columns.myRole")}</th>
               <th className={th}>{t("collections.table.columns.created")}</th>
               <th className={th} />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          <tbody className="divide-y divide-gray-100 dark:divide-white/5">
             {isLoading && (
               <tr>
                 <td className={td} colSpan={5}>
@@ -95,7 +99,7 @@ export function CollectionsTable({
                         onClick={() => onDelete(c.id)}
                       >
                         {t("common.delete")}
-                      </button>
+                      </button>{" "}
                     </Can>
                   )}
                 </td>

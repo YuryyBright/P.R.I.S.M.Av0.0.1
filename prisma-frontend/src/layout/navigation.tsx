@@ -66,9 +66,8 @@ export const NAV_GROUPS: NavGroup[] = [
     key: "tools",
     items: [
       {
-        key: "collections", // -> t("sidebar.items.collections")
+        key: "collections",
         path: COLLECTIONS_ROUTES.list,
-        permission: COLLECTION_PERMISSIONS.read,
         icon: <FolderIcon fontSize={ICON} />,
       },
     ],

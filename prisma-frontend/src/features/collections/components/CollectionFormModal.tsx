@@ -158,12 +158,12 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
    * collections.visibility.public.label
    * collections.visibility.public.hint
    */
-  const visibilityLabel = visibilityOption
-    ? t(
-        `collections.visibility.${visibilityOption.value}.label`,
-        visibilityOption.label,
-      )
-    : "";
+  // const visibilityLabel = visibilityOption
+  //   ? t(
+  //       `collections.visibility.${visibilityOption.value}.label`,
+  //       visibilityOption.label,
+  //     )
+  //   : "";
 
   const visibilityHint = visibilityOption
     ? t(
@@ -196,7 +196,7 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
             type="submit"
             form="collection-form"
             disabled={isMutating}
-            className={`${btnPrimary} min-w-[110px]`}
+            className={`${btnPrimary} min-w-27.5`}
           >
             {isMutating
               ? t("common.saving", "Збереження…")
@@ -214,7 +214,7 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
         noValidate
       >
         {/* Header description */}
-        <div className="rounded-xl border border-gray-100 bg-gray-50/70 px-4 py-3 dark:border-white/5 dark:bg-white/[0.02]">
+        <div className="rounded-xl border border-gray-100 bg-gray-50/70 px-4 py-3 dark:border-white/5 dark:bg-white/2">
           <p className="text-theme-sm leading-5 text-gray-600 dark:text-gray-400">
             {isEdit
               ? t(
@@ -274,7 +274,7 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
         >
           <div className="space-y-1.5">
             <textarea
-              className={`${inputClass} min-h-[110px] w-full resize-y`}
+              className={`${inputClass} min-h-27.5 w-full resize-y`}
               rows={4}
               value={values.description}
               onChange={(event) => set("description", event.target.value)}
@@ -328,7 +328,7 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
             </select>
 
             {visibilityHint && (
-              <div className="flex items-start gap-2 rounded-lg bg-gray-50 px-3 py-2.5 dark:bg-white/[0.03]">
+              <div className="flex items-start gap-2 rounded-lg bg-gray-50 px-3 py-2.5 dark:bg-white/3">
                 <span className="mt-0.5 text-gray-400" aria-hidden="true">
                   ⓘ
                 </span>
