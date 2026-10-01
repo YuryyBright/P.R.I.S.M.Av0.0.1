@@ -24,7 +24,9 @@ export const collectionToForm = (c: Collection): CollectionFormValues => ({
   visibility: c.visibility,
 });
 
-export const formToCreatePayload = (f: CollectionFormValues): CollectionCreatePayload => ({
+export const formToCreatePayload = (
+  f: CollectionFormValues,
+): CollectionCreatePayload => ({
   name: f.name.trim(),
   description: f.description.trim() || null,
   visibility: f.visibility,
@@ -34,20 +36,30 @@ export const formToCreatePayload = (f: CollectionFormValues): CollectionCreatePa
  * Diff against the original: only changed keys go out. Unlike users, the PATCH
  * here honours explicit nulls, so clearing the description alone works.
  */
-export function formToUpdatePayload(f: CollectionFormValues, original: Collection): CollectionUpdatePayload {
+export function formToUpdatePayload(
+  f: CollectionFormValues,
+  original: Collection,
+): CollectionUpdatePayload {
   const out: CollectionUpdatePayload = {};
   const name = f.name.trim();
   if (name && name !== original.name) out.name = name;
 
   const description = f.description.trim();
-  if (description !== (original.description ?? "")) out.description = description || null;
+  if (description !== (original.description ?? ""))
+    out.description = description || null;
 
   if (f.visibility !== original.visibility) out.visibility = f.visibility;
   return out;
 }
 
 /** Only the owner (or a superuser, who gets `owner`) may PATCH/DELETE/manage members. */
-export const canManageCollection = (c: Pick<Collection, "my_role">): boolean => c.my_role === "owner";
+export const canManageCollection = (c: Pick<Collection, "my_role">): boolean =>
+  c.my_role === "owner";
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** owner/editor may upload and edit documents; viewer is read-only. */
+export const canWriteDocuments = (c: Pick<Collection, "my_role">): boolean =>
+  c.my_role === "owner" || c.my_role === "editor";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const isUuid = (v: string): boolean => UUID_RE.test(v.trim());

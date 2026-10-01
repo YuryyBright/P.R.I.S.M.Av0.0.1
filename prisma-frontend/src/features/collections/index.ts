@@ -3,6 +3,13 @@
 // only when another feature or app/ really needs it (e.g. a documents feature needing the collection list).
 export { collectionsRoutes } from "./routes";
 export { collectionsUiSlice } from "./store/collectionsUiSlice";
-export { COLLECTION_PERMISSIONS, COLLECTIONS_ROUTES } from "./constants/collections.constants";
+export {
+  COLLECTION_PERMISSIONS,
+  COLLECTIONS_ROUTES,
+} from "./constants/collections.constants";
 export { useCollectionActions } from "./hooks/useCollectionActions";
-export type { Collection, CollectionRole, CollectionVisibility } from "./types/collection.types";
+export type {
+  Collection,
+  CollectionRole,
+  CollectionVisibility,
+} from "./types/collection.types";

@@ -17,6 +17,7 @@ import {
   type CollectionFormValues,
 } from "../lib/collectionMappers";
 import type { Collection } from "../types/collection.types";
+import { SpinnerIcon } from "./CollectionIcons";
 
 interface Props {
   /** Present -> edit mode. Absent -> create mode. Mount with a `key` so state resets. */
@@ -140,37 +141,14 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
     }
   }
 
-  const visibilityOption = VISIBILITY_OPTIONS.find(
-    (option) => option.value === values.visibility,
-  );
-
   const descriptionLength = values.description.length;
 
   /**
    * i18n structure:
    *
-   * collections.visibility.private.label
-   * collections.visibility.private.hint
-   *
-   * collections.visibility.shared.label
-   * collections.visibility.shared.hint
-   *
-   * collections.visibility.public.label
-   * collections.visibility.public.hint
+   * collections.visibility.{private|shared|public}.label
+   * collections.visibility.{private|shared|public}.hint
    */
-  // const visibilityLabel = visibilityOption
-  //   ? t(
-  //       `collections.visibility.${visibilityOption.value}.label`,
-  //       visibilityOption.label,
-  //     )
-  //   : "";
-
-  const visibilityHint = visibilityOption
-    ? t(
-        `collections.visibility.${visibilityOption.value}.hint`,
-        visibilityOption.hint ?? "",
-      )
-    : "";
 
   return (
     <Modal
@@ -182,10 +160,10 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
           : t("collections.form.createTitle", "Нова колекція")
       }
       footer={
-        <div className="flex w-full items-center justify-end gap-2">
+        <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
           <button
             type="button"
-            className={btnSecondary}
+            className={`${btnSecondary} w-full sm:w-auto`}
             onClick={onClose}
             disabled={isMutating}
           >
@@ -196,8 +174,9 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
             type="submit"
             form="collection-form"
             disabled={isMutating}
-            className={`${btnPrimary} min-w-27.5`}
+            className={`${btnPrimary} w-full gap-2 sm:w-auto sm:min-w-27.5`}
           >
+            {isMutating && <SpinnerIcon />}
             {isMutating
               ? t("common.saving", "Збереження…")
               : isEdit
@@ -213,20 +192,17 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
         className="space-y-5"
         noValidate
       >
-        {/* Header description */}
-        <div className="rounded-xl border border-gray-100 bg-gray-50/70 px-4 py-3 dark:border-white/5 dark:bg-white/2">
-          <p className="text-theme-sm leading-5 text-gray-600 dark:text-gray-400">
-            {isEdit
-              ? t(
-                  "collections.form.editDescription",
-                  "Змініть параметри колекції та збережіть зміни.",
-                )
-              : t(
-                  "collections.form.createDescription",
-                  "Створіть колекцію для організації та спільної роботи з матеріалами.",
-                )}
-          </p>
-        </div>
+        <p className="text-theme-sm leading-5 text-gray-500 dark:text-gray-400">
+          {isEdit
+            ? t(
+                "collections.form.editDescription",
+                "Змініть параметри колекції та збережіть зміни.",
+              )
+            : t(
+                "collections.form.createDescription",
+                "Створіть колекцію для організації та спільної роботи з матеріалами.",
+              )}
+        </p>
 
         {/* Form error */}
         {formError && <Alert>{formError}</Alert>}
@@ -250,17 +226,24 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
               autoFocus
               required
               aria-invalid={Boolean(fieldErrors.name)}
+              aria-describedby="collection-name-hint"
             />
 
-            <div className="flex items-center justify-between">
-              <p className="text-theme-xs text-gray-400">
+            <div className="flex items-center justify-between gap-3">
+              <p
+                id="collection-name-hint"
+                className="text-theme-xs text-gray-500 dark:text-gray-400"
+              >
                 {t(
                   "collections.form.nameHint",
                   "Введіть зрозумілу назву колекції",
                 )}
               </p>
 
-              <span className="text-theme-xs text-gray-400">
+              <span
+                aria-hidden="true"
+                className="text-theme-xs text-gray-400 tabular-nums dark:text-gray-500"
+              >
                 {values.name.length}/255
               </span>
             </div>
@@ -288,10 +271,11 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
 
             <div className="flex justify-end">
               <span
-                className={`text-theme-xs ${
+                aria-hidden="true"
+                className={`text-theme-xs tabular-nums ${
                   descriptionLength > 4800
-                    ? "text-warning-500"
-                    : "text-gray-400"
+                    ? "text-warning-600 dark:text-warning-400"
+                    : "text-gray-400 dark:text-gray-500"
                 }`}
               >
                 {descriptionLength}/5000
@@ -300,46 +284,74 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
           </div>
         </Field>
 
-        {/* Visibility */}
-        <Field
-          label={t("collections.form.visibility", "Видимість")}
-          error={fieldErrors.visibility}
-        >
-          <div className="space-y-2">
-            <select
-              className={`${inputClass} w-full`}
-              value={values.visibility}
-              onChange={(event) =>
-                set(
-                  "visibility",
-                  event.target.value as CollectionFormValues["visibility"],
-                )
-              }
-              aria-invalid={Boolean(fieldErrors.visibility)}
-            >
-              {VISIBILITY_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {t(
-                    `collections.visibility.${option.value}.label`,
-                    option.label,
-                  )}
-                </option>
-              ))}
-            </select>
+        {/* Visibility: radio cards, so every option's hint is visible before choosing */}
+        <fieldset className="space-y-2">
+          <legend className="mb-1.5 text-theme-sm font-medium text-gray-700 dark:text-gray-300">
+            {t("collections.form.visibility", "Видимість")}
+          </legend>
 
-            {visibilityHint && (
-              <div className="flex items-start gap-2 rounded-lg bg-gray-50 px-3 py-2.5 dark:bg-white/3">
-                <span className="mt-0.5 text-gray-400" aria-hidden="true">
-                  ⓘ
-                </span>
+          <div className="grid gap-2">
+            {VISIBILITY_OPTIONS.map((option) => {
+              const checked = values.visibility === option.value;
 
-                <p className="text-theme-xs leading-5 text-gray-500 dark:text-gray-400">
-                  {visibilityHint}
-                </p>
-              </div>
-            )}
+              return (
+                <label
+                  key={option.value}
+                  className="relative flex cursor-pointer flex-col gap-1 rounded-xl border border-gray-200 bg-white p-3.5 transition-colors hover:border-gray-300 has-checked:border-brand-500 has-checked:bg-brand-50/50 has-focus-visible:ring-2 has-focus-visible:ring-brand-500/40 dark:border-white/10 dark:bg-transparent dark:hover:border-white/20 dark:has-checked:border-brand-400 dark:has-checked:bg-brand-500/10"
+                >
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value={option.value}
+                    checked={checked}
+                    onChange={() =>
+                      set(
+                        "visibility",
+                        option.value as CollectionFormValues["visibility"],
+                      )
+                    }
+                    className="sr-only"
+                  />
+
+                  <span className="flex items-center gap-2.5 text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                    <span
+                      aria-hidden="true"
+                      className={`flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                        checked
+                          ? "border-brand-500 dark:border-brand-400"
+                          : "border-gray-300 dark:border-white/25"
+                      }`}
+                    >
+                      {checked && (
+                        <span className="size-2 rounded-full bg-brand-500 dark:bg-brand-400" />
+                      )}
+                    </span>
+                    {t(
+                      `collections.visibility.${option.value}.label`,
+                      option.label,
+                    )}
+                  </span>
+
+                  <span className="pl-6.5 text-theme-xs leading-5 text-gray-500 dark:text-gray-400">
+                    {t(
+                      `collections.visibility.${option.value}.hint`,
+                      option.hint ?? "",
+                    )}
+                  </span>
+                </label>
+              );
+            })}
           </div>
-        </Field>
+
+          {fieldErrors.visibility && (
+            <p
+              role="alert"
+              className="text-theme-xs text-error-600 dark:text-error-400"
+            >
+              {fieldErrors.visibility}
+            </p>
+          )}
+        </fieldset>
       </form>
     </Modal>
   );

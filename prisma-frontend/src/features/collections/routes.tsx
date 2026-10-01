@@ -17,6 +17,12 @@ export const collectionsRoutes: RouteObject[] = [
           Component: (await import("./pages/CollectionsPage")).default,
         }),
       },
+      {
+        path: ":collectionId",
+        lazy: async () => ({
+          Component: (await import("./pages/CollectionDetailPage")).default,
+        }),
+      },
     ],
   },
 ];

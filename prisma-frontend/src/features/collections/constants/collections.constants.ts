@@ -13,7 +13,10 @@ export const COLLECTIONS_PATHS = {
 } as const;
 
 /** Browser routes owned by this feature. */
-export const COLLECTIONS_ROUTES = { list: "/collections" } as const;
+export const COLLECTIONS_ROUTES = {
+  list: "/collections",
+  detail: (id: string) => `/collections/${id}`,
+} as const;
 
 /**
  * VERIFY against PERM_COLLECTIONS_* in app/api/deps.py and the seeded permissions.

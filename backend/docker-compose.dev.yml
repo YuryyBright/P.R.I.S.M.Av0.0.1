@@ -207,6 +207,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   # Redis for development
   prisma_redis_dev:
     image: redis:7.2-alpine
@@ -236,7 +237,8 @@ volumes:
     name: prisma_pgadmin_dev_data
   prisma_redis_dev_data:
     name: prisma_redis_dev_data
-
+  prisma_qdrant_dev_data:
+    name: prisma_qdrant_dev_data
 networks:
   prisma_dev_network:
     name: prisma_dev_network

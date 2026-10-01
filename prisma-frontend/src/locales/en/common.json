@@ -384,7 +384,7 @@
   "collections": {
     "title": "Collections",
     "loadError": "Failed to load collections",
-
+    "detail": { "back": "All collections" },
     "pagination": {
       "total_one": "{count} collection",
       "total_other": "{count} collections"
@@ -475,6 +475,49 @@
       "userIdPlaceholder": "User UUID",
       "invalidUuid": "Enter a valid user UUID",
       "empty": "No members yet."
+    }
+  },
+  "documents": {
+    "title": "Documents",
+    "loadError": "Failed to load documents",
+    "noPermission": "You don't have permission to view documents.",
+    "filter": { "label": "Filter by status", "all": "All statuses" },
+    "pagination": { "total": "{{count}} documents" },
+    "table": {
+      "empty": "No documents yet",
+      "reindex": "Reindex",
+      "columns": {
+        "document": "Document",
+        "size": "Size",
+        "status": "Status",
+        "added": "Added"
+      }
+    },
+    "status": {
+      "pending": "Queued",
+      "processing": "Processing",
+      "chunking": "Chunking",
+      "embedding": "Embedding",
+      "indexing": "Indexing",
+      "ready": "Ready",
+      "failed": "Failed",
+      "deleted": "Deleted"
+    },
+    "upload": {
+      "button": "Upload files",
+      "uploading": "Uploading…",
+      "hint": "Drag files here or click “Upload files”. PDF, DOCX, TXT, MD, HTML, JSON — up to {{max}} MB each.",
+      "errors": {
+        "type": "unsupported file type",
+        "size": "file is larger than {{max}} MB",
+        "empty": "file is empty",
+        "server": "upload failed"
+      }
+    },
+    "rename": { "title": "Rename document" },
+    "delete": {
+      "title": "Delete document",
+      "confirm": "Delete “{{name}}”? Its indexed data will be removed."
     }
   }
 }

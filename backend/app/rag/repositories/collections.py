@@ -1,9 +1,3 @@
-"""Доступ до БД для Collection / CollectionMember.
-
-Без бізнес-логіки і без commit:
-транзакцією керує сервіс.
-"""
-
 from __future__ import annotations
 
 import uuid
@@ -16,29 +10,110 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.models.rag.collection import Collection
 from app.models.rag.collection_member import CollectionMember
 from app.models.users.user_model import User
-
-
+from app.rag.domain.enums import CollectionRole
+from datetime import timezone
+from typing import Any
 class CollectionRepository:
+    """
+    Database access for Collection and CollectionMember.
+
+    Responsibilities:
+    - SELECT;
+    - INSERT;
+    - UPDATE through ORM entities;
+    - DELETE;
+    - existence checks.
+
+    No business rules.
+    No authorization.
+    No commit / rollback.
+    """
+
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
+        # ---------------- Collection ----------------
+
+    async def create(
+        self,
+        *,
+        owner_id: uuid.UUID,
+        name: str,
+        description: str | None,
+        visibility,
+    ) -> Collection:
+        collection = Collection(
+            name=name,
+            description=description,
+            owner_id=owner_id,
+            visibility=visibility,
+        )
+        self.db.add(collection)
+        await self.db.flush()  # INSERT + перевірка constraint'ів
+        return collection
+
+    async def update(
+        self,
+        collection: Collection,
+        changes: dict[str, Any],
+    ) -> Collection:
+        for field, value in changes.items():
+            setattr(collection, field, value)
+        self.db.add(collection)
+        await self.db.flush()  # UPDATE + перевірка constraint'ів
+        return collection
+
+    async def soft_delete(self, collection: Collection) -> None:
+        collection.is_active = False
+        collection.deleted_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        self.db.add(collection)
+        await self.db.flush()
+
+    async def refresh(self, entity) -> None:
+        await self.db.refresh(entity)
+
+    # ---------------- Members ----------------
+
+    async def upsert_member(
+        self,
+        collection_id: uuid.UUID,
+        user_id: uuid.UUID,
+        role: CollectionRole,
+    ) -> CollectionMember:
+        member = await self.get_member(collection_id, user_id)
+        if member is None:
+            member = CollectionMember(
+                collection_id=collection_id,
+                user_id=user_id,
+                role=role,
+            )
+        else:
+            member.role = role
+        self.db.add(member)
+        await self.db.flush()
+        return member
+    # ------------------------------------------------------------------
+    # Collection
+    # ------------------------------------------------------------------
 
     async def get(
         self,
         collection_id: uuid.UUID,
     ) -> Collection | None:
-        return await self.db.get(Collection, collection_id)
+        return await self.db.get(
+            Collection,
+            collection_id,
+        )
 
     async def add(
         self,
-        col: Collection,
+        collection: Collection,
     ) -> Collection:
-        self.db.add(col)
+        self.db.add(collection)
 
-        # Flush потрібен, щоб constraint/IntegrityError
-        # спрацював до commit.
+        # Force INSERT and constraint validation.
         await self.db.flush()
 
-        return col
+        return collection
 
     async def flush(self) -> None:
         await self.db.flush()
@@ -50,7 +125,7 @@ class CollectionRepository:
         limit: int,
         offset: int,
     ) -> list[Collection]:
-        rows = await self.db.exec(
+        result = await self.db.exec(
             select(Collection)
             .where(where)
             .order_by(Collection.created_at.desc())
@@ -58,19 +133,19 @@ class CollectionRepository:
             .offset(offset)
         )
 
-        return list(rows.all())
+        return list(result.all())
 
     async def count_visible(
         self,
         where: ColumnElement[bool],
     ) -> int:
-        return (
-            await self.db.exec(
-                select(func.count())
-                .select_from(Collection)
-                .where(where)
-            )
-        ).one()
+        result = await self.db.exec(
+            select(func.count())
+            .select_from(Collection)
+            .where(where)
+        )
+
+        return result.one()
 
     # ------------------------------------------------------------------
     # Members
@@ -108,13 +183,9 @@ class CollectionRepository:
             )
         )
 
-        return (getattr(result, "rowcount", 0) or 0) > 0
-
-    async def user_exists(
-        self,
-        user_id: uuid.UUID,
-    ) -> bool:
-        return await self.db.get(User, user_id) is not None
+        return bool(
+            getattr(result, "rowcount", 0)
+        )
 
     async def list_members(
         self,
@@ -129,7 +200,19 @@ class CollectionRepository:
         return list(result.all())
 
     # ------------------------------------------------------------------
-    # Deleted collections
+    # Users
+    # ------------------------------------------------------------------
+
+    async def user_exists(
+        self,
+        user_id: uuid.UUID,
+    ) -> bool:
+        return (
+            await self.db.get(User, user_id)
+        ) is not None
+
+    # ------------------------------------------------------------------
+    # Cleanup / physical deletion
     # ------------------------------------------------------------------
 
     async def list_deleted(
@@ -138,7 +221,6 @@ class CollectionRepository:
         older_than: datetime,
         limit: int,
     ) -> list[uuid.UUID]:
-        """Колекції, позначені видаленими, але ще не очищені фізично."""
         result = await self.db.exec(
             select(Collection.id)
             .where(
@@ -154,10 +236,6 @@ class CollectionRepository:
         self,
         collection_id: uuid.UUID,
     ) -> None:
-        """Фізичне видалення.
-
-        Документи мають бути видалені раніше (FK RESTRICT).
-        """
         await self.db.exec(
             delete(CollectionMember).where(
                 CollectionMember.collection_id == collection_id

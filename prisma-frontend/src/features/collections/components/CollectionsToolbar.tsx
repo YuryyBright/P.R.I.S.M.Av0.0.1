@@ -10,14 +10,14 @@ export function CollectionsToolbar() {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   return (
-    <div className="flex items-center">
-      <div className="ml-auto">
-        <Can permission={COLLECTION_PERMISSIONS.create}>
-          <button className={btnPrimary} onClick={() => dispatch(collectionsUiActions.openCreateForm())}>
-            {t("collections.toolbar.new")}
-          </button>
-        </Can>
-      </div>
-    </div>
+    <Can permission={COLLECTION_PERMISSIONS.create}>
+      <button
+        type="button"
+        className={`${btnPrimary} w-full gap-2 sm:w-auto`}
+        onClick={() => dispatch(collectionsUiActions.openCreateForm())}
+      >
+        {t("collections.toolbar.new")}
+      </button>
+    </Can>
   );
 }

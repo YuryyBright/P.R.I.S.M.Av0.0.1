@@ -1,26 +1,26 @@
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
 import { Can } from "@/features/auth";
 import { formatDateTime } from "@/shared/lib/date";
-import type { UUID } from "@/shared/types/api";
 import { btnPrimary } from "@/shared/ui/classes";
-import {
-  COLLECTION_PERMISSIONS,
-  COLLECTIONS_ROUTES,
-} from "../constants/collections.constants";
-import type { Collection } from "../types/collection.types";
-import { CollectionActions } from "./CollectionActions";
-import { RoleBadge, VisibilityBadge } from "./CollectionBadges";
-import { FolderIcon } from "./CollectionIcons";
+import { DOCUMENT_PERMISSIONS } from "../constants/documents.constants";
+import { formatBytes } from "../lib/documentFormat";
+import type { DocumentItem } from "../types/document.types";
+import { DocumentActions } from "./DocumentActions";
+import { FileIcon, UploadIcon } from "./DocumentIcons";
+import { DocumentStatusBadge } from "./DocumentStatusBadge";
 
 interface Props {
-  rows: Collection[];
+  rows: DocumentItem[];
   isLoading: boolean;
-  onEdit: (id: UUID) => void;
-  onMembers: (id: UUID) => void;
-  onDelete: (id: UUID) => void;
-  /** Optional: shows a call-to-action inside the empty state. */
-  onCreate?: () => void;
+  /** Collection role allows editing (owner/editor). Global permission is checked via <Can>. */
+  canWrite: boolean;
+  /** A status filter is active — the empty state explains that instead of inviting an upload. */
+  isFiltered?: boolean;
+  /** Optional: opens the file picker from the empty state. */
+  onUpload?: () => void;
+  onRename: (doc: DocumentItem) => void;
+  onReindex: (doc: DocumentItem) => void;
+  onDelete: (doc: DocumentItem) => void;
 }
 
 const th =
@@ -31,43 +31,57 @@ const surface =
   "overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/3";
 const skeleton =
   "animate-pulse rounded-md bg-gray-100 motion-reduce:animate-none dark:bg-white/5";
-const nameLink =
-  "rounded font-medium text-gray-800 underline-offset-4 transition-colors hover:text-brand-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 dark:text-white/90 dark:hover:text-brand-400";
 
-function FolderTile() {
+function FileTile() {
   return (
     <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-gray-500 ring-1 ring-gray-200/70 ring-inset dark:bg-white/5 dark:text-gray-400 dark:ring-white/5">
-      <FolderIcon className="size-5" />
+      <FileIcon className="size-5" />
     </span>
   );
 }
 
-function EmptyState({ onCreate }: { onCreate?: () => void }) {
+function EmptyState({
+  canWrite,
+  isFiltered,
+  onUpload,
+}: Pick<Props, "canWrite" | "isFiltered" | "onUpload">) {
   const { t } = useTranslation();
   return (
     <div
       className={`${surface} flex flex-col items-center px-6 py-14 text-center`}
     >
       <span className="flex size-12 items-center justify-center rounded-2xl bg-gray-50 text-gray-400 ring-1 ring-gray-200/70 ring-inset dark:bg-white/5 dark:text-gray-500 dark:ring-white/5">
-        <FolderIcon className="size-6" />
+        <FileIcon className="size-6" />
       </span>
-      <h2 className="mt-4 text-theme-sm font-medium text-gray-800 dark:text-white/90">
-        {t("collections.table.empty")}
-      </h2>
+      <h3 className="mt-4 text-theme-sm font-medium text-gray-800 dark:text-white/90">
+        {t("documents.table.empty")}
+      </h3>
       <p className="mt-1 max-w-sm text-theme-sm text-gray-500 dark:text-gray-400">
-        {t(
-          "collections.table.emptyHint",
-          "Створіть першу колекцію, щоб організувати матеріали та запросити учасників.",
-        )}
+        {isFiltered
+          ? t(
+              "documents.table.emptyFiltered",
+              "Немає документів з таким статусом. Змініть фільтр, щоб побачити інші.",
+            )
+          : canWrite
+            ? t(
+                "documents.table.emptyHint",
+                "Завантажте перші файли, щоб вони з'явилися в цій колекції.",
+              )
+            : t(
+                "documents.table.emptyReadOnly",
+                "У цій колекції ще немає документів.",
+              )}
       </p>
-      {onCreate && (
-        <Can permission={COLLECTION_PERMISSIONS.create}>
+      {canWrite && !isFiltered && onUpload && (
+        <Can permission={DOCUMENT_PERMISSIONS.write}>
           <button
             type="button"
             className={`${btnPrimary} mt-6 gap-2`}
-            onClick={onCreate}
+            onClick={onUpload}
           >
-            {t("collections.toolbar.new")}
+            <UploadIcon className="size-4" />
+
+            {t("documents.upload.button")}
           </button>
         </Can>
       )}
@@ -85,17 +99,17 @@ function DesktopSkeletonRows() {
             <div className="flex items-center gap-3">
               <div className={`${skeleton} size-10 rounded-xl`} />
               <div className="space-y-2">
-                <div className={`${skeleton} h-3.5 w-40`} />
-                <div className={`${skeleton} h-3 w-56`} />
+                <div className={`${skeleton} h-3.5 w-48`} />
+                <div className={`${skeleton} h-3 w-32`} />
               </div>
             </div>
             {i === 0 && <span className="sr-only">{t("common.loading")}</span>}
           </td>
           <td className={td}>
-            <div className={`${skeleton} h-5 w-20 rounded-full`} />
+            <div className={`${skeleton} h-3.5 w-14`} />
           </td>
           <td className={td}>
-            <div className={`${skeleton} h-5 w-16 rounded-full`} />
+            <div className={`${skeleton} h-5 w-20 rounded-full`} />
           </td>
           <td className={td}>
             <div className={`${skeleton} h-3.5 w-28`} />
@@ -117,12 +131,11 @@ function CardSkeletons() {
             <div className={`${skeleton} size-10 rounded-xl`} />
             <div className="flex-1 space-y-2">
               <div className={`${skeleton} h-3.5 w-2/3`} />
-              <div className={`${skeleton} h-3 w-full`} />
+              <div className={`${skeleton} h-3 w-1/3`} />
             </div>
           </div>
           <div className="mt-4 flex gap-2">
             <div className={`${skeleton} h-5 w-20 rounded-full`} />
-            <div className={`${skeleton} h-5 w-16 rounded-full`} />
           </div>
           {i === 0 && <span className="sr-only">{t("common.loading")}</span>}
         </li>
@@ -131,18 +144,26 @@ function CardSkeletons() {
   );
 }
 
-export function CollectionsTable({
+export function DocumentsTable({
   rows,
   isLoading,
-  onEdit,
-  onMembers,
+  canWrite,
+  isFiltered,
+  onUpload,
+  onRename,
+  onReindex,
   onDelete,
-  onCreate,
 }: Props) {
   const { t } = useTranslation();
 
   if (!isLoading && rows.length === 0) {
-    return <EmptyState onCreate={onCreate} />;
+    return (
+      <EmptyState
+        canWrite={canWrite}
+        isFiltered={isFiltered}
+        onUpload={onUpload}
+      />
+    );
   }
 
   return (
@@ -152,25 +173,25 @@ export function CollectionsTable({
         <div className="max-w-full overflow-x-auto">
           <table className="min-w-full">
             <caption className="sr-only">
-              {t("collections.table.caption", "Список колекцій")}
+              {t("documents.table.caption", "Список документів")}
             </caption>
             <thead className="border-b border-gray-100 dark:border-white/5">
               <tr>
                 <th scope="col" className={th}>
-                  {t("collections.table.columns.collection")}
+                  {t("documents.table.columns.document")}
                 </th>
                 <th scope="col" className={th}>
-                  {t("collections.table.columns.visibility")}
+                  {t("documents.table.columns.size")}
                 </th>
                 <th scope="col" className={th}>
-                  {t("collections.table.columns.myRole")}
+                  {t("documents.table.columns.status")}
                 </th>
                 <th scope="col" className={th}>
-                  {t("collections.table.columns.created")}
+                  {t("documents.table.columns.added")}
                 </th>
                 <th scope="col" className={th}>
                   <span className="sr-only">
-                    {t("collections.table.columns.actions", "Дії")}
+                    {t("documents.table.columns.actions", "Дії")}
                   </span>
                 </th>
               </tr>
@@ -179,46 +200,50 @@ export function CollectionsTable({
               {isLoading ? (
                 <DesktopSkeletonRows />
               ) : (
-                rows.map((c) => (
+                rows.map((d) => (
                   <tr
-                    key={c.id}
+                    key={d.id}
                     className="transition-colors hover:bg-gray-50/60 dark:hover:bg-white/2"
                   >
                     <td className={td}>
                       <div className="flex items-center gap-3">
-                        <FolderTile />
+                        <FileTile />
                         <div className="min-w-0">
-                          <Link
-                            to={COLLECTIONS_ROUTES.detail(c.id)}
-                            className={nameLink}
+                          <p
+                            className="max-w-md truncate font-medium text-gray-800 dark:text-white/90"
+                            title={d.title}
                           >
-                            {c.name}
-                          </Link>
-                          {c.description && (
-                            <p className="max-w-md truncate text-theme-xs text-gray-500 dark:text-gray-400">
-                              {c.description}
+                            {d.title}
+                          </p>
+                          {d.filename && d.filename !== d.title && (
+                            <p
+                              className="max-w-md truncate text-theme-xs text-gray-500 dark:text-gray-400"
+                              title={d.filename}
+                            >
+                              {d.filename}
                             </p>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className={td}>
-                      <VisibilityBadge visibility={c.visibility} />
+                    <td className={`${td} whitespace-nowrap tabular-nums`}>
+                      {formatBytes(d.size_bytes)}
                     </td>
                     <td className={td}>
-                      <RoleBadge role={c.my_role} />
+                      <DocumentStatusBadge status={d.status} />
                     </td>
                     <td className={`${td} whitespace-nowrap`}>
-                      {formatDateTime(c.created_at)}
+                      {formatDateTime(d.created_at)}
                     </td>
                     <td className={`${td} text-end`}>
-                      <CollectionActions
-                        collection={c}
+                      <DocumentActions
+                        document={d}
+                        canWrite={canWrite}
                         variant="icon"
                         className="justify-end"
-                        onMembers={() => onMembers(c.id)}
-                        onEdit={() => onEdit(c.id)}
-                        onDelete={() => onDelete(c.id)}
+                        onRename={() => onRename(d)}
+                        onReindex={() => onReindex(d)}
+                        onDelete={() => onDelete(d)}
                       />
                     </td>
                   </tr>
@@ -234,42 +259,41 @@ export function CollectionsTable({
         {isLoading ? (
           <CardSkeletons />
         ) : (
-          rows.map((c) => (
-            <li key={c.id} className={`${surface} p-4`}>
+          rows.map((d) => (
+            <li key={d.id} className={`${surface} p-4`}>
               <div className="flex items-start gap-3">
-                <FolderTile />
+                <FileTile />
                 <div className="min-w-0 flex-1">
-                  <Link
-                    to={COLLECTIONS_ROUTES.detail(c.id)}
-                    className={`${nameLink} block break-words`}
-                  >
-                    {c.name}
-                  </Link>
-                  {c.description && (
-                    <p className="mt-0.5 line-clamp-2 text-theme-xs text-gray-500 dark:text-gray-400">
-                      {c.description}
+                  <p className="font-medium break-words text-gray-800 dark:text-white/90">
+                    {d.title}
+                  </p>
+                  {d.filename && d.filename !== d.title && (
+                    <p className="mt-0.5 truncate text-theme-xs text-gray-500 dark:text-gray-400">
+                      {d.filename}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <VisibilityBadge visibility={c.visibility} />
-                <RoleBadge role={c.my_role} />
+              <div className="mt-3">
+                <DocumentStatusBadge status={d.status} />
               </div>
 
-              <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
-                {t("collections.table.columns.created")}:{" "}
-                {formatDateTime(c.created_at)}
-              </p>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-theme-xs text-gray-500 dark:text-gray-400">
+                <span className="tabular-nums">
+                  {formatBytes(d.size_bytes)}
+                </span>
+                <span>{formatDateTime(d.created_at)}</span>
+              </div>
 
-              <CollectionActions
-                collection={c}
+              <DocumentActions
+                document={d}
+                canWrite={canWrite}
                 variant="labeled"
-                className="mt-4 grid grid-cols-3 gap-2 border-t border-gray-100 pt-4 dark:border-white/5"
-                onMembers={() => onMembers(c.id)}
-                onEdit={() => onEdit(c.id)}
-                onDelete={() => onDelete(c.id)}
+                className="mt-4 flex-wrap border-t border-gray-100 pt-4 *:flex-1 dark:border-white/5"
+                onRename={() => onRename(d)}
+                onReindex={() => onReindex(d)}
+                onDelete={() => onDelete(d)}
               />
             </li>
           ))

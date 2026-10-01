@@ -1,6 +1,6 @@
 import uuid
 from typing import TYPE_CHECKING, Optional
-
+from datetime import datetime
 from sqlalchemy import Text, UniqueConstraint, text
 from sqlmodel import Field, Relationship
 
@@ -39,6 +39,7 @@ class Collection(RagBaseModel, table=True):
     is_active: bool = Field(
         default=True, sa_column_kwargs={"server_default": text("true")}
     )
+    deleted_at: Optional[datetime] = Field(default=None)
 
     # one-way до User: існуюча модель User не змінюється
     owner: Optional["User"] = Relationship(sa_relationship_kwargs={"lazy": "selectin"})

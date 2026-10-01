@@ -4,31 +4,24 @@ import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Alert } from "@/shared/ui/Alert";
 import { Modal } from "@/shared/ui/Modal";
 import { btnDanger, btnSecondary } from "@/shared/ui/classes";
-import { useGetCollectionByIdQuery } from "../api/collections.endpoints";
-import { useCollectionActions } from "../hooks/useCollectionActions";
-import { AlertTriangleIcon, SpinnerIcon } from "./CollectionIcons";
+import { useDocumentActions } from "../hooks/useDocumentActions";
+import type { DocumentItem } from "../types/document.types";
+import { AlertTriangleIcon, SpinnerIcon } from "./DocumentIcons";
 
 interface Props {
-  collectionId: string;
+  document: DocumentItem;
   onClose: () => void;
-  onDeleted?: (message: string) => void;
 }
 
-export function DeleteCollectionDialog({
-  collectionId,
-  onClose,
-  onDeleted,
-}: Props) {
+export function DeleteDocumentDialog({ document: doc, onClose }: Props) {
   const { t } = useTranslation();
-  const { data: collection } = useGetCollectionByIdQuery(collectionId);
-  const { deleteCollection, isMutating } = useCollectionActions();
+  const { deleteDocument, isMutating } = useDocumentActions();
   const [error, setError] = useState<string | null>(null);
 
   async function confirm() {
     setError(null);
     try {
-      await deleteCollection(collectionId); // 204, no body
-      onDeleted?.(t("collections.delete.deleted"));
+      await deleteDocument(doc.id, doc.collection_id); // 204, no body
       onClose();
     } catch (e) {
       setError(isNormalizedApiError(e) ? e.message : t("errors.unexpected"));
@@ -39,7 +32,7 @@ export function DeleteCollectionDialog({
     <Modal
       open
       onClose={onClose}
-      title={t("collections.delete.title")}
+      title={t("documents.delete.title")}
       footer={
         <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           {/* Cancel is the default focus: the destructive action needs a deliberate choice. */}
@@ -74,12 +67,10 @@ export function DeleteCollectionDialog({
 
         <div className="min-w-0 space-y-1.5">
           <p className="text-theme-sm leading-6 break-words text-gray-700 dark:text-gray-300">
-            {collection
-              ? t("collections.delete.confirm", { name: collection.name })
-              : t("collections.delete.confirmGeneric")}
+            {t("documents.delete.confirm", { name: doc.title })}
           </p>
           <p className="text-theme-xs text-gray-500 dark:text-gray-400">
-            {t("collections.delete.hint", "Цю дію неможливо скасувати.")}
+            {t("documents.delete.hint", "Цю дію неможливо скасувати.")}
           </p>
         </div>
       </div>
