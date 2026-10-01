@@ -25,33 +25,25 @@ export const COLLECTION_PERMISSIONS = {
   manage: "rag.collections.manage", // PATCH, DELETE, members/*
 } as const;
 
-/**
- * Option labels are i18n KEYS, not text: components call t(option.labelKey),
- * so they re-render in the active language.
- */
 export const VISIBILITY_OPTIONS: {
   value: CollectionVisibility;
-  labelKey: string;
-  hintKey: string;
+  label: string;
+  hint: string;
 }[] = [
-  {
-    value: "private",
-    labelKey: "collections.visibility.private.label",
-    hintKey: "collections.visibility.private.hint",
-  },
+  { value: "private", label: "Private", hint: "Only you and members" },
   {
     value: "shared",
-    labelKey: "collections.visibility.shared.label",
-    hintKey: "collections.visibility.shared.hint",
+    label: "Shared",
+    hint: "You and explicitly invited members",
   },
   {
     value: "public",
-    labelKey: "collections.visibility.public.label",
-    hintKey: "collections.visibility.public.hint",
+    label: "Public",
+    hint: "Everyone with collections read access",
   },
 ];
 
-export const MEMBER_ROLE_OPTIONS: { value: MemberRole; labelKey: string }[] = [
-  { value: "viewer", labelKey: "collections.memberRole.viewer" },
-  { value: "editor", labelKey: "collections.memberRole.editor" },
+export const MEMBER_ROLE_OPTIONS: { value: MemberRole; label: string }[] = [
+  { value: "viewer", label: "Viewer" },
+  { value: "editor", label: "Editor" },
 ];
