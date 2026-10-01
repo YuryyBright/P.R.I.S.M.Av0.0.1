@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Modal } from "@/shared/ui/Modal";
 import { useSession } from "@/features/auth";
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function DeleteUserDialog({ userId, onClose, onDeleted }: Props) {
+  const { t } = useTranslation();
   const { data: user } = useGetUserByIdQuery(userId);
   const { user: me } = useSession();
   const { deleteUser, isMutating } = useUserActions();
@@ -26,7 +28,7 @@ export function DeleteUserDialog({ userId, onClose, onDeleted }: Props) {
       onDeleted?.(res.message);
       onClose();
     } catch (e) {
-      setError(isNormalizedApiError(e) ? e.message : "Unexpected error");
+      setError(isNormalizedApiError(e) ? e.message : t("errors.unexpected"));
     }
   }
 
@@ -34,26 +36,28 @@ export function DeleteUserDialog({ userId, onClose, onDeleted }: Props) {
     <Modal
       open
       onClose={onClose}
-      title="Delete user"
+      title={t("users.delete.title")}
       footer={
         <>
           <button className={btnSecondary} onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             className={btnDanger}
             disabled={isMutating || isSelf}
             onClick={confirm}
           >
-            {isMutating ? "Deleting…" : "Delete"}
+            {isMutating ? t("common.deleting") : t("common.delete")}
           </button>
         </>
       }
     >
       <p className="text-sm text-gray-600 dark:text-gray-400">
         {isSelf
-          ? "You can't delete your own account."
-          : `Delete ${user ? userFullName(user) : "this user"}? This cannot be undone.`}
+          ? t("users.delete.self")
+          : user
+            ? t("users.delete.confirm", { name: userFullName(user) })
+            : t("users.delete.confirmGeneric")}
       </p>
       {error && <p className="mt-3 text-sm text-error-500">{error}</p>}
     </Modal>

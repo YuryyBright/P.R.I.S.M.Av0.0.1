@@ -345,14 +345,19 @@ async def read_users(
     Retrieve users, optionally filtered by email. Requires admin or manager role.
     """
     if email:
-        users = await crud.user.get_multi_by_email(email=email, db_session=db_session)
+        users = await crud.user.get_multi_by_email(
+            email=email,
+            db_session=db_session,
+        )
+
         response_data = {
             "items": [serialize_user(user) for user in users],
             "total": len(users),
             "page": 1,
-            "size": len(users),
+            "size": max(len(users), 1),
             "pages": 1,
         }
+
         return create_response(data=response_data)
     else:
         if params is None:

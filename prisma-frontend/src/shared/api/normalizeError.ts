@@ -1,4 +1,5 @@
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+import i18n from "@/i18n";
 import type { ErrorDetail } from "../types/api";
 
 export type NormalizedStatus = number | "NETWORK" | "PARSE" | "TIMEOUT" | "UNKNOWN";
@@ -33,7 +34,10 @@ export function normalizeError(error: FetchBaseQueryError): NormalizedApiError {
   const status: NormalizedStatus =
     typeof error.status === "number" ? error.status : (STRING_STATUS[error.status] ?? "UNKNOWN");
 
-  let message = `Request failed${typeof status === "number" ? ` (${status})` : ""}`;
+  let message =
+    typeof status === "number"
+      ? i18n.t("errors.api.requestFailed", { status })
+      : i18n.t("errors.api.requestFailedNoStatus");
   let errors: ErrorDetail[] = [];
   const body = "data" in error ? error.data : undefined;
 
@@ -53,7 +57,7 @@ export function normalizeError(error: FetchBaseQueryError): NormalizedApiError {
         code: str(d.type),
         message: String(d.msg ?? ""),
       }));
-      message = "Validation error";
+      message = i18n.t("errors.api.validation");
     } else if (isRecord(body.detail)) {
       const d = body.detail;
       message = str(d.message) ?? message;
@@ -65,10 +69,10 @@ export function normalizeError(error: FetchBaseQueryError): NormalizedApiError {
       message = body.error;
     }
   } else if (status === "NETWORK") {
-    message = "Network error. Check your connection.";
+    message = i18n.t("errors.api.network");
   }
 
-  if (status === 429 && !isRecord(body)) message = "Too many requests. Try again later.";
+  if (status === 429 && !isRecord(body)) message = i18n.t("errors.api.tooManyRequests");
 
   const fieldErrors: Record<string, string> = {};
   for (const e of errors) if (e.field && !(e.field in fieldErrors)) fieldErrors[e.field] = e.message;

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { Can } from "@/features/auth";
 import { btnPrimary, inputClass } from "@/shared/ui/classes";
@@ -7,6 +8,7 @@ import { usersUiActions, usersUiSlice } from "../store/usersUiSlice";
 import type { UserOrderBy } from "../types/user.types";
 
 export function UsersToolbar() {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const ui = useSelector(usersUiSlice.selectors.selectUsersUi);
   const [text, setText] = useState(ui.emailQuery);
@@ -22,7 +24,7 @@ export function UsersToolbar() {
       <Can permission={USER_PERMISSIONS.searchByEmail}>
         <input
           className={`${inputClass} w-72`}
-          placeholder="Search by email"
+          placeholder={t("users.toolbar.searchPlaceholder")}
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
@@ -33,8 +35,8 @@ export function UsersToolbar() {
         onChange={(e) => dispatch(usersUiActions.setOrderBy(e.target.value as UserOrderBy))}
         disabled={ui.emailQuery.trim().length > 0}
       >
-        <option value="default">Default order</option>
-        <option value="created_at">By created date</option>
+        <option value="default">{t("users.toolbar.orderDefault")}</option>
+        <option value="created_at">{t("users.toolbar.orderCreatedAt")}</option>
       </select>
       <div className="ml-auto">
         <Can permission={USER_PERMISSIONS.create}>
@@ -42,7 +44,7 @@ export function UsersToolbar() {
             className={btnPrimary}
             onClick={() => dispatch(usersUiActions.openCreateForm())}
           >
-            + Add user
+            {t("users.toolbar.add")}
           </button>
         </Can>
       </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router";
 import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { AuthHeading } from "../components/AuthShell";
@@ -16,13 +17,14 @@ type State =
  * Rendered inside <AuthShell/> (layout route), so no wrapper here.
  */
 export default function VerifyEmailPage() {
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const token = params.get("token");
   const { verifyEmail } = useAuthActions();
   const [state, setState] = useState<State>(
     token
       ? { kind: "loading" }
-      : { kind: "error", message: "The link is missing its token." },
+      : { kind: "error", message: t("auth.errors.missingToken") },
   );
   const sent = useRef(false);
 
@@ -34,7 +36,7 @@ export default function VerifyEmailPage() {
       .catch((e) =>
         setState({
           kind: "error",
-          message: isNormalizedApiError(e) ? e.message : "Unexpected error",
+          message: isNormalizedApiError(e) ? e.message : t("errors.unexpected"),
         }),
       );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -44,18 +46,18 @@ export default function VerifyEmailPage() {
     state.kind === "loading"
       ? {
           icon: "loading" as const,
-          title: "Verifying your email",
-          text: "This will only take a moment.",
+          title: t("auth.verify.loadingTitle"),
+          text: t("auth.verify.loadingText"),
         }
       : state.kind === "ok"
         ? {
             icon: "success" as const,
-            title: "Email verified",
+            title: t("auth.verify.okTitle"),
             text: state.message,
           }
         : {
             icon: "error" as const,
-            title: "Verification failed",
+            title: t("auth.verify.errorTitle"),
             text: state.message,
           };
 
@@ -66,7 +68,7 @@ export default function VerifyEmailPage() {
 
       {state.kind !== "loading" && (
         <Link to={AUTH_ROUTES.signIn} className={authPrimaryBtnClass}>
-          Go to sign in
+          {t("auth.goToSignIn")}
         </Link>
       )}
     </div>

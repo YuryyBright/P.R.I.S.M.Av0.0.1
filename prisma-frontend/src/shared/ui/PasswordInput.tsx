@@ -1,10 +1,12 @@
 import { useState, type InputHTMLAttributes } from "react";
+import { useTranslation } from "react-i18next";
 import { inputClass } from "./classes";
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "type">;
 
 /** Drop-in replacement for <input type="password"> with a show/hide button. */
 export function PasswordInput({ className = "", ...rest }: Props) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
 
   return (
@@ -18,7 +20,7 @@ export function PasswordInput({ className = "", ...rest }: Props) {
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        aria-label={visible ? "Hide password" : "Show password"}
+        aria-label={visible ? t("shared.passwordInput.hide") : t("shared.passwordInput.show")}
         aria-pressed={visible}
         className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-gray-500 hover:text-gray-700 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500 dark:text-gray-400 dark:hover:text-gray-200"
       >

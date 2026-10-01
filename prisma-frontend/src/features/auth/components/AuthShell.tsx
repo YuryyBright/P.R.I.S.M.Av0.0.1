@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, Outlet } from "react-router";
 
 import GridShape from "@/components/common/GridShape";
 import ThemeTogglerTwo from "@/components/common/ThemeTogglerTwo";
 
-const BRAND_NAME = "P.R.I.S.M.A.";
-const BRAND_TAGLINE = "Intelligence Platform";
-const BRAND_SUBTEXT =
-  "A secure workspace for managing your data, users and operations.";
+const BRAND_NAME = "P.R.I.S.M.A."; // product name: not translated
 
 export function AuthShell() {
+  const { t } = useTranslation();
+
   return (
     <div className="relative min-h-screen bg-white lg:flex dark:bg-gray-950">
       {/* Left side */}
@@ -65,18 +65,18 @@ export function AuthShell() {
           {/* Badge */}
           <div className="mb-6 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2">
             <span className="text-[10px] font-semibold tracking-[0.28em] text-white/50 uppercase">
-              {BRAND_TAGLINE}
+              {t("auth.brand.tagline")}
             </span>
           </div>
 
           <h2 className="text-3xl font-semibold tracking-tight text-white xl:text-4xl">
-            Intelligence,
+            {t("auth.brand.headlineLine1")}
             <br />
-            simplified.
+            {t("auth.brand.headlineLine2")}
           </h2>
 
           <p className="mt-5 max-w-md text-sm leading-7 text-white/50">
-            {BRAND_SUBTEXT}
+            {t("auth.brand.subtext")}
           </p>
 
           {/* Decorative line */}
@@ -90,7 +90,7 @@ export function AuthShell() {
         {/* Bottom label */}
         <div className="absolute right-0 bottom-8 left-0 text-center">
           <span className="text-[10px] font-medium tracking-[0.24em] text-white/20 uppercase">
-            Secure authentication
+            {t("auth.brand.secure")}
           </span>
         </div>
       </aside>

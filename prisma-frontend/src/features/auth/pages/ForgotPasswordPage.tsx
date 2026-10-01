@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Alert } from "@/shared/ui/Alert";
@@ -17,6 +18,7 @@ import { useAuthActions } from "../hooks/useAuthActions";
 
 /** Rendered inside <AuthShell/> (layout route), so no wrapper here. */
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const { requestPasswordReset, isPending } = useAuthActions();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +30,7 @@ export default function ForgotPasswordPage() {
     try {
       setDone((await requestPasswordReset({ email: email.trim() })).message); // uniform for every address
     } catch (err) {
-      setError(isNormalizedApiError(err) ? err.message : "Unexpected error"); // e.g. 429 after 3/hour
+      setError(isNormalizedApiError(err) ? err.message : t("errors.unexpected")); // e.g. 429 after 3/hour
     }
   }
 
@@ -36,9 +38,13 @@ export default function ForgotPasswordPage() {
     return (
       <div className="text-center">
         <AuthStatusIcon kind="mail" />
-        <AuthHeading align="center" title="Check your email" subtitle={done} />
+        <AuthHeading
+          align="center"
+          title={t("auth.checkEmail")}
+          subtitle={done}
+        />
         <Link to={AUTH_ROUTES.signIn} className={authPrimaryBtnClass}>
-          Back to sign in
+          {t("auth.backToSignIn")}
         </Link>
       </div>
     );
@@ -47,8 +53,8 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <AuthHeading
-        title="Forgot password?"
-        subtitle="Enter your email and we will send you a reset link."
+        title={t("auth.forgot.title")}
+        subtitle={t("auth.forgot.subtitle")}
       />
 
       <form onSubmit={submit} className="space-y-5">
@@ -56,12 +62,12 @@ export default function ForgotPasswordPage() {
           {error && <Alert>{error}</Alert>}
         </div>
 
-        <Field label="Email">
+        <Field label={t("auth.fields.email")}>
           <input
             className={authInputClass}
             type="email"
             autoComplete="username"
-            placeholder="you@example.com"
+            placeholder={t("auth.placeholders.email")}
             autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -69,13 +75,13 @@ export default function ForgotPasswordPage() {
           />
         </Field>
 
-        <AuthSubmit pending={isPending} pendingLabel="Sending…">
-          Send reset link
+        <AuthSubmit pending={isPending} pendingLabel={t("auth.forgot.pending")}>
+          {t("auth.forgot.submit")}
         </AuthSubmit>
       </form>
 
       <AuthFooter>
-        <BackLink to={AUTH_ROUTES.signIn}>Back to sign in</BackLink>
+        <BackLink to={AUTH_ROUTES.signIn}>{t("auth.backToSignIn")}</BackLink>
       </AuthFooter>
     </>
   );

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Alert } from "@/shared/ui/Alert";
@@ -18,6 +19,7 @@ import { useAuthActions } from "../hooks/useAuthActions";
 
 /** Rendered inside <AuthShell/> (layout route), so no wrapper here. */
 export default function SignUpPage() {
+  const { t } = useTranslation();
   const { register, isPending } = useAuthActions();
   const [v, setV] = useState({
     first_name: "",
@@ -36,7 +38,7 @@ export default function SignUpPage() {
     e.preventDefault();
     setError(null);
     if (v.password !== v.confirm) {
-      setFieldErrors({ confirm: "Passwords do not match" });
+      setFieldErrors({ confirm: t("auth.errors.passwordsMismatch") });
       return;
     }
     setFieldErrors({});
@@ -50,7 +52,7 @@ export default function SignUpPage() {
       setDone(res.message); // identical for every address on purpose
     } catch (err) {
       if (!isNormalizedApiError(err)) {
-        setError("Unexpected error");
+        setError(t("errors.unexpected"));
         return;
       }
       setFieldErrors(err.fieldErrors);
@@ -62,9 +64,13 @@ export default function SignUpPage() {
     return (
       <div className="text-center">
         <AuthStatusIcon kind="mail" />
-        <AuthHeading align="center" title="Check your email" subtitle={done} />
+        <AuthHeading
+          align="center"
+          title={t("auth.checkEmail")}
+          subtitle={done}
+        />
         <Link to={AUTH_ROUTES.signIn} className={authPrimaryBtnClass}>
-          Go to sign in
+          {t("auth.goToSignIn")}
         </Link>
       </div>
     );
@@ -73,8 +79,8 @@ export default function SignUpPage() {
   return (
     <>
       <AuthHeading
-        title="Create account"
-        subtitle="Fill in the details to get started."
+        title={t("auth.signUp.title")}
+        subtitle={t("auth.signUp.subtitle")}
       />
 
       <form onSubmit={submit} className="space-y-5">
@@ -83,7 +89,7 @@ export default function SignUpPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <Field label="First name" error={fieldErrors.first_name}>
+          <Field label={t("auth.fields.firstName")} error={fieldErrors.first_name}>
             <input
               className={authInputClass}
               autoComplete="given-name"
@@ -92,7 +98,7 @@ export default function SignUpPage() {
               onChange={(e) => set("first_name", e.target.value)}
             />
           </Field>
-          <Field label="Last name" error={fieldErrors.last_name}>
+          <Field label={t("auth.fields.lastName")} error={fieldErrors.last_name}>
             <input
               className={authInputClass}
               autoComplete="family-name"
@@ -102,47 +108,45 @@ export default function SignUpPage() {
           </Field>
         </div>
 
-        <Field label="Email" error={fieldErrors.email}>
+        <Field label={t("auth.fields.email")} error={fieldErrors.email}>
           <input
             className={authInputClass}
             type="email"
             autoComplete="username"
-            placeholder="you@example.com"
+            placeholder={t("auth.placeholders.email")}
             value={v.email}
             onChange={(e) => set("email", e.target.value)}
             required
           />
         </Field>
 
-        <Field label="Password" error={fieldErrors.password}>
+        <Field label={t("auth.fields.password")} error={fieldErrors.password}>
           <PasswordInput
             autoComplete="new-password"
-            placeholder="Create a password"
+            placeholder={t("auth.placeholders.createPassword")}
             value={v.password}
             onChange={(e) => set("password", e.target.value)}
             required
           />
         </Field>
 
-        <Field label="Confirm password" error={fieldErrors.confirm}>
+        <Field label={t("auth.fields.confirmPassword")} error={fieldErrors.confirm}>
           <PasswordInput
             autoComplete="new-password"
-            placeholder="Repeat the password"
+            placeholder={t("auth.placeholders.repeatPassword")}
             value={v.confirm}
             onChange={(e) => set("confirm", e.target.value)}
             required
           />
         </Field>
 
-        <AuthSubmit pending={isPending} pendingLabel="Creating account…">
-          Create account
+        <AuthSubmit pending={isPending} pendingLabel={t("auth.signUp.pending")}>
+          {t("auth.signUp.submit")}
         </AuthSubmit>
       </form>
 
       <AuthFooter>
-        <BackLink to={AUTH_ROUTES.signIn}>
-          Already have an account? Sign in
-        </BackLink>
+        <BackLink to={AUTH_ROUTES.signIn}>{t("auth.signUp.haveAccount")}</BackLink>
       </AuthFooter>
     </>
   );

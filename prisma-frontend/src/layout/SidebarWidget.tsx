@@ -12,14 +12,6 @@ export default function SidebarWidget() {
         <p className="mb-4 text-theme-sm text-gray-500 dark:text-gray-400">
           {t("sidebar.widget.description")}
         </p>
-        <a
-          href="https://tailadmin.com/pricing"
-          target="_blank"
-          rel="nofollow"
-          className="flex items-center justify-center rounded-lg bg-brand-500 p-3 text-theme-sm font-medium text-white hover:bg-brand-600"
-        >
-          {t("sidebar.widget.purchasePlan")}
-        </a>
       </div>
     </div>
   );

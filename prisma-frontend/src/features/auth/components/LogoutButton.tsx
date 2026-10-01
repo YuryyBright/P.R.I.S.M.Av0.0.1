@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { btnSecondary } from "@/shared/ui/classes";
 import { useAuthActions } from "../hooks/useAuthActions";
 
@@ -24,6 +25,7 @@ export function LogoutButton({
   children,
   onClick,
 }: LogoutButtonProps) {
+  const { t } = useTranslation();
   const { signOut } = useAuthActions();
   const [pending, setPending] = useState(false);
 
@@ -45,7 +47,8 @@ export function LogoutButton({
       disabled={pending}
       onClick={() => void handleClick()}
     >
-      {children ?? (everywhere ? "Sign out everywhere" : "Sign out")}
+      {children ??
+        (everywhere ? t("auth.logout.signOutEverywhere") : t("auth.logout.signOut"))}
     </button>
   );
 }

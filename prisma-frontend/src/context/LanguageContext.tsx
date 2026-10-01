@@ -1,8 +1,11 @@
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { defaultLocale, normalizeLocale, type Locale } from "@/i18n/config";
+import { languages } from "@/i18n/languages";
 
-export type LanguageCode = "en" | "ar" | "es" | "de";
+/** Alias kept for existing imports; the list of codes lives in i18n/config.ts. */
+export type LanguageCode = Locale;
 
 export type Language = {
   code: LanguageCode;
@@ -11,12 +14,12 @@ export type Language = {
   flag?: string;
 };
 
-export const AVAILABLE_LANGUAGES: Language[] = [
-  { code: "en", name: "English", dir: "ltr" },
-  { code: "ar", name: "العربية", dir: "rtl" },
-  { code: "es", name: "Español", dir: "ltr" },
-  { code: "de", name: "Deutsch", dir: "ltr" },
-];
+/** Derived from i18n/languages.ts, so only languages that really have translations are offered. */
+export const AVAILABLE_LANGUAGES: Language[] = languages.map((l) => ({
+  code: l.id,
+  name: l.name,
+  dir: l.dir,
+}));
 
 type LanguageContextType = {
   language: LanguageCode;
@@ -32,23 +35,21 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { i18n } = useTranslation();
-  const [language, setLanguageState] = useState<LanguageCode>(() => {
-    const currentLng = (i18n.resolvedLanguage || i18n.language || "en") as LanguageCode;
-    return AVAILABLE_LANGUAGES.some((lang) => lang.code === currentLng)
-      ? currentLng
-      : "en";
-  });
+  const [language, setLanguageState] = useState<LanguageCode>(
+    () => normalizeLocale(i18n.resolvedLanguage || i18n.language) ?? defaultLocale,
+  );
 
   const currentLanguage =
     AVAILABLE_LANGUAGES.find((lang) => lang.code === language) ||
+    AVAILABLE_LANGUAGES.find((lang) => lang.code === defaultLocale) ||
     AVAILABLE_LANGUAGES[0];
   const dir = currentLanguage.dir;
 
   useEffect(() => {
     const handleLanguageChanged = (lng: string) => {
-      const matched = AVAILABLE_LANGUAGES.find((l) => l.code === lng);
-      if (matched && matched.code !== language) {
-        setLanguageState(matched.code);
+      const next = normalizeLocale(lng);
+      if (next && next !== language) {
+        setLanguageState(next);
       }
     };
 
@@ -61,12 +62,16 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = dir;
-    localStorage.setItem("i18nextLng", language);
-    localStorage.setItem("language", language);
+    try {
+      localStorage.setItem("i18nextLng", language);
+      localStorage.setItem("language", language);
+    } catch {
+      // storage unavailable: the choice just won't survive a reload
+    }
   }, [language, dir]);
 
   const setLanguage = (code: LanguageCode) => {
-    i18n.changeLanguage(code);
+    void i18n.changeLanguage(code);
     setLanguageState(code);
   };
 

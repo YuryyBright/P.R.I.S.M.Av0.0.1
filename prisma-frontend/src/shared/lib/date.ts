@@ -1,3 +1,12 @@
+import i18n from "@/i18n";
+import { INTL_LOCALES, defaultLocale, normalizeLocale } from "@/i18n/config";
+
+/** Intl tag of the active UI language ("uk-UA" / "en-US"). Call at render time so it follows language changes. */
+export function currentDateLocale(): string {
+  const lng = normalizeLocale(i18n.resolvedLanguage || i18n.language) ?? defaultLocale;
+  return INTL_LOCALES[lng];
+}
+
 /**
  * FastAPI serialises naive datetimes WITHOUT an offset ("2026-09-30T12:00:00").
  * `new Date()` would read that as LOCAL time. We assume the backend stores UTC
@@ -11,12 +20,12 @@ export function parseApiDate(value?: string | null): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-export function formatDateTime(value?: string | null, locale = "uk-UA"): string {
+export function formatDateTime(value?: string | null, locale = currentDateLocale()): string {
   const d = parseApiDate(value);
   return d ? d.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" }) : "—";
 }
 
-export function formatDate(value?: string | null, locale = "uk-UA"): string {
+export function formatDate(value?: string | null, locale = currentDateLocale()): string {
   const d = parseApiDate(value);
   return d ? d.toLocaleDateString(locale, { dateStyle: "medium" }) : "—";
 }

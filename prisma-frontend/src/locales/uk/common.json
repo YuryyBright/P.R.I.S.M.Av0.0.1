@@ -1,0 +1,428 @@
+{
+  "common": {
+    "home": "Головна",
+    "edit": "Редагувати",
+    "close": "Закрити",
+    "saveChanges": "Зберегти зміни",
+    "viewMore": "Докладніше",
+    "delete": "Видалити",
+    "filter": "Фільтр",
+    "seeAll": "Показати всі",
+    "cancel": "Скасувати",
+    "save": "Зберегти",
+    "saving": "Збереження…",
+    "deleting": "Видалення…",
+    "loading": "Завантаження…",
+    "add": "Додати",
+    "remove": "Прибрати"
+  },
+  "app": {
+    "name": "P.R.I.S.M.A"
+  },
+  "sidebar": {
+    "groups": {
+      "main": "Головне",
+      "management": "Керування",
+      "account": "Акаунт",
+      "menu": "Меню",
+      "support": "Підтримка",
+      "others": "Інше",
+      "tools": "Інструменти"
+    },
+    "badges": {
+      "new": "нове",
+      "pro": "pro"
+    },
+    "items": {
+      "home": "Головна",
+      "users": "Користувачі",
+      "profile": "Мій профіль і доступи",
+      "settings": "Налаштування",
+      "changePassword": "Змінити пароль",
+      "collections": "Колекції"
+    },
+    "widget": {
+      "title": "№1 дашборд на Tailwind CSS",
+      "description": "Провідний шаблон адмін-панелі на Tailwind CSS із понад 500 UI-компонентами та сторінками.",
+      "purchasePlan": "Придбати план"
+    }
+  },
+  "header": {
+    "searchPlaceholder": "Пошук або команда…",
+    "toggleSidebar": "Згорнути/розгорнути меню",
+    "notifications": {
+      "title": "Сповіщення",
+      "requestsPermission": "просить дозвіл змінити",
+      "project": "Проєкт",
+      "minAgo": "{count} хв тому",
+      "hrAgo": "{count} год тому",
+      "viewAll": "Усі сповіщення"
+    }
+  },
+  "userDropdown": {
+    "editProfile": "Мій профіль і доступи",
+    "accountSettings": "Налаштування",
+    "support": "Підтримка",
+    "language": "Мова",
+    "signOut": "Вийти"
+  },
+  "errors": {
+    "forbidden": {
+      "title": "Немає доступу",
+      "description": "У вашої ролі немає потрібного дозволу для цього розділу.",
+      "backHome": "На головну"
+    },
+    "notFound": {
+      "title": "Сторінку не знайдено",
+      "description": "Такої сторінки не існує або її було переміщено.",
+      "backHome": "На головну"
+    },
+    "unexpected": "Сталася непередбачена помилка",
+    "api": {
+      "requestFailed": "Запит не виконано ({status})",
+      "requestFailedNoStatus": "Запит не виконано",
+      "validation": "Помилка валідації",
+      "network": "Помилка мережі. Перевірте з’єднання.",
+      "tooManyRequests": "Забагато запитів. Спробуйте пізніше."
+    }
+  },
+  "home": {
+    "title": "Вітаємо в P.R.I.S.M.A",
+    "greeting": "Вітаємо, {name}",
+    "subtitle": "Ви увійшли в систему. Скористайтеся меню ліворуч для навігації.",
+    "stats": {
+      "status": "Статус акаунта",
+      "active": "Активний",
+      "inactive": "Неактивний",
+      "roles": "Ролі",
+      "permissions": "Дозволи",
+      "accessLevel": "Рівень доступу",
+      "superuser": "Суперкористувач",
+      "regular": "За ролями"
+    },
+    "quickLinks": {
+      "title": "Швидкий доступ",
+      "profile": "Мій профіль і доступи",
+      "profileHint": "Ваші ролі та дозволи",
+      "settings": "Налаштування",
+      "settingsHint": "Тема, мова, безпека",
+      "users": "Користувачі",
+      "usersHint": "Керування акаунтами та ролями"
+    },
+    "placeholder": {
+      "title": "Дашборд незабаром",
+      "description": "Це заглушка. Тут з’являться віджети, звіти та активність."
+    }
+  },
+  "access": {
+    "title": "Профіль і доступи",
+    "profileCard": {
+      "verified": "Email підтверджено",
+      "notVerified": "Email не підтверджено",
+      "active": "Активний",
+      "inactive": "Неактивний",
+      "superuser": "Суперкористувач"
+    },
+    "roles": {
+      "title": "Ролі",
+      "empty": "Ролей ще не призначено.",
+      "noDescription": "Без опису"
+    },
+    "permissions": {
+      "title": "Дозволи",
+      "count": "усього {count}",
+      "search": "Фільтр дозволів…",
+      "empty": "Дозволів не надано.",
+      "noMatch": "За вашим фільтром нічого не знайдено."
+    },
+    "superuserNote": "Суперкористувач: повний доступ до всіх розділів незалежно від призначених ролей.",
+    "groups": {
+      "users": "Користувачі",
+      "self": "Власний профіль",
+      "roles": "Ролі",
+      "other": "Інше"
+    },
+    "actions": {
+      "read": "перегляд",
+      "create": "створення",
+      "update": "редагування",
+      "delete": "видалення",
+      "update_profile": "редагування профілю"
+    }
+  },
+  "settings": {
+    "title": "Налаштування",
+    "subtitle": "Особисті параметри та безпека акаунта.",
+    "profile": {
+      "title": "Особисті дані",
+      "firstName": "Ім’я",
+      "lastName": "Прізвище",
+      "phone": "Телефон",
+      "email": "Email",
+      "emailHint": "Email може змінити лише адміністратор.",
+      "save": "Зберегти зміни",
+      "saving": "Збереження…",
+      "saved": "Зміни збережено.",
+      "nothingToSave": "Немає змін для збереження.",
+      "error": "Не вдалося зберегти зміни."
+    },
+    "appearance": {
+      "title": "Вигляд",
+      "theme": "Тема",
+      "light": "Світла",
+      "dark": "Темна",
+      "language": "Мова"
+    },
+    "security": {
+      "title": "Безпека",
+      "changePassword": "Змінити пароль",
+      "changePasswordHint": "Встановіть новий пароль для свого акаунта.",
+      "signOutThis": "Вийти",
+      "signOutEverywhere": "Вийти на всіх пристроях",
+      "signOutHint": "Завершує поточну сесію або всі активні сесії."
+    }
+  },
+  "shared": {
+    "loading": "Завантаження…",
+    "pagination": {
+      "perPage": "{size} / стор.",
+      "prev": "Назад",
+      "next": "Далі"
+    },
+    "passwordInput": {
+      "show": "Показати пароль",
+      "hide": "Сховати пароль"
+    },
+    "passwordStrength": {
+      "rules": {
+        "length": "Щонайменше 8 символів",
+        "case": "Великі та малі літери",
+        "number": "Цифра",
+        "symbol": "Спеціальний символ"
+      },
+      "levels": {
+        "0": "Дуже слабкий",
+        "1": "Слабкий",
+        "2": "Середній",
+        "3": "Добрий",
+        "4": "Надійний"
+      }
+    }
+  },
+  "auth": {
+    "brand": {
+      "tagline": "Інтелектуальна платформа",
+      "headlineLine1": "Інтелект,",
+      "headlineLine2": "спрощений.",
+      "subtext": "Безпечний робочий простір для керування даними, користувачами та процесами.",
+      "secure": "Безпечна автентифікація"
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Пароль",
+      "firstName": "Ім’я",
+      "lastName": "Прізвище",
+      "confirmPassword": "Підтвердіть пароль",
+      "currentPassword": "Поточний пароль",
+      "newPassword": "Новий пароль",
+      "confirmNewPassword": "Підтвердіть новий пароль"
+    },
+    "placeholders": {
+      "email": "you@example.com",
+      "enterPassword": "Введіть пароль",
+      "createPassword": "Створіть пароль",
+      "repeatPassword": "Повторіть пароль",
+      "enterCurrentPassword": "Введіть поточний пароль",
+      "createNewPassword": "Створіть новий пароль",
+      "repeatNewPassword": "Повторіть новий пароль"
+    },
+    "errors": {
+      "passwordsMismatch": "Паролі не збігаються",
+      "missingToken": "У посиланні відсутній токен."
+    },
+    "checkEmail": "Перевірте пошту",
+    "goToSignIn": "Перейти до входу",
+    "backToSignIn": "Назад до входу",
+    "signIn": {
+      "title": "З поверненням.",
+      "subtitle": "Увійдіть, щоб продовжити роботу у вашому просторі P.R.I.S.M.A.",
+      "forgot": "Забули пароль?",
+      "submit": "Увійти",
+      "pending": "Вхід…",
+      "newTo": "Вперше в P.R.I.S.M.A.?",
+      "createAccount": "Створити акаунт",
+      "didntGetEmail": "Не отримали лист?",
+      "resend": "Надіслати лист підтвердження повторно",
+      "resendIn": "Повторно через {seconds} с",
+      "agreement": "Продовжуючи, ви погоджуєтеся з <terms>Умовами використання</terms> та <privacy>Політикою конфіденційності</privacy> P.R.I.S.M.A."
+    },
+    "signUp": {
+      "title": "Створити акаунт",
+      "subtitle": "Заповніть дані, щоб почати.",
+      "submit": "Створити акаунт",
+      "pending": "Створення акаунта…",
+      "haveAccount": "Вже маєте акаунт? Увійти"
+    },
+    "forgot": {
+      "title": "Забули пароль?",
+      "subtitle": "Вкажіть email, і ми надішлемо посилання для скидання пароля.",
+      "submit": "Надіслати посилання",
+      "pending": "Надсилання…"
+    },
+    "reset": {
+      "title": "Встановіть новий пароль",
+      "subtitle": "Оберіть надійний пароль, якого ви ще не використовували.",
+      "submit": "Скинути пароль",
+      "pending": "Збереження…",
+      "doneTitle": "Пароль оновлено"
+    },
+    "verify": {
+      "loadingTitle": "Підтверджуємо ваш email",
+      "loadingText": "Це займе лише мить.",
+      "okTitle": "Email підтверджено",
+      "errorTitle": "Не вдалося підтвердити"
+    },
+    "changePassword": {
+      "pageTitle": "Зміна пароля",
+      "cardTitle": "Оновіть свій пароль",
+      "cardHint": "Після зміни всі інші ваші сесії буде завершено.",
+      "submit": "Змінити пароль",
+      "pending": "Збереження…"
+    },
+    "logout": {
+      "signOut": "Вийти",
+      "signOutEverywhere": "Вийти на всіх пристроях"
+    }
+  },
+  "users": {
+    "title": "Користувачі",
+    "loadError": "Не вдалося завантажити користувачів",
+    "pagination": {
+      "total_one": "{count} користувач",
+      "total_few": "{count} користувачі",
+      "total_many": "{count} користувачів",
+      "total_other": "{count} користувача"
+    },
+    "toolbar": {
+      "searchPlaceholder": "Пошук за email",
+      "orderDefault": "Типовий порядок",
+      "orderCreatedAt": "За датою створення",
+      "add": "+ Додати користувача"
+    },
+    "table": {
+      "selectAll": "Вибрати всіх",
+      "selectRow": "Вибрати {email}",
+      "columns": {
+        "user": "Користувач",
+        "roles": "Ролі",
+        "status": "Статус",
+        "expires": "Діє до",
+        "created": "Створено"
+      },
+      "empty": "Користувачів не знайдено."
+    },
+    "status": {
+      "active": "Активний",
+      "inactive": "Неактивний",
+      "locked": "Заблокований",
+      "unverified": "Не підтверджений"
+    },
+    "form": {
+      "titleAdd": "Додати користувача",
+      "titleEdit": "Редагувати користувача",
+      "email": "Email",
+      "firstName": "Ім’я",
+      "lastName": "Прізвище",
+      "phone": "Телефон",
+      "password": "Пароль",
+      "passwordKeep": "Новий пароль (залиште порожнім, щоб не змінювати)",
+      "expires": "Акаунт діє до",
+      "active": "Активний",
+      "superuser": "Суперкористувач",
+      "validation": {
+        "email": "Вкажіть коректний email",
+        "passwordRequired": "Пароль обов’язковий"
+      }
+    },
+    "delete": {
+      "title": "Видалити користувача",
+      "self": "Ви не можете видалити власний акаунт.",
+      "confirm": "Видалити {name}? Цю дію неможливо скасувати.",
+      "confirmGeneric": "Видалити цього користувача? Цю дію неможливо скасувати."
+    }
+  },
+  "collections": {
+    "title": "Колекції",
+    "loadError": "Не вдалося завантажити колекції",
+    "pagination": {
+      "total_one": "{count} колекція",
+      "total_few": "{count} колекції",
+      "total_many": "{count} колекцій",
+      "total_other": "{count} колекції"
+    },
+    "toolbar": {
+      "new": "+ Нова колекція"
+    },
+    "table": {
+      "columns": {
+        "collection": "Колекція",
+        "visibility": "Видимість",
+        "myRole": "Моя роль",
+        "created": "Створено"
+      },
+      "empty": "Колекцій не знайдено.",
+      "members": "Учасники"
+    },
+    "visibility": {
+      "private": {
+        "label": "Приватна",
+        "hint": "Лише ви та учасники"
+      },
+      "shared": {
+        "label": "Спільна",
+        "hint": "Ви та явно запрошені учасники"
+      },
+      "public": {
+        "label": "Публічна",
+        "hint": "Усі, хто має доступ до перегляду колекцій"
+      }
+    },
+    "memberRole": {
+      "viewer": "Глядач",
+      "editor": "Редактор"
+    },
+    "roles": {
+      "owner": "Власник",
+      "editor": "Редактор",
+      "viewer": "Глядач"
+    },
+    "form": {
+      "titleNew": "Нова колекція",
+      "titleEdit": "Редагувати колекцію",
+      "name": "Назва",
+      "description": "Опис",
+      "visibility": "Видимість",
+      "created": "Колекцію створено",
+      "updated": "Колекцію оновлено",
+      "validation": {
+        "nameRequired": "Назва обов’язкова",
+        "nameMax": "Максимум 255 символів",
+        "descriptionMax": "Максимум 5000 символів"
+      }
+    },
+    "delete": {
+      "title": "Видалити колекцію",
+      "deleted": "Колекцію видалено",
+      "confirm": "Видалити «{name}»? Вона зникне одразу, а її документи та вектори буде видалено у фоновому режимі. Цю дію неможливо скасувати.",
+      "confirmGeneric": "Видалити цю колекцію? Вона зникне одразу, а її документи та вектори буде видалено у фоновому режимі. Цю дію неможливо скасувати."
+    },
+    "members": {
+      "title": "Учасники — {name}",
+      "titleGeneric": "Учасники",
+      "owner": "Власник:",
+      "userIdPlaceholder": "UUID користувача",
+      "invalidUuid": "Вкажіть коректний UUID користувача",
+      "empty": "Учасників ще немає."
+    }
+  }
+}

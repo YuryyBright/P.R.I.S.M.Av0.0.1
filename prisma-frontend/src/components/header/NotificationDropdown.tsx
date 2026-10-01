@@ -1,10 +1,12 @@
 import { cn } from "@/utils";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
 export default function NotificationDropdown() {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [notifying, setNotifying] = useState(true);
 
@@ -58,7 +60,7 @@ export default function NotificationDropdown() {
       >
         <div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-700">
           <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            Notification
+            {t("header.notifications.title")}
           </h5>
           <button
             onClick={toggleDropdown}
@@ -104,16 +106,16 @@ export default function NotificationDropdown() {
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Terry Franci
                   </span>
-                  <span> requests permission to change</span>
+                  <span> {t("header.notifications.requestsPermission")}</span>
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Project - Nganter App
                   </span>
                 </span>
 
                 <span className="flex items-center gap-2 text-theme-xs text-gray-500 dark:text-gray-400">
-                  <span>Project</span>
+                  <span>{t("header.notifications.project")}</span>
                   <span className="h-1 w-1 rounded-full bg-gray-400"></span>
-                  <span>5 min ago</span>
+                  <span>{t("header.notifications.minAgo", { count: 5 })}</span>
                 </span>
               </span>
             </DropdownItem>
@@ -140,16 +142,16 @@ export default function NotificationDropdown() {
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Alena Franci
                   </span>
-                  <span>requests permission to change</span>
+                  <span> {t("header.notifications.requestsPermission")}</span>
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Project - Nganter App
                   </span>
                 </span>
 
                 <span className="flex items-center gap-2 text-theme-xs text-gray-500 dark:text-gray-400">
-                  <span>Project</span>
+                  <span>{t("header.notifications.project")}</span>
                   <span className="h-1 w-1 rounded-full bg-gray-400"></span>
-                  <span>8 min ago</span>
+                  <span>{t("header.notifications.minAgo", { count: 8 })}</span>
                 </span>
               </span>
             </DropdownItem>
@@ -176,16 +178,16 @@ export default function NotificationDropdown() {
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Jocelyn Kenter
                   </span>
-                  <span> requests permission to change</span>
+                  <span> {t("header.notifications.requestsPermission")}</span>
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Project - Nganter App
                   </span>
                 </span>
 
                 <span className="flex items-center gap-2 text-theme-xs text-gray-500 dark:text-gray-400">
-                  <span>Project</span>
+                  <span>{t("header.notifications.project")}</span>
                   <span className="h-1 w-1 rounded-full bg-gray-400"></span>
-                  <span>15 min ago</span>
+                  <span>{t("header.notifications.minAgo", { count: 15 })}</span>
                 </span>
               </span>
             </DropdownItem>
@@ -213,16 +215,16 @@ export default function NotificationDropdown() {
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Brandon Philips
                   </span>
-                  <span>requests permission to change</span>
+                  <span> {t("header.notifications.requestsPermission")}</span>
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Project - Nganter App
                   </span>
                 </span>
 
                 <span className="flex items-center gap-2 text-theme-xs text-gray-500 dark:text-gray-400">
-                  <span>Project</span>
+                  <span>{t("header.notifications.project")}</span>
                   <span className="h-1 w-1 rounded-full bg-gray-400"></span>
-                  <span>1 hr ago</span>
+                  <span>{t("header.notifications.hrAgo", { count: 1 })}</span>
                 </span>
               </span>
             </DropdownItem>
@@ -249,16 +251,16 @@ export default function NotificationDropdown() {
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Terry Franci
                   </span>
-                  <span> requests permission to change</span>
+                  <span> {t("header.notifications.requestsPermission")}</span>
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Project - Nganter App
                   </span>
                 </span>
 
                 <span className="flex items-center gap-2 text-theme-xs text-gray-500 dark:text-gray-400">
-                  <span>Project</span>
+                  <span>{t("header.notifications.project")}</span>
                   <span className="h-1 w-1 rounded-full bg-gray-400"></span>
-                  <span>5 min ago</span>
+                  <span>{t("header.notifications.minAgo", { count: 5 })}</span>
                 </span>
               </span>
             </DropdownItem>
@@ -285,16 +287,16 @@ export default function NotificationDropdown() {
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Alena Franci
                   </span>
-                  <span> requests permission to change</span>
+                  <span> {t("header.notifications.requestsPermission")}</span>
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Project - Nganter App
                   </span>
                 </span>
 
                 <span className="flex items-center gap-2 text-theme-xs text-gray-500 dark:text-gray-400">
-                  <span>Project</span>
+                  <span>{t("header.notifications.project")}</span>
                   <span className="h-1 w-1 rounded-full bg-gray-400"></span>
-                  <span>8 min ago</span>
+                  <span>{t("header.notifications.minAgo", { count: 8 })}</span>
                 </span>
               </span>
             </DropdownItem>
@@ -321,16 +323,16 @@ export default function NotificationDropdown() {
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Jocelyn Kenter
                   </span>
-                  <span> requests permission to change</span>
+                  <span> {t("header.notifications.requestsPermission")}</span>
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Project - Nganter App
                   </span>
                 </span>
 
                 <span className="flex items-center gap-2 text-theme-xs text-gray-500 dark:text-gray-400">
-                  <span>Project</span>
+                  <span>{t("header.notifications.project")}</span>
                   <span className="h-1 w-1 rounded-full bg-gray-400"></span>
-                  <span>15 min ago</span>
+                  <span>{t("header.notifications.minAgo", { count: 15 })}</span>
                 </span>
               </span>
             </DropdownItem>
@@ -357,16 +359,16 @@ export default function NotificationDropdown() {
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Brandon Philips
                   </span>
-                  <span>requests permission to change</span>
+                  <span> {t("header.notifications.requestsPermission")}</span>
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Project - Nganter App
                   </span>
                 </span>
 
                 <span className="flex items-center gap-2 text-theme-xs text-gray-500 dark:text-gray-400">
-                  <span>Project</span>
+                  <span>{t("header.notifications.project")}</span>
                   <span className="h-1 w-1 rounded-full bg-gray-400"></span>
-                  <span>1 hr ago</span>
+                  <span>{t("header.notifications.hrAgo", { count: 1 })}</span>
                 </span>
               </span>
             </DropdownItem>
@@ -377,7 +379,7 @@ export default function NotificationDropdown() {
           to="/"
           className="mt-3 block rounded-lg border border-gray-300 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
         >
-          View All Notifications
+          {t("header.notifications.viewAll")}
         </Link>
       </Dropdown>
     </div>

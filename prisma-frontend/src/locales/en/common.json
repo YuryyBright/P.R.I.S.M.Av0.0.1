@@ -7,13 +7,24 @@
     "viewMore": "View More",
     "delete": "Delete",
     "filter": "Filter",
-    "seeAll": "See all"
+    "seeAll": "See all",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "deleting": "Deleting…",
+    "loading": "Loading…",
+    "add": "Add",
+    "remove": "Remove"
   },
   "sidebar": {
     "groups": {
       "menu": "Menu",
       "support": "Support",
-      "others": "Others"
+      "others": "Others",
+      "main": "Main",
+      "management": "Management",
+      "account": "Account",
+      "tools": "Tools"
     },
     "badges": {
       "new": "new",
@@ -120,7 +131,13 @@
       "supportReply": "Ticket Reply",
       "email": "Email",
       "inbox": "Inbox",
-      "inboxDetails": "Details"
+      "inboxDetails": "Details",
+      "home": "Home",
+      "users": "Users",
+      "collections": "Collections",
+      "profile": "My profile & access",
+      "settings": "Settings",
+      "changePassword": "Change password"
     },
     "widget": {
       "title": "#1 Tailwind CSS Dashboard",
@@ -875,6 +892,364 @@
         "completed": "Completed",
         "inProgress": "In Progress"
       }
+    }
+  },
+  "app": {
+    "name": "P.R.I.S.M.A"
+  },
+  "errors": {
+    "unexpected": "Unexpected error",
+    "api": {
+      "requestFailed": "Request failed ({status})",
+      "requestFailedNoStatus": "Request failed",
+      "validation": "Validation error",
+      "network": "Network error. Check your connection.",
+      "tooManyRequests": "Too many requests. Try again later."
+    },
+    "forbidden": {
+      "title": "Access denied",
+      "description": "Your role does not have the permission required for this section.",
+      "backHome": "Back to home"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "This page does not exist or has been moved.",
+      "backHome": "Back to home"
+    }
+  },
+  "home": {
+    "title": "Welcome to P.R.I.S.M.A",
+    "greeting": "Welcome, {name}",
+    "subtitle": "You are signed in. Use the menu on the left to navigate.",
+    "stats": {
+      "status": "Account status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "roles": "Roles",
+      "permissions": "Permissions",
+      "accessLevel": "Access level",
+      "superuser": "Superuser",
+      "regular": "By roles"
+    },
+    "quickLinks": {
+      "title": "Quick access",
+      "profile": "My profile & access",
+      "profileHint": "Your roles and permissions",
+      "settings": "Settings",
+      "settingsHint": "Theme, language, security",
+      "users": "Users",
+      "usersHint": "Manage accounts and roles"
+    },
+    "placeholder": {
+      "title": "Dashboard coming soon",
+      "description": "This is a placeholder. Widgets, reports and activity will appear here."
+    }
+  },
+  "access": {
+    "title": "Profile & access",
+    "profileCard": {
+      "verified": "Email verified",
+      "notVerified": "Email not verified",
+      "active": "Active",
+      "inactive": "Inactive",
+      "superuser": "Superuser"
+    },
+    "roles": {
+      "title": "Roles",
+      "empty": "No roles assigned yet.",
+      "noDescription": "No description"
+    },
+    "permissions": {
+      "title": "Permissions",
+      "count": "{count} total",
+      "search": "Filter permissions…",
+      "empty": "No permissions granted.",
+      "noMatch": "Nothing matches your filter."
+    },
+    "superuserNote": "Superuser: full access to every section regardless of assigned roles.",
+    "groups": {
+      "users": "Users",
+      "self": "Own profile",
+      "roles": "Roles",
+      "other": "Other"
+    },
+    "actions": {
+      "read": "view",
+      "create": "create",
+      "update": "edit",
+      "delete": "delete",
+      "update_profile": "edit profile"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Personal preferences and account security.",
+    "profile": {
+      "title": "Personal details",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "email": "Email",
+      "emailHint": "Only an administrator can change the email.",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saved": "Changes saved.",
+      "nothingToSave": "No changes to save.",
+      "error": "Could not save changes."
+    },
+    "appearance": {
+      "title": "Appearance",
+      "theme": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "language": "Language"
+    },
+    "security": {
+      "title": "Security",
+      "changePassword": "Change password",
+      "changePasswordHint": "Set a new password for your account.",
+      "signOutThis": "Sign out",
+      "signOutEverywhere": "Sign out on all devices",
+      "signOutHint": "Ends the current session or all active sessions."
+    }
+  },
+  "shared": {
+    "loading": "Loading…",
+    "pagination": {
+      "perPage": "{size} / page",
+      "prev": "Prev",
+      "next": "Next"
+    },
+    "passwordInput": {
+      "show": "Show password",
+      "hide": "Hide password"
+    },
+    "passwordStrength": {
+      "rules": {
+        "length": "At least 8 characters",
+        "case": "Upper and lower case letters",
+        "number": "A number",
+        "symbol": "A symbol"
+      },
+      "levels": {
+        "0": "Too weak",
+        "1": "Weak",
+        "2": "Fair",
+        "3": "Good",
+        "4": "Strong"
+      }
+    }
+  },
+  "auth": {
+    "brand": {
+      "tagline": "Intelligence Platform",
+      "headlineLine1": "Intelligence,",
+      "headlineLine2": "simplified.",
+      "subtext": "A secure workspace for managing your data, users and operations.",
+      "secure": "Secure authentication"
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "confirmPassword": "Confirm password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmNewPassword": "Confirm new password"
+    },
+    "placeholders": {
+      "email": "you@example.com",
+      "enterPassword": "Enter your password",
+      "createPassword": "Create a password",
+      "repeatPassword": "Repeat the password",
+      "enterCurrentPassword": "Enter your current password",
+      "createNewPassword": "Create a new password",
+      "repeatNewPassword": "Repeat the new password"
+    },
+    "errors": {
+      "passwordsMismatch": "Passwords do not match",
+      "missingToken": "The link is missing its token."
+    },
+    "checkEmail": "Check your email",
+    "goToSignIn": "Go to sign in",
+    "backToSignIn": "Back to sign in",
+    "signIn": {
+      "title": "Welcome back.",
+      "subtitle": "Sign in to continue to your P.R.I.S.M.A. workspace.",
+      "forgot": "Forgot password?",
+      "submit": "Sign in",
+      "pending": "Signing in…",
+      "newTo": "New to P.R.I.S.M.A.?",
+      "createAccount": "Create an account",
+      "didntGetEmail": "Didn't get the email?",
+      "resend": "Resend verification email",
+      "resendIn": "Resend in {seconds}s",
+      "agreement": "By continuing, you agree to the P.R.I.S.M.A. <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
+    },
+    "signUp": {
+      "title": "Create account",
+      "subtitle": "Fill in the details to get started.",
+      "submit": "Create account",
+      "pending": "Creating account…",
+      "haveAccount": "Already have an account? Sign in"
+    },
+    "forgot": {
+      "title": "Forgot password?",
+      "subtitle": "Enter your email and we will send you a reset link.",
+      "submit": "Send reset link",
+      "pending": "Sending…"
+    },
+    "reset": {
+      "title": "Set a new password",
+      "subtitle": "Choose a strong password you have not used before.",
+      "submit": "Reset password",
+      "pending": "Saving…",
+      "doneTitle": "Password updated"
+    },
+    "verify": {
+      "loadingTitle": "Verifying your email",
+      "loadingText": "This will only take a moment.",
+      "okTitle": "Email verified",
+      "errorTitle": "Verification failed"
+    },
+    "changePassword": {
+      "pageTitle": "Change password",
+      "cardTitle": "Update your password",
+      "cardHint": "After the change, all your other sessions will be signed out.",
+      "submit": "Change password",
+      "pending": "Saving…"
+    },
+    "logout": {
+      "signOut": "Sign out",
+      "signOutEverywhere": "Sign out everywhere"
+    }
+  },
+  "users": {
+    "title": "Users",
+    "loadError": "Failed to load users",
+    "pagination": {
+      "total_one": "{count} user",
+      "total_other": "{count} users"
+    },
+    "toolbar": {
+      "searchPlaceholder": "Search by email",
+      "orderDefault": "Default order",
+      "orderCreatedAt": "By created date",
+      "add": "+ Add user"
+    },
+    "table": {
+      "selectAll": "Select all",
+      "selectRow": "Select {email}",
+      "columns": {
+        "user": "User",
+        "roles": "Roles",
+        "status": "Status",
+        "expires": "Expires",
+        "created": "Created"
+      },
+      "empty": "No users found."
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "locked": "Locked",
+      "unverified": "Unverified"
+    },
+    "form": {
+      "titleAdd": "Add user",
+      "titleEdit": "Edit user",
+      "email": "Email",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "password": "Password",
+      "passwordKeep": "New password (leave blank to keep)",
+      "expires": "Account expires",
+      "active": "Active",
+      "superuser": "Superuser",
+      "validation": {
+        "email": "Enter a valid email",
+        "passwordRequired": "Password is required"
+      }
+    },
+    "delete": {
+      "title": "Delete user",
+      "self": "You can't delete your own account.",
+      "confirm": "Delete {name}? This cannot be undone.",
+      "confirmGeneric": "Delete this user? This cannot be undone."
+    }
+  },
+  "collections": {
+    "title": "Collections",
+    "loadError": "Failed to load collections",
+    "pagination": {
+      "total_one": "{count} collection",
+      "total_other": "{count} collections"
+    },
+    "toolbar": {
+      "new": "+ New collection"
+    },
+    "table": {
+      "columns": {
+        "collection": "Collection",
+        "visibility": "Visibility",
+        "myRole": "My role",
+        "created": "Created"
+      },
+      "empty": "No collections found.",
+      "members": "Members"
+    },
+    "visibility": {
+      "private": {
+        "label": "Private",
+        "hint": "Only you and members"
+      },
+      "shared": {
+        "label": "Shared",
+        "hint": "You and explicitly invited members"
+      },
+      "public": {
+        "label": "Public",
+        "hint": "Everyone with collections read access"
+      }
+    },
+    "memberRole": {
+      "viewer": "Viewer",
+      "editor": "Editor"
+    },
+    "roles": {
+      "owner": "Owner",
+      "editor": "Editor",
+      "viewer": "Viewer"
+    },
+    "form": {
+      "titleNew": "New collection",
+      "titleEdit": "Edit collection",
+      "name": "Name",
+      "description": "Description",
+      "visibility": "Visibility",
+      "created": "Collection created",
+      "updated": "Collection updated",
+      "validation": {
+        "nameRequired": "Name is required",
+        "nameMax": "Max 255 characters",
+        "descriptionMax": "Max 5000 characters"
+      }
+    },
+    "delete": {
+      "title": "Delete collection",
+      "deleted": "Collection deleted",
+      "confirm": "Delete \"{name}\"? It disappears immediately; its documents and vectors are removed in the background. This cannot be undone.",
+      "confirmGeneric": "Delete this collection? It disappears immediately; its documents and vectors are removed in the background. This cannot be undone."
+    },
+    "members": {
+      "title": "Members — {name}",
+      "titleGeneric": "Members",
+      "owner": "Owner:",
+      "userIdPlaceholder": "User UUID",
+      "invalidUuid": "Enter a valid user UUID",
+      "empty": "No members yet."
     }
   }
 }

@@ -1,4 +1,6 @@
+import type { TFunction } from "i18next";
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { btnPrimary, btnSecondary, inputClass } from "@/shared/ui/classes";
 import { Alert } from "@/shared/ui/Alert";
@@ -21,15 +23,16 @@ interface Props {
   onSaved?: (message: string) => void;
 }
 
-function validate(v: UserFormValues, isEdit: boolean): Record<string, string> {
+function validate(v: UserFormValues, isEdit: boolean, t: TFunction): Record<string, string> {
   const e: Record<string, string> = {};
-  if (!/^\S+@\S+\.\S+$/.test(v.email.trim())) e.email = "Enter a valid email";
+  if (!/^\S+@\S+\.\S+$/.test(v.email.trim())) e.email = t("users.form.validation.email");
   // Password rules (length, complexity, reuse) live on the server -> show its message.
-  if (!isEdit && !v.password) e.password = "Password is required";
+  if (!isEdit && !v.password) e.password = t("users.form.validation.passwordRequired");
   return e;
 }
 
 export function UserFormModal({ user, onClose, onSaved }: Props) {
+  const { t } = useTranslation();
   const isEdit = Boolean(user);
   const { createUser, updateUser, isMutating } = useUserActions();
   const [values, setValues] = useState<UserFormValues>(() => (user ? userToForm(user) : emptyUserForm));
@@ -42,7 +45,7 @@ export function UserFormModal({ user, onClose, onSaved }: Props) {
   async function submit(e: FormEvent) {
     e.preventDefault();
     setFormError(null);
-    const local = validate(values, isEdit);
+    const local = validate(values, isEdit, t);
     setFieldErrors(local);
     if (Object.keys(local).length) return;
 
@@ -62,7 +65,7 @@ export function UserFormModal({ user, onClose, onSaved }: Props) {
         setFieldErrors(err.fieldErrors);
         setFormError(err.message);
       } else {
-        setFormError("Unexpected error");
+        setFormError(t("errors.unexpected"));
       }
     }
   }
@@ -71,11 +74,11 @@ export function UserFormModal({ user, onClose, onSaved }: Props) {
     <Modal
       open
       onClose={onClose}
-      title={isEdit ? "Edit user" : "Add user"}
+      title={isEdit ? t("users.form.titleEdit") : t("users.form.titleAdd")}
       footer={
         <>
           <button type="button" className={btnSecondary} onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="submit"
@@ -83,28 +86,28 @@ export function UserFormModal({ user, onClose, onSaved }: Props) {
             disabled={isMutating}
             className={btnPrimary}
           >
-            {isMutating ? "Saving…" : "Save"}
+            {isMutating ? t("common.saving") : t("common.save")}
           </button>
         </>
       }
     >
       <form id="user-form" onSubmit={submit} className="space-y-4">
         {formError && <Alert>{formError}</Alert>}
-        <Field label="Email" error={fieldErrors.email}>
+        <Field label={t("users.form.email")} error={fieldErrors.email}>
           <input className={inputClass} type="email" value={values.email} onChange={(e) => set("email", e.target.value)} />
         </Field>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="First name" error={fieldErrors.first_name}>
+          <Field label={t("users.form.firstName")} error={fieldErrors.first_name}>
             <input className={inputClass} value={values.first_name} onChange={(e) => set("first_name", e.target.value)} />
           </Field>
-          <Field label="Last name" error={fieldErrors.last_name}>
+          <Field label={t("users.form.lastName")} error={fieldErrors.last_name}>
             <input className={inputClass} value={values.last_name} onChange={(e) => set("last_name", e.target.value)} />
           </Field>
         </div>
-        <Field label="Phone" error={fieldErrors.contact_phone}>
+        <Field label={t("users.form.phone")} error={fieldErrors.contact_phone}>
           <input className={inputClass} value={values.contact_phone} onChange={(e) => set("contact_phone", e.target.value)} />
         </Field>
-        <Field label={isEdit ? "New password (leave blank to keep)" : "Password"} error={fieldErrors.password}>
+        <Field label={isEdit ? t("users.form.passwordKeep") : t("users.form.password")} error={fieldErrors.password}>
           <input
             className={inputClass}
             type="password"
@@ -113,7 +116,7 @@ export function UserFormModal({ user, onClose, onSaved }: Props) {
             onChange={(e) => set("password", e.target.value)}
           />
         </Field>
-        <Field label="Account expires" error={fieldErrors.expiry_date}>
+        <Field label={t("users.form.expires")} error={fieldErrors.expiry_date}>
           <input
             className={inputClass}
             type="datetime-local"
@@ -124,11 +127,11 @@ export function UserFormModal({ user, onClose, onSaved }: Props) {
         <div className="flex gap-6 text-sm text-gray-700 dark:text-gray-400">
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={values.is_active} onChange={(e) => set("is_active", e.target.checked)} />
-            Active
+            {t("users.form.active")}
           </label>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={values.is_superuser} onChange={(e) => set("is_superuser", e.target.checked)} />
-            Superuser
+            {t("users.form.superuser")}
           </label>
         </div>
       </form>

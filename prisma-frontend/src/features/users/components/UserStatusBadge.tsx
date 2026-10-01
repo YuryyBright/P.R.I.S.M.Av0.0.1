@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { UserStatus } from "../types/user.types";
 
 const STYLES: Record<UserStatus, string> = {
@@ -8,9 +9,10 @@ const STYLES: Record<UserStatus, string> = {
 };
 
 export function UserStatusBadge({ status }: { status: UserStatus }) {
+  const { t } = useTranslation();
   return (
     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-theme-xs font-medium capitalize ${STYLES[status]}`}>
-      {status}
+      {t(`users.status.${status}`)}
     </span>
   );
 }

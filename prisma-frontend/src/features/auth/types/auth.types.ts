@@ -22,6 +22,8 @@ export interface SessionUser {
   is_active: boolean;
   is_superuser: boolean;
   needs_to_change_password?: boolean;
+  /** Present when GET /users/me returns it (serialize_user does); optional until confirmed in the Network tab. */
+  contact_phone?: string | null;
   verified?: boolean;
   roles: SessionRole[];
   /** flat, unique permission names from all roles, e.g. "users.read" */

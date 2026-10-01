@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router";
 import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Alert } from "@/shared/ui/Alert";
@@ -17,6 +18,7 @@ import { useAuthActions } from "../hooks/useAuthActions";
 
 /** /reset-password?token=...  Rendered inside <AuthShell/> (layout route), so no wrapper here. */
 export default function ResetPasswordPage() {
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const token = params.get("token");
   const { confirmPasswordReset, isPending } = useAuthActions();
@@ -29,11 +31,11 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setError(null);
     if (!token) {
-      setError("The link is missing its token.");
+      setError(t("auth.errors.missingToken"));
       return;
     }
     if (password !== confirm) {
-      setError("Passwords do not match");
+      setError(t("auth.errors.passwordsMismatch"));
       return;
     }
     try {
@@ -42,7 +44,7 @@ export default function ResetPasswordPage() {
       );
     } catch (err) {
       // Either the uniform "invalid token" message, or a password-policy / reuse refusal.
-      setError(isNormalizedApiError(err) ? err.message : "Unexpected error");
+      setError(isNormalizedApiError(err) ? err.message : t("errors.unexpected"));
     }
   }
 
@@ -50,9 +52,13 @@ export default function ResetPasswordPage() {
     return (
       <div className="text-center">
         <AuthStatusIcon kind="success" />
-        <AuthHeading align="center" title="Password updated" subtitle={done} />
+        <AuthHeading
+          align="center"
+          title={t("auth.reset.doneTitle")}
+          subtitle={done}
+        />
         <Link to={AUTH_ROUTES.signIn} className={authPrimaryBtnClass}>
-          Go to sign in
+          {t("auth.goToSignIn")}
         </Link>
       </div>
     );
@@ -61,8 +67,8 @@ export default function ResetPasswordPage() {
   return (
     <>
       <AuthHeading
-        title="Set a new password"
-        subtitle="Choose a strong password you have not used before."
+        title={t("auth.reset.title")}
+        subtitle={t("auth.reset.subtitle")}
       />
 
       <form onSubmit={submit} className="space-y-5">
@@ -70,10 +76,10 @@ export default function ResetPasswordPage() {
           {error && <Alert>{error}</Alert>}
         </div>
 
-        <Field label="New password">
+        <Field label={t("auth.fields.newPassword")}>
           <PasswordInput
             autoComplete="new-password"
-            placeholder="Create a password"
+            placeholder={t("auth.placeholders.createPassword")}
             autoFocus
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -81,23 +87,23 @@ export default function ResetPasswordPage() {
           />
         </Field>
 
-        <Field label="Confirm new password">
+        <Field label={t("auth.fields.confirmNewPassword")}>
           <PasswordInput
             autoComplete="new-password"
-            placeholder="Repeat the password"
+            placeholder={t("auth.placeholders.repeatPassword")}
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             required
           />
         </Field>
 
-        <AuthSubmit pending={isPending} pendingLabel="Saving…">
-          Reset password
+        <AuthSubmit pending={isPending} pendingLabel={t("auth.reset.pending")}>
+          {t("auth.reset.submit")}
         </AuthSubmit>
       </form>
 
       <AuthFooter>
-        <BackLink to={AUTH_ROUTES.signIn}>Back to sign in</BackLink>
+        <BackLink to={AUTH_ROUTES.signIn}>{t("auth.backToSignIn")}</BackLink>
       </AuthFooter>
     </>
   );

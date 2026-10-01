@@ -6,7 +6,7 @@ import { useSidebar } from "@/context/SidebarContext";
 import { ScrollToTop } from "@/components/common/ScrollToTop";
 
 export default function AppLayout() {
-  const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+  const { isExpanded, isHovered } = useSidebar();
 
   const sidebarWidth = isExpanded || isHovered ? "xl:ml-72.5" : "xl:ml-22.5";
 

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { Alert } from "@/shared/ui/Alert";
 import { Pagination } from "@/shared/ui/Pagination";
@@ -17,16 +18,17 @@ function EditUserModal({ userId }: { userId: string }) {
 }
 
 export default function UsersPage() {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const ui = useSelector(usersUiSlice.selectors.selectUsersUi);
   const list = useUsersList();
 
   return (
     <div className="space-y-5">
-      <h1 className="text-title-sm font-semibold text-gray-800 dark:text-white/90">Users</h1>
+      <h1 className="text-title-sm font-semibold text-gray-800 dark:text-white/90">{t("users.title")}</h1>
       <UsersToolbar />
 
-      {list.error && <Alert>{(list.error as { message?: string }).message ?? "Failed to load users"}</Alert>}
+      {list.error && <Alert>{(list.error as { message?: string }).message ?? t("users.loadError")}</Alert>}
 
       <UsersTable
         rows={list.rows}
@@ -44,7 +46,7 @@ export default function UsersPage() {
           pages={list.pages}
           total={list.total}
           size={list.size}
-          itemsLabel="users"
+          totalLabel={t("users.pagination.total", { count: list.total })}
           disabled={list.isFetching}
           onPage={(p) => dispatch(usersUiActions.setPage(p))}
           onSize={(s) => dispatch(usersUiActions.setSize(s))}

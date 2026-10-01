@@ -4,7 +4,8 @@ import { getLanguage, languages, type Locale } from "@/i18n/languages";
 import { cn } from "@/utils";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AUTH_ROUTES, LogoutButton, useSession } from "@/features/auth";
+import { ACCOUNT_ROUTES } from "@/features/account";
+import { LogoutButton, useSession } from "@/features/auth";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
@@ -102,7 +103,7 @@ export default function UserDropdown() {
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
-              to="/profile"
+              to={ACCOUNT_ROUTES.profile}
               className="group flex items-center gap-3 rounded-lg px-3 py-2 text-theme-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
             >
               <svg
@@ -127,7 +128,7 @@ export default function UserDropdown() {
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
-              to={AUTH_ROUTES.changePassword}
+              to={ACCOUNT_ROUTES.settings}
               className="group flex items-center gap-3 rounded-lg px-3 py-2 text-theme-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
             >
               <svg

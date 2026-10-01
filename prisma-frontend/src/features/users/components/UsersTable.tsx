@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Can } from "@/features/auth";
 import { formatDate, formatDateTime } from "@/shared/lib/date";
 import type { UUID } from "@/shared/types/api";
@@ -20,6 +21,7 @@ const th = "px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:te
 const td = "px-5 py-4 text-theme-sm text-gray-700 dark:text-gray-300";
 
 export function UsersTable({ rows, isLoading, selectedIds, onToggle, onToggleAll, onEdit, onDelete }: Props) {
+  const { t } = useTranslation();
   const allChecked = rows.length > 0 && rows.every((r) => selectedIds.includes(r.id));
 
   return (
@@ -31,28 +33,28 @@ export function UsersTable({ rows, isLoading, selectedIds, onToggle, onToggleAll
               <th className={th}>
                 <input
                   type="checkbox"
-                  aria-label="Select all"
+                  aria-label={t("users.table.selectAll")}
                   checked={allChecked}
                   onChange={(e) => onToggleAll(rows.map((r) => r.id), e.target.checked)}
                 />
               </th>
-              <th className={th}>User</th>
-              <th className={th}>Roles</th>
-              <th className={th}>Status</th>
-              <th className={th}>Expires</th>
-              <th className={th}>Created</th>
+              <th className={th}>{t("users.table.columns.user")}</th>
+              <th className={th}>{t("users.table.columns.roles")}</th>
+              <th className={th}>{t("users.table.columns.status")}</th>
+              <th className={th}>{t("users.table.columns.expires")}</th>
+              <th className={th}>{t("users.table.columns.created")}</th>
               <th className={th} />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
             {isLoading && (
               <tr>
-                <td className={td} colSpan={7}>Loading…</td>
+                <td className={td} colSpan={7}>{t("common.loading")}</td>
               </tr>
             )}
             {!isLoading && rows.length === 0 && (
               <tr>
-                <td className={td} colSpan={7}>No users found.</td>
+                <td className={td} colSpan={7}>{t("users.table.empty")}</td>
               </tr>
             )}
             {rows.map((u) => (
@@ -60,7 +62,7 @@ export function UsersTable({ rows, isLoading, selectedIds, onToggle, onToggleAll
                 <td className={td}>
                   <input
                     type="checkbox"
-                    aria-label={`Select ${u.email}`}
+                    aria-label={t("users.table.selectRow", { email: u.email })}
                     checked={selectedIds.includes(u.id)}
                     onChange={() => onToggle(u.id)}
                   />
@@ -87,12 +89,12 @@ export function UsersTable({ rows, isLoading, selectedIds, onToggle, onToggleAll
                 <td className={`${td} whitespace-nowrap text-end`}>
                   <Can permission={USER_PERMISSIONS.update}>
                     <button className="mr-3 text-brand-500 hover:underline" onClick={() => onEdit(u.id)}>
-                      Edit
+                      {t("common.edit")}
                     </button>
                   </Can>
                   <Can permission={USER_PERMISSIONS.delete}>
                     <button className="text-error-500 hover:underline" onClick={() => onDelete(u.id)}>
-                      Delete
+                      {t("common.delete")}
                     </button>
                   </Can>
                 </td>

@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Alert } from "@/shared/ui/Alert";
@@ -18,6 +19,7 @@ const RESEND_COOLDOWN_SECONDS = 30;
 
 /** Rendered inside <AuthShell/> (layout route): бренд уже є в оболонці, тут його не дублюємо. */
 export default function SignInPage() {
+  const { t } = useTranslation();
   const { login, resendVerification, isPending } = useAuthActions();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,7 +45,7 @@ export default function SignInPage() {
       await login({ email: email.trim(), password });
     } catch (err) {
       if (!isNormalizedApiError(err)) {
-        setError("Unexpected error");
+        setError(t("errors.unexpected"));
         return;
       }
       setError(err.message);
@@ -61,7 +63,7 @@ export default function SignInPage() {
       setInfo(res.message);
       setCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (err) {
-      setError(isNormalizedApiError(err) ? err.message : "Unexpected error");
+      setError(isNormalizedApiError(err) ? err.message : t("errors.unexpected"));
     } finally {
       setResending(false);
     }
@@ -70,8 +72,8 @@ export default function SignInPage() {
   return (
     <>
       <AuthHeading
-        title="Welcome back."
-        subtitle="Sign in to continue to your P.R.I.S.M.A. workspace."
+        title={t("auth.signIn.title")}
+        subtitle={t("auth.signIn.subtitle")}
       />
 
       <form onSubmit={submit} className="space-y-5">
@@ -82,7 +84,7 @@ export default function SignInPage() {
           {(notVerified || info) && (
             <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800 dark:bg-white/[0.03]">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Didn&apos;t get the email?
+                {t("auth.signIn.didntGetEmail")}
               </span>
 
               <button
@@ -93,19 +95,19 @@ export default function SignInPage() {
               >
                 {resending && <Spinner className="size-3.5" />}
                 {cooldown > 0
-                  ? `Resend in ${cooldown}s`
-                  : "Resend verification email"}
+                  ? t("auth.signIn.resendIn", { seconds: cooldown })
+                  : t("auth.signIn.resend")}
               </button>
             </div>
           )}
         </div>
 
-        <Field label="Email">
+        <Field label={t("auth.fields.email")}>
           <input
             className={authInputClass}
             type="email"
             autoComplete="username"
-            placeholder="you@example.com"
+            placeholder={t("auth.placeholders.email")}
             autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -119,29 +121,29 @@ export default function SignInPage() {
               htmlFor="signin-password"
               className="text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Password
+              {t("auth.fields.password")}
             </label>
 
             <Link
               to={AUTH_ROUTES.forgotPassword}
               className="text-xs font-medium text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
             >
-              Forgot password?
+              {t("auth.signIn.forgot")}
             </Link>
           </div>
 
           <PasswordInput
             id="signin-password"
             autoComplete="current-password"
-            placeholder="Enter your password"
+            placeholder={t("auth.placeholders.enterPassword")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>
 
-        <AuthSubmit pending={isPending} pendingLabel="Signing in…">
-          Sign in
+        <AuthSubmit pending={isPending} pendingLabel={t("auth.signIn.pending")}>
+          {t("auth.signIn.submit")}
         </AuthSubmit>
 
         <div className="relative py-2">
@@ -150,31 +152,33 @@ export default function SignInPage() {
           </div>
           <div className="relative flex justify-center">
             <span className="bg-white px-4 text-xs text-gray-400 dark:bg-gray-950 dark:text-gray-500">
-              New to P.R.I.S.M.A.?
+              {t("auth.signIn.newTo")}
             </span>
           </div>
         </div>
 
         <Link to={AUTH_ROUTES.signUp} className={authSecondaryBtnClass}>
-          Create an account
+          {t("auth.signIn.createAccount")}
         </Link>
 
         <p className="pt-1 text-center text-xs leading-5 text-gray-400 dark:text-gray-500">
-          By continuing, you agree to the P.R.I.S.M.A.{" "}
-          <button
-            type="button"
-            className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            Terms of Service
-          </button>{" "}
-          and{" "}
-          <button
-            type="button"
-            className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            Privacy Policy
-          </button>
-          .
+          <Trans
+            i18nKey="auth.signIn.agreement"
+            components={{
+              terms: (
+                <button
+                  type="button"
+                  className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300"
+                />
+              ),
+              privacy: (
+                <button
+                  type="button"
+                  className="underline underline-offset-2 hover:text-gray-600 dark:hover:text-gray-300"
+                />
+              ),
+            }}
+          />
         </p>
       </form>
     </>

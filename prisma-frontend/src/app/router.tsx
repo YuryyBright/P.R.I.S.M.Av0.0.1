@@ -1,4 +1,4 @@
-import { Navigate, createBrowserRouter } from "react-router";
+import { createBrowserRouter } from "react-router";
 import {
   GuestOnly,
   RequireAuth,
@@ -7,9 +7,12 @@ import {
   authOpenRoutes,
   authProtectedRoutes,
 } from "@/features/auth";
-import { USERS_ROUTES, usersRoutes } from "@/features/users";
+import { accountRoutes } from "@/features/account";
+import { homeRoutes } from "@/features/home";
+import { usersRoutes } from "@/features/users";
 import AppLayout from "@/layout/AppLayout"; // TailAdmin shell: sidebar + header + <Outlet/>
-import { FullPageLoader } from "../shared/ui/FullPageLoader";
+import { FullPageLoader } from "@/shared/ui/FullPageLoader";
+import { collectionsRoutes } from "@/features/collections";
 /**
  * Composition only: each feature owns its routes, this file decides WHERE they sit
  * (public / guest-only / protected). New feature = spread its routes into the right group.
@@ -30,17 +33,30 @@ export const router = createBrowserRouter([
           {
             element: <AppLayout />,
             children: [
+              ...homeRoutes, //            "/"  welcome page (placeholder dashboard)
+              ...accountRoutes, //         "/profile", "/settings"
+              ...authProtectedRoutes, //   "/change-password"
+              ...usersRoutes, //           "/users" (needs users.read)
+              ...collectionsRoutes, //     "/collections" (needs collections.read)
               {
-                index: true,
-                element: <Navigate to={USERS_ROUTES.list} replace />,
+                path: "/403",
+                lazy: async () => ({
+                  Component: (await import("@/shared/ui/ForbiddenPage"))
+                    .default,
+                }),
               },
-              ...authProtectedRoutes,
-              ...usersRoutes,
+              // Unknown URL: show 404 inside the layout. Anonymous visitors never reach it,
+              // <RequireAuth/> sends them to sign-in first.
+              {
+                path: "*",
+                lazy: async () => ({
+                  Component: (await import("@/shared/ui/NotFoundPage")).default,
+                }),
+              },
             ],
           },
         ],
       },
-      { path: "*", element: <Navigate to="/" replace /> },
     ],
   },
 ]);

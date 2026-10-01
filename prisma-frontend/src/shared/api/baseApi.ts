@@ -36,33 +36,52 @@ const rawBaseQuery = fetchBaseQuery({
 });
 
 const isCsrfFailure = (error: FetchBaseQueryError): boolean =>
-  error.status === 403 && /csrf/i.test(JSON.stringify("data" in error ? error.data : ""));
+  error.status === 403 &&
+  /csrf/i.test(JSON.stringify("data" in error ? error.data : ""));
 
-export const baseQuery: BaseQueryFn<string | FetchArgs, unknown, NormalizedApiError, ApiExtraOptions> = async (
-  args,
-  api,
-  extra,
-) => {
+export const baseQuery: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  NormalizedApiError,
+  ApiExtraOptions
+> = async (args, api, extra) => {
   let result = await rawBaseQuery(args, api, extra);
 
   // Stale CSRF token (its cookie lives 1h): fetch a fresh pair and retry once.
-  if (result.error && !SAFE_METHODS.has(methodOf(args)) && isCsrfFailure(result.error)) {
+  if (
+    result.error &&
+    !SAFE_METHODS.has(methodOf(args)) &&
+    isCsrfFailure(result.error)
+  ) {
     await getCsrfToken(true);
     result = await rawBaseQuery(args, api, extra);
   }
 
   if (result.error?.status === 401 && !extra?.public) {
-    if (await refreshSessionOnce()) result = await rawBaseQuery(args, api, extra);
+    if (await refreshSessionOnce())
+      result = await rawBaseQuery(args, api, extra);
     else getAuthBridge().onAuthFailed?.();
   }
 
-  return result.error ? { error: normalizeError(result.error) } : { data: result.data };
+  return result.error
+    ? { error: normalizeError(result.error) }
+    : { data: result.data };
 };
 
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery,
-  // "Session" = the current user (GET /users/me). Anything that changes me invalidates it.
-  tagTypes: ["Session", "User", "Permission", "PermissionGroup", "Role", "RoleGroup"],
+
+  tagTypes: [
+    "User",
+    "Session",
+    "Permission",
+    "PermissionGroup",
+    "Role",
+    "RoleGroup",
+    "Collection",
+    "CollectionMember",
+  ],
+
   endpoints: () => ({}),
 });

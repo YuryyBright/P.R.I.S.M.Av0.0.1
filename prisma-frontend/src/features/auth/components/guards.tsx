@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router";
+import ForbiddenPage from "@/shared/ui/ForbiddenPage";
 import { FullPageLoader } from "@/shared/ui/FullPageLoader";
 import { AUTH_ROUTES } from "../constants/auth.constants";
 import { usePermissions, type PermissionMode } from "../hooks/usePermissions";
@@ -53,15 +54,5 @@ export function RequirePermission({
   mode,
 }: RequirePermissionProps) {
   const { can } = usePermissions();
-  if (can(permission, mode)) return <Outlet />;
-  return (
-    <div className="rounded-2xl border border-gray-200 p-8 text-center dark:border-white/[0.05]">
-      <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-        403: Access denied
-      </h2>
-      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        You don&apos;t have permission to view this page.
-      </p>
-    </div>
-  );
+  return can(permission, mode) ? <Outlet /> : <ForbiddenPage />;
 }

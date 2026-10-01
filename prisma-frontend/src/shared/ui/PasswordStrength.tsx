@@ -1,18 +1,19 @@
+import { useTranslation } from "react-i18next";
+
 /**
  * Advisory only: the backend policy is the source of truth and its message is still shown on submit.
  * Adjust RULES to match your server-side policy.
  */
 const RULES = [
-  { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+  { id: "length", test: (p: string) => p.length >= 8 },
   {
-    label: "Upper and lower case letters",
+    id: "case",
     test: (p: string) => /[a-z]/.test(p) && /[A-Z]/.test(p),
   },
-  { label: "A number", test: (p: string) => /\d/.test(p) },
-  { label: "A symbol", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
-];
+  { id: "number", test: (p: string) => /\d/.test(p) },
+  { id: "symbol", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+] as const;
 
-const LABELS = ["Too weak", "Weak", "Fair", "Good", "Strong"];
 const COLORS = [
   "bg-red-500",
   "bg-red-500",
@@ -22,6 +23,7 @@ const COLORS = [
 ];
 
 export function PasswordStrength({ value }: { value: string }) {
+  const { t } = useTranslation();
   if (!value) return null;
 
   const passed = RULES.map((r) => r.test(value));
@@ -41,16 +43,16 @@ export function PasswordStrength({ value }: { value: string }) {
           ))}
         </div>
         <span
-          className="w-16 text-right text-xs text-gray-500 dark:text-gray-400"
+          className="min-w-16 text-right text-xs text-gray-500 dark:text-gray-400"
           aria-live="polite"
         >
-          {LABELS[score]}
+          {t(`shared.passwordStrength.levels.${score}`)}
         </span>
       </div>
       <ul className="grid grid-cols-1 gap-x-4 gap-y-1 text-xs sm:grid-cols-2">
         {RULES.map((r, i) => (
           <li
-            key={r.label}
+            key={r.id}
             className={`flex items-center gap-1.5 ${
               passed[i]
                 ? "text-green-600 dark:text-green-400"
@@ -73,7 +75,7 @@ export function PasswordStrength({ value }: { value: string }) {
                 <circle cx="8" cy="8" r="2" />
               )}
             </svg>
-            {r.label}
+            {t(`shared.passwordStrength.rules.${r.id}`)}
           </li>
         ))}
       </ul>
