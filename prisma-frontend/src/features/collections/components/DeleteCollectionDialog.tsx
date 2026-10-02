@@ -12,13 +12,11 @@ import {
   TrashIcon,
   btnContent,
 } from "./CollectionIcons";
-
 interface Props {
   collectionId: string;
   onClose: () => void;
   onDeleted?: (message: string) => void;
 }
-
 export function DeleteCollectionDialog({
   collectionId,
   onClose,
@@ -28,18 +26,16 @@ export function DeleteCollectionDialog({
   const { data: collection } = useGetCollectionByIdQuery(collectionId);
   const { deleteCollection, isMutating } = useCollectionActions();
   const [error, setError] = useState<string | null>(null);
-
   async function confirm() {
     setError(null);
     try {
-      await deleteCollection(collectionId); // 204, no body
+      await deleteCollection(collectionId);
       onDeleted?.(t("collections.delete.deleted"));
       onClose();
     } catch (e) {
       setError(isNormalizedApiError(e) ? e.message : t("errors.unexpected"));
     }
   }
-
   return (
     <Modal
       open
@@ -47,7 +43,7 @@ export function DeleteCollectionDialog({
       title={t("collections.delete.title")}
       footer={
         <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          {/* Cancel is the default focus: the destructive action needs a deliberate choice. */}
+          {" "}
           <button
             type="button"
             className={`${btnSecondary} ${btnContent} w-full sm:w-auto`}
@@ -55,45 +51,59 @@ export function DeleteCollectionDialog({
             disabled={isMutating}
             autoFocus
           >
-            {t("common.cancel")}
-          </button>
+            {" "}
+            {t("common.cancel")}{" "}
+          </button>{" "}
           <button
             type="button"
             className={`${btnDanger} ${btnContent} w-full sm:w-auto`}
             disabled={isMutating}
             onClick={confirm}
           >
-            {isMutating ? <SpinnerIcon /> : <TrashIcon />}
-            {isMutating ? t("common.deleting") : t("common.delete")}
-          </button>
+            {" "}
+            {isMutating ? (
+              <SpinnerIcon className="size-5" />
+            ) : (
+              <TrashIcon className="size-5" />
+            )}{" "}
+            <span>
+              {" "}
+              {isMutating ? t("common.deleting") : t("common.delete")}{" "}
+            </span>{" "}
+          </button>{" "}
         </div>
       }
     >
+      {" "}
       <div className="flex gap-4">
+        {" "}
         <span
           aria-hidden="true"
           className="flex size-11 shrink-0 items-center justify-center rounded-full bg-error-50 text-error-600 ring-8 ring-error-50/50 dark:bg-error-500/15 dark:text-error-400 dark:ring-error-500/5"
         >
-          <AlertTriangleIcon className="size-5" />
-        </span>
-
+          {" "}
+          <AlertTriangleIcon className="size-5" />{" "}
+        </span>{" "}
         <div className="min-w-0 space-y-1.5">
+          {" "}
           <p className="text-theme-sm leading-6 wrap-break-word text-gray-700 dark:text-gray-300">
+            {" "}
             {collection
               ? t("collections.delete.confirm", { name: collection.name })
-              : t("collections.delete.confirmGeneric")}
-          </p>
+              : t("collections.delete.confirmGeneric")}{" "}
+          </p>{" "}
           <p className="text-theme-xs text-gray-500 dark:text-gray-400">
-            {t("collections.delete.hint", "Цю дію неможливо скасувати.")}
-          </p>
-        </div>
-      </div>
-
+            {" "}
+            {t("collections.delete.hint", "Цю дію неможливо скасувати.")}{" "}
+          </p>{" "}
+        </div>{" "}
+      </div>{" "}
       {error && (
         <div className="mt-4">
-          <Alert>{error}</Alert>
+          {" "}
+          <Alert>{error}</Alert>{" "}
         </div>
-      )}
+      )}{" "}
     </Modal>
   );
 }

@@ -1,9 +1,22 @@
-import type { SVGProps } from "react";
+import type { ReactNode, SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement>;
 
-/** Base wrapper: decorative by default (aria-hidden), inherits colour from text. */
-function Icon({ children, className = "size-4", ...props }: IconProps) {
+interface IconWrapperProps extends IconProps {
+  children: ReactNode;
+}
+
+/**
+ * Base icon wrapper.
+ *
+ * All collection icons use the same:
+ * - 24x24 viewBox
+ * - 20x20 default rendered size
+ * - block display
+ * - shrink-0
+ * - currentColor
+ */
+function Icon({ children, className = "size-5", ...props }: IconWrapperProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -14,7 +27,7 @@ function Icon({ children, className = "size-4", ...props }: IconProps) {
       strokeLinejoin="round"
       aria-hidden="true"
       focusable="false"
-      className={`shrink-0 ${className}`}
+      className={`block shrink-0 ${className}`}
       {...props}
     >
       {children}
@@ -106,8 +119,12 @@ export const AlertTriangleIcon = (p: IconProps) => (
   </Icon>
 );
 
-/** Loading spinner; stops spinning for users who prefer reduced motion. */
-export const SpinnerIcon = ({ className = "size-4", ...p }: IconProps) => (
+/**
+ * Loading spinner.
+ *
+ * Same 20x20 default size as other UI icons.
+ */
+export const SpinnerIcon = ({ className = "size-5", ...p }: IconProps) => (
   <Icon
     className={`${className} animate-spin motion-reduce:animate-none`}
     {...p}
@@ -116,16 +133,11 @@ export const SpinnerIcon = ({ className = "size-4", ...p }: IconProps) => (
   </Icon>
 );
 
-/**
- * Layout for any button that contains an icon/spinner + text.
- * Tailwind preflight makes <svg> `display:block`, so without a flex row the
- * icon drops above the label. Append this to btnPrimary / btnSecondary / btnDanger.
- */
-export const btnContent =
-  "inline-flex flex-row items-center justify-center gap-2 whitespace-nowrap [&>svg]:shrink-0";
-
 export const CheckIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M20 6 9 17l-5-5" />
   </Icon>
 );
+
+export const btnContent =
+  "inline-flex flex-row flex-nowrap items-center justify-center gap-2 whitespace-nowrap [&>svg]:block [&>svg]:shrink-0";

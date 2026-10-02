@@ -391,7 +391,7 @@
     },
 
     "toolbar": {
-      "new": "+ New collection"
+      "new": "New collection"
     },
 
     "table": {
@@ -482,7 +482,7 @@
     "loadError": "Failed to load documents",
     "noPermission": "You don't have permission to view documents.",
     "filter": { "label": "Filter by status", "all": "All statuses" },
-    "pagination": { "total": "{{count}} documents" },
+    "pagination": { "total": " documents" },
     "table": {
       "empty": "No documents yet",
       "reindex": "Reindex",
@@ -506,7 +506,7 @@
     "upload": {
       "button": "Upload files",
       "uploading": "Uploading…",
-      "hint": "Drag files here or click “Upload files”. PDF, DOCX, TXT, MD, HTML, JSON — up to {{max}} MB each.",
+      "hint": "Drag files here or click “Upload files”. PDF, DOCX, TXT, MD, HTML, JSON — up to max MB each.",
       "errors": {
         "type": "unsupported file type",
         "size": "file is larger than {{max}} MB",
