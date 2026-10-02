@@ -91,7 +91,7 @@ export function RenameDocumentModal({ document: doc, onClose }: Props) {
                 {doc.filename && doc.filename !== doc.title
                   ? t("documents.rename.file", {
                       name: doc.filename,
-                      defaultValue: "Файл: {{name}}",
+                      defaultValue: "Файл: {name}",
                     })
                   : ""}
               </p>

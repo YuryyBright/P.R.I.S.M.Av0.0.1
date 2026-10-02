@@ -17,6 +17,7 @@ import { parseStatus } from "../lib/documentFormat";
 import type { DocumentItem, UploadResult } from "../types/document.types";
 import { DeleteDocumentDialog } from "./DeleteDocumentDialog";
 import { SpinnerIcon, UploadIcon, btnContent } from "./DocumentIcons";
+import { DocumentDetailsModal } from "./DocumentDetailsModal";
 import { DocumentsTable } from "./DocumentsTable";
 import { RenameDocumentModal } from "./RenameDocumentModal";
 import { UploadResults } from "./UploadResults";
@@ -50,6 +51,7 @@ export function DocumentsPanel({ collectionId, canWrite }: Props) {
   const [dragging, setDragging] = useState(false);
   const [results, setResults] = useState<UploadResult[]>([]);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [detailsDoc, setDetailsDoc] = useState<DocumentItem | null>(null);
   const [renameDoc, setRenameDoc] = useState<DocumentItem | null>(null);
   const [deleteDoc, setDeleteDoc] = useState<DocumentItem | null>(null);
 
@@ -198,6 +200,7 @@ export function DocumentsPanel({ collectionId, canWrite }: Props) {
         canWrite={canWrite}
         isFiltered={Boolean(list.status)}
         onUpload={() => fileInput.current?.click()}
+        onDetails={setDetailsDoc}
         onRename={setRenameDoc}
         onReindex={handleReindex}
         onDelete={setDeleteDoc}
@@ -229,6 +232,14 @@ export function DocumentsPanel({ collectionId, canWrite }: Props) {
             {t("documents.upload.drop", "Відпустіть файли, щоб завантажити")}
           </p>
         </div>
+      )}
+
+      {detailsDoc && (
+        <DocumentDetailsModal
+          key={detailsDoc.id}
+          document={detailsDoc}
+          onClose={() => setDetailsDoc(null)}
+        />
       )}
 
       {renameDoc && (

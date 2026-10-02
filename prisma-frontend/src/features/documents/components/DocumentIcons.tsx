@@ -97,3 +97,11 @@ export const CheckIcon = (p: IconProps) => (
  */
 export const btnContent =
   "inline-flex! flex-row! flex-nowrap! items-center! justify-center! gap-2! whitespace-nowrap [&>svg]:shrink-0";
+
+export const InfoIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 16v-4" />
+    <path d="M12 8h.01" />
+  </Icon>
+);

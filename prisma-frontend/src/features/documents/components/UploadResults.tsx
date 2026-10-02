@@ -23,7 +23,7 @@ export function UploadResults({
           <p className="font-medium">
             {t("documents.upload.failedTitle", {
               count: failed.length,
-              defaultValue: "Не вдалося завантажити файлів: {{count}}",
+              defaultValue: "Не вдалося завантажити файлів: {count}",
             })}
           </p>
           <ul className="space-y-1 text-theme-sm">

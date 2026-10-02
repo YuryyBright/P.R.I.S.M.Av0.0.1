@@ -3,6 +3,7 @@ import type { DocumentStatus } from "../types/document.types";
 export const DOCUMENTS_PATHS = {
   inCollection: (collectionId: string) => `/collections/${collectionId}/documents`,
   byId: (id: string) => `/documents/${id}`,
+  details: (id: string) => `/documents/${id}/details`,
   reindex: (id: string) => `/documents/${id}/reindex`,
 } as const;
 

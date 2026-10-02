@@ -40,7 +40,10 @@ from app.rag.settings import IngestionSettings, get_rag_settings
 from app.rag.domain.access import AccessPolicy, Action, collections_with_role_where
 from app.rag.domain.enums import (CollectionRole, DocumentSourceType,
                                 DocumentStatus, JobStatus, JobType)
-from app.rag.schemas import DocumentUpdate, JobListItem, UploadResponse
+from app.rag.schemas import (
+    ChunkStatsRead, DocumentDetailRead, DocumentJobBrief, DocumentUpdate,
+    JobListItem, UploadResponse,
+)
 logger = logging.getLogger(__name__)
 
 _READ_CHUNK = 1024 * 1024
@@ -135,6 +138,56 @@ class DocumentService:
         doc = await self._get_active_or_404(document_id)
         await self.policy.require(user, doc.collection_id, Action.READ)   # 404, якщо колекція недоступна
         return doc
+
+    async def get_details(self, user: User, document_id: uuid.UUID) -> DocumentDetailRead:
+        """Повна картка документа: метадані + агрегати по чанках + останні job-и.
+
+        Доступ — як у get() (READ на колекцію). Чутливі поля віддаємо вужчому колу:
+        owner_email / acl_count — лише тим, хто має WRITE на колекцію; storage_path — superuser.
+        """
+        doc = await self.get(user, document_id)
+        is_superuser = bool(getattr(user, "is_superuser", False))
+        can_write = is_superuser or await self.policy.can(user, doc.collection_id, Action.WRITE)
+
+        stats = await self.docs.chunk_stats(doc.id)
+        jobs = await self.jobs.list_for_document(doc.id, limit=5)
+
+        owner_email = None
+        acl_count = None
+        if can_write:
+            acl_count = await self.docs.acl_count(doc.id)
+            if doc.owner_id is not None:
+                owner = await self.db.get(User, doc.owner_id)
+                owner_email = getattr(owner, "email", None)
+
+        def _val(x):  # Enum -> str
+            return getattr(x, "value", x)
+
+        return DocumentDetailRead(
+            id=doc.id, collection_id=doc.collection_id,
+            collection_name=getattr(doc.collection, "name", None),
+            title=doc.title, filename=doc.filename, mime_type=doc.mime_type,
+            size_bytes=doc.size_bytes,
+            source_type=_val(doc.source_type), source_id=doc.source_id,
+            external_id=doc.external_id,
+            language=doc.language, author=doc.author, url=doc.url,
+            published_at=doc.published_at,
+            status=_val(doc.status), version=doc.version, content_hash=doc.content_hash,
+            has_original=bool(doc.storage_path),
+            storage_path=doc.storage_path if is_superuser else None,
+            owner_id=doc.owner_id, owner_email=owner_email, acl_count=acl_count,
+            meta=doc.meta or {},
+            created_at=getattr(doc, "created_at", None),
+            updated_at=getattr(doc, "updated_at", None),
+            indexed_at=doc.indexed_at,
+            chunks=ChunkStatsRead(**stats),
+            recent_jobs=[
+                DocumentJobBrief(
+                    id=j.id, job_type=_val(j.job_type), status=_val(j.status),
+                    created_at=getattr(j, "created_at", None))
+                for j in jobs
+            ],
+        )
 
     async def list(self, user: User, collection_id: uuid.UUID, *, limit: int, offset: int,
                    status: DocumentStatus | None = None) -> tuple[list[Document], int]:

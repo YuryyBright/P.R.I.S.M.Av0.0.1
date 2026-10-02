@@ -2,7 +2,7 @@ import { baseApi } from "@/shared/api/baseApi";
 import { DEFAULT_PAGE_SIZE, type UUID } from "@/shared/types/api";
 import { DOCUMENTS_PATHS } from "../constants/documents.constants";
 import type {
-  DocumentItem, DocumentsPageArgs, LimitOffsetPage, UploadResponse,
+  DocumentDetails, DocumentItem, DocumentsPageArgs, LimitOffsetPage, UploadResponse,
 } from "../types/document.types";
 
 /** One LIST tag per collection, so invalidating one collection doesn't refetch others. */
@@ -26,6 +26,13 @@ export const documentsApi = baseApi.injectEndpoints({
         ...(res?.items ?? []).map((d) => ({ type: "Document" as const, id: d.id })),
         listTag(collectionId),
       ],
+    }),
+
+    /** GET /documents/{id}/details — full card: DB metadata, chunk stats, recent jobs. */
+    getDocumentDetails: build.query<DocumentDetails, UUID>({
+      query: (id) => ({ url: DOCUMENTS_PATHS.details(id) }),
+      // Same tag as rename/reindex/delete, so those refresh an open card automatically.
+      providesTags: (_r, _e, id) => [{ type: "Document" as const, id }],
     }),
 
     /** POST /collections/{id}/documents -> 202 {document_id, job_id}. One file per request. */
@@ -60,6 +67,7 @@ export const documentsApi = baseApi.injectEndpoints({
 
 export const {
   useGetDocumentsPageQuery,
+  useGetDocumentDetailsQuery,
   useUploadDocumentMutation,
   useRenameDocumentMutation,
   useDeleteDocumentMutation,

@@ -14,6 +14,7 @@ interface Props {
   canWrite: boolean;
   isFiltered?: boolean;
   onUpload?: () => void;
+  onDetails: (doc: DocumentItem) => void;
   onRename: (doc: DocumentItem) => void;
   onReindex: (doc: DocumentItem) => void;
   onDelete: (doc: DocumentItem) => void;
@@ -165,6 +166,7 @@ export function DocumentsTable({
   canWrite,
   isFiltered,
   onUpload,
+  onDetails,
   onRename,
   onReindex,
   onDelete,
@@ -240,13 +242,14 @@ export function DocumentsTable({
                         <FileTile />{" "}
                         <div className="min-w-0">
                           {" "}
-                          <p
-                            className="max-w-md truncate font-medium text-gray-800 dark:text-white/90"
+                          <button
+                            type="button"
+                            onClick={() => onDetails(d)}
+                            className="block max-w-md truncate text-start font-medium text-gray-800 hover:text-brand-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 dark:text-white/90 dark:hover:text-brand-400"
                             title={d.title}
                           >
-                            {" "}
-                            {d.title}{" "}
-                          </p>{" "}
+                            {d.title}
+                          </button>{" "}
                           {d.filename && d.filename !== d.title && (
                             <p
                               className="max-w-md truncate text-theme-xs text-gray-500 dark:text-gray-400"
@@ -278,6 +281,7 @@ export function DocumentsTable({
                         canWrite={canWrite}
                         variant="icon"
                         className="justify-end"
+                        onDetails={() => onDetails(d)}
                         onRename={() => onRename(d)}
                         onReindex={() => onReindex(d)}
                         onDelete={() => onDelete(d)}
@@ -304,10 +308,13 @@ export function DocumentsTable({
                 <FileTile />{" "}
                 <div className="min-w-0 flex-1">
                   {" "}
-                  <p className="font-medium wrap-break-word text-gray-800 dark:text-white/90">
-                    {" "}
-                    {d.title}{" "}
-                  </p>{" "}
+                  <button
+                    type="button"
+                    onClick={() => onDetails(d)}
+                    className="text-start font-medium wrap-break-word text-gray-800 hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 dark:text-white/90 dark:hover:text-brand-400"
+                  >
+                    {d.title}
+                  </button>{" "}
                   {d.filename && d.filename !== d.title && (
                     <p className="mt-0.5 truncate text-theme-xs text-gray-500 dark:text-gray-400">
                       {" "}
@@ -333,7 +340,8 @@ export function DocumentsTable({
                 canWrite={canWrite}
                 variant="labeled"
                 className="mt-4 flex-wrap border-t border-gray-100 pt-4 *:flex-1 dark:border-white/5"
-                onRename={() => onRename(d)}
+                onDetails={() => onDetails(d)}
+                        onRename={() => onRename(d)}
                 onReindex={() => onReindex(d)}
                 onDelete={() => onDelete(d)}
               />{" "}

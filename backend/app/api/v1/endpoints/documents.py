@@ -1,4 +1,4 @@
-"""Роути окремого документа: читання, перейменування, видалення, reindex, історія job-ів."""
+"""Роути окремого документа: читання, деталі, перейменування, видалення, reindex, історія job-ів."""
 import uuid
 
 from fastapi import APIRouter, Depends, Query, Response
@@ -9,7 +9,9 @@ from app.api.deps import (
     PERM_DOCUMENTS_READ, PERM_DOCUMENTS_WRITE,
     get_current_user, get_document_service, get_job_service,
 )
-from app.rag.schemas import DocumentRead, DocumentUpdate, JobRead, UploadResponse
+from app.rag.schemas import (
+    DocumentDetailRead, DocumentRead, DocumentUpdate, JobRead, UploadResponse,
+)
 from app.rag.services.documents import DocumentService, JobService
 
 router = APIRouter(prefix="/documents", tags=["rag: documents"])
@@ -22,6 +24,13 @@ _doc_write = get_current_user([PERM_DOCUMENTS_WRITE])
 async def get_document(document_id: uuid.UUID, user: User = Depends(_doc_read),
                        svc: DocumentService = Depends(get_document_service)):
     return await svc.get(user, document_id)
+
+
+@router.get("/{document_id}/details", response_model=DocumentDetailRead)
+async def get_document_details(document_id: uuid.UUID, user: User = Depends(_doc_read),
+                               svc: DocumentService = Depends(get_document_service)):
+    """Повна картка: метадані з БД, статистика чанків, останні job-и."""
+    return await svc.get_details(user, document_id)
 
 
 @router.patch("/{document_id}", response_model=DocumentRead)
