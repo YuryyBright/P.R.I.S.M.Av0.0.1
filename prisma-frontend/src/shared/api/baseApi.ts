@@ -81,6 +81,7 @@ export const baseApi = createApi({
     "RoleGroup",
     "Collection",
     "CollectionMember",
+    "Job",
   ],
 
   endpoints: () => ({}),

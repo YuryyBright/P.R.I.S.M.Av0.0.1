@@ -149,3 +149,27 @@ class JobRead(_ORM):
     finished_at: datetime | None
     created_at: datetime
     stages: list[StageRead] = []
+    
+class JobListItem(_ORM):
+    """Рядок списку job-ів: JobRead без stages + дані документа для таблиці."""
+    id: uuid.UUID
+    document_id: uuid.UUID | None
+    document_title: str | None = None       
+    collection_id: uuid.UUID | None = None   
+    job_type: JobType
+    status: JobStatus
+    current_stage: IngestionStageName | None
+    progress: int
+    error_code: str | None
+    error_message: str | None
+    retry_count: int
+    started_at: datetime | None
+    finished_at: datetime | None
+    created_at: datetime
+
+    @classmethod
+    def from_job(cls, job: object, document_title: str | None,
+                 collection_id: uuid.UUID | None) -> "JobListItem":
+        # той самий патерн, що й CollectionRead.from_collection
+        return cls.model_validate(job).model_copy(
+            update={"document_title": document_title, "collection_id": collection_id})

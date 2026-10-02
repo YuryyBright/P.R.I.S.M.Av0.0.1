@@ -7,17 +7,22 @@ import uuid
 from datetime import datetime
 from typing import Sequence
 
-from sqlalchemy import update
+from sqlalchemy import ColumnElement, func, or_, update
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.models.rag.collection import Collection
 from app.models.rag.document import Document
 from app.models.rag.ingestion_job import IngestionJob
 from app.models.rag.ingestion_stage import IngestionStage
 from app.models.rag.rag_base import utcnow
 from app.rag.domain.enums import IngestionStageName, JobStatus, StageStatus
 
-ACTIVE_JOB_STATUSES = (JobStatus.QUEUED, JobStatus.PROCESSING)
+
+ACTIVE_JOB_STATUSES = (
+    JobStatus.QUEUED,
+    JobStatus.PROCESSING,
+)
 
 
 class IngestionJobRepository:
@@ -159,3 +164,50 @@ class IngestionJobRepository:
         for name in names:
             stage = await self.get_or_create_stage(job_id, name)
             stage.items_processed = done
+    
+    async def list_page(
+            self, *,
+            user_id: uuid.UUID | None,
+            collections_where: ColumnElement[bool] | None,
+            status: JobStatus | None,
+            document_id: uuid.UUID | None,
+            limit: int,
+            offset: int,
+        ) -> tuple[list[tuple[IngestionJob, str | None, uuid.UUID | None]], int]:
+            """Сторінка job-ів (нові першими) + назва документа й collection_id.
+    
+            user_id is None            -> без обмежень (superuser);
+            user_id задано             -> job-и автора АБО job-и документів колекцій,
+                                          що підпали під `collections_where`
+                                          (умову будує access.collections_with_role_where).
+            LEFT JOIN: job переживає видалення документа (document_id SET NULL),
+            а власні job-и без документа лишаються видимими автору.
+            """
+            stmt = (
+                select(IngestionJob, Document.title, Document.collection_id)
+                .outerjoin(Document, Document.id == IngestionJob.document_id)
+            )
+            if user_id is not None:
+                scope = IngestionJob.user_id == user_id
+                if collections_where is not None:
+                    scope = or_(
+                        scope,
+                        Document.collection_id.in_(
+                            select(Collection.id).where(collections_where)),
+                    )
+                stmt = stmt.where(scope)
+            if status is not None:
+                stmt = stmt.where(IngestionJob.status == status)
+            if document_id is not None:
+                stmt = stmt.where(IngestionJob.document_id == document_id)
+    
+            total = (await self.db.exec(
+                select(func.count()).select_from(stmt.order_by(None).subquery())
+            )).one()
+    
+            rows = (await self.db.exec(
+                stmt.order_by(IngestionJob.created_at.desc(), IngestionJob.id)
+                    .limit(limit).offset(offset)
+            )).all()
+            return list(map(tuple, rows)), total
+    

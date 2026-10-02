@@ -126,3 +126,22 @@ def visible_where(user: Any) -> ColumnElement[bool]:
         Collection.visibility == CollectionVisibility.PUBLIC,
         Collection.id.in_(member_subquery),
     )
+
+def collections_with_role_where(user: Any, minimum: CollectionRole) -> ColumnElement[bool]:
+    """SQL-фільтр колекцій, де користувач має роль НЕ нижче `minimum`.
+
+    SQL-дзеркало effective_role(): owner → member з достатньою роллю →
+    (PUBLIC дає лише VIEWER, тож враховується тільки коли minimum == VIEWER).
+    Неактивні колекції не враховуються. Superuser — усі активні.
+    """
+    if getattr(user, "is_superuser", False):
+        return Collection.is_active.is_(True)
+
+    member_subquery = select(CollectionMember.collection_id).where(
+        CollectionMember.user_id == user.id,
+        CollectionMember.role.in_(roles_at_least(minimum)),
+    )
+    conditions = [Collection.owner_id == user.id, Collection.id.in_(member_subquery)]
+    if role_at_least(CollectionRole.VIEWER, minimum):   # minimum == VIEWER
+        conditions.append(Collection.visibility == CollectionVisibility.PUBLIC)
+    return Collection.is_active.is_(True) & or_(*conditions)

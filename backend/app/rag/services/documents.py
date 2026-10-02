@@ -26,7 +26,7 @@ from app.models.rag.document import Document
 from app.models.rag.ingestion_job import IngestionJob
 from app.models.users.user_model import User
 from app.rag.domain.access import AccessPolicy, Action
-from app.rag.domain.enums import DocumentSourceType, DocumentStatus, JobStatus, JobType
+from app.rag.domain.enums import CollectionRole, DocumentSourceType, DocumentStatus, JobStatus, JobType
 from app.rag.domain.exceptions import (
     ConflictError, ForbiddenError, InvalidInputError, NotFoundError,
     PayloadTooLargeError, UnsupportedMediaError,
@@ -37,13 +37,16 @@ from app.rag.repositories import DocumentRepository, IngestionJobRepository
 from app.rag.schemas import DocumentUpdate, UploadResponse
 from app.rag.services.dispatch import dispatch_parse, dispatch_purge_document
 from app.rag.settings import IngestionSettings, get_rag_settings
-
+from app.rag.domain.access import AccessPolicy, Action, collections_with_role_where
+from app.rag.domain.enums import (CollectionRole, DocumentSourceType,
+                                DocumentStatus, JobStatus, JobType)
+from app.rag.schemas import DocumentUpdate, JobListItem, UploadResponse
 logger = logging.getLogger(__name__)
 
 _READ_CHUNK = 1024 * 1024
 _ACTIVE = (JobStatus.QUEUED, JobStatus.PROCESSING)
 _SETTLED_DOC = (DocumentStatus.READY, DocumentStatus.FAILED, DocumentStatus.DELETED)
-
+JOB_LIST_MIN_ROLE = CollectionRole.EDITOR
 
 class DocumentService:
     def __init__(self, db: AsyncSession, policy: AccessPolicy, storage: BlobStorage, *,
@@ -249,3 +252,19 @@ class JobService:
         if job.document_id is None:
             raise InvalidInputError("Job has no document to retry")
         return job.document_id
+    
+    async def list_page(self, user: User, *, limit: int, offset: int,
+                            status: JobStatus | None = None,
+                            document_id: uuid.UUID | None = None,
+                            ) -> tuple[list[JobListItem], int]:
+            """Свої job-и + job-и документів колекцій, де користувач ≥ JOB_LIST_MIN_ROLE.
+            Superuser бачить усі."""
+            if getattr(user, "is_superuser", False):
+                user_id, coll_where = None, None
+            else:
+                user_id = user.id
+                coll_where = collections_with_role_where(user, JOB_LIST_MIN_ROLE)
+            rows, total = await self.jobs.list_page(
+                user_id=user_id, collections_where=coll_where, status=status,
+                document_id=document_id, limit=limit, offset=offset)
+            return [JobListItem.from_job(j, title, cid) for j, title, cid in rows], total

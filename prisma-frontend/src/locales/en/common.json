@@ -43,7 +43,8 @@
       "collections": "Collections",
       "profile": "My profile & access",
       "settings": "Settings",
-      "changePassword": "Change password"
+      "changePassword": "Change password",
+      "jobs": "Jobs"
     },
 
     "widget": {
@@ -519,5 +520,78 @@
       "title": "Delete document",
       "confirm": "Delete “{{name}}”? Its indexed data will be removed."
     }
+  },
+  "jobs": {
+    "title": "Jobs",
+    "subtitle": "Document processing status: parsing, chunking, embedding and indexing.",
+    "live": "Updating automatically",
+    "loadError": "Failed to load jobs.",
+    "noPermission": "You don't have permission to view jobs.",
+    "toolbar": { "refresh": "Refresh" },
+    "filter": { "label": "Filter by status", "all": "All statuses" },
+    "status": {
+      "queued": "Queued",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "type": {
+      "document_ingest": "New document ingestion",
+      "reindex": "Reindex"
+    },
+    "stage": {
+      "parse": "Parsing",
+      "chunk": "Chunking",
+      "embed": "Embedding",
+      "index": "Indexing",
+      "finalize": "Finalizing"
+    },
+    "stageStatus": {
+      "pending": "Pending",
+      "processing": "In progress",
+      "completed": "Done",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "skipped": "Skipped"
+    },
+    "table": {
+      "caption": "Ingestion jobs",
+      "empty": "No jobs yet",
+      "emptyHint": "Ingestion jobs appear here after you upload or reindex documents.",
+      "emptyFiltered": "No jobs with this status. Change the filter to see others.",
+      "documentDeleted": "Document deleted",
+      "retries": "retries: {{count}}",
+      "columns": {
+        "job": "Job",
+        "status": "Status",
+        "progress": "Progress",
+        "created": "Created",
+        "duration": "Duration",
+        "actions": "Actions"
+      }
+    },
+    "actions": {
+      "group": "Job actions",
+      "details": "Details",
+      "cancel": "Cancel",
+      "retry": "Retry"
+    },
+    "cancel": {
+      "title": "Cancel job?",
+      "confirm": "Stop indexing “{{name}}”?",
+      "hint": "A document that isn't ready yet will be marked as failed. You can reindex it with “Retry”.",
+      "keep": "Keep running",
+      "cancelling": "Cancelling…"
+    },
+    "details": {
+      "title": "Job details",
+      "stages": "Stages",
+      "created": "Created",
+      "started": "Started",
+      "finished": "Finished",
+      "retries": "Retries"
+    },
+    "pagination": { "total": "Total: {{count}}" }
   }
 }

@@ -11,10 +11,9 @@ import { ACCOUNT_ROUTES } from "@/features/account";
 import { AUTH_ROUTES } from "@/features/auth";
 import { HOME_ROUTES } from "@/features/home";
 import { USER_PERMISSIONS, USERS_ROUTES } from "@/features/users";
-import {
-  COLLECTION_PERMISSIONS,
-  COLLECTIONS_ROUTES,
-} from "@/features/collections";
+import { COLLECTIONS_ROUTES } from "@/features/collections";
+import { JOB_PERMISSIONS, JOBS_ROUTES } from "@/features/jobs";
+import { TaskIcon } from "@/icons";
 
 export interface NavItem {
   /** i18n key under `sidebar.items.*` */
@@ -69,6 +68,12 @@ export const NAV_GROUPS: NavGroup[] = [
         key: "collections",
         path: COLLECTIONS_ROUTES.list,
         icon: <FolderIcon fontSize={ICON} />,
+      },
+      {
+        key: "jobs",
+        path: JOBS_ROUTES.list,
+        permission: JOB_PERMISSIONS.read,
+        icon: <TaskIcon fontSize={ICON} />,
       },
     ],
   },
