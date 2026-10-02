@@ -6,7 +6,12 @@ import { Modal } from "@/shared/ui/Modal";
 import { btnDanger, btnSecondary } from "@/shared/ui/classes";
 import { useGetCollectionByIdQuery } from "../api/collections.endpoints";
 import { useCollectionActions } from "../hooks/useCollectionActions";
-import { AlertTriangleIcon, SpinnerIcon } from "./CollectionIcons";
+import {
+  AlertTriangleIcon,
+  SpinnerIcon,
+  TrashIcon,
+  btnContent,
+} from "./CollectionIcons";
 
 interface Props {
   collectionId: string;
@@ -45,7 +50,7 @@ export function DeleteCollectionDialog({
           {/* Cancel is the default focus: the destructive action needs a deliberate choice. */}
           <button
             type="button"
-            className={`${btnSecondary} w-full sm:w-auto`}
+            className={`${btnSecondary} ${btnContent} w-full sm:w-auto`}
             onClick={onClose}
             disabled={isMutating}
             autoFocus
@@ -54,11 +59,11 @@ export function DeleteCollectionDialog({
           </button>
           <button
             type="button"
-            className={`${btnDanger} w-full gap-2 sm:w-auto`}
+            className={`${btnDanger} ${btnContent} w-full sm:w-auto`}
             disabled={isMutating}
             onClick={confirm}
           >
-            {isMutating && <SpinnerIcon />}
+            {isMutating ? <SpinnerIcon /> : <TrashIcon />}
             {isMutating ? t("common.deleting") : t("common.delete")}
           </button>
         </div>
@@ -67,13 +72,13 @@ export function DeleteCollectionDialog({
       <div className="flex gap-4">
         <span
           aria-hidden="true"
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-error-50 text-error-600 ring-8 ring-error-50/50 dark:bg-error-500/15 dark:text-error-400 dark:ring-error-500/5"
         >
           <AlertTriangleIcon className="size-5" />
         </span>
 
         <div className="min-w-0 space-y-1.5">
-          <p className="text-theme-sm leading-6 break-words text-gray-700 dark:text-gray-300">
+          <p className="text-theme-sm leading-6 wrap-break-word text-gray-700 dark:text-gray-300">
             {collection
               ? t("collections.delete.confirm", { name: collection.name })
               : t("collections.delete.confirmGeneric")}

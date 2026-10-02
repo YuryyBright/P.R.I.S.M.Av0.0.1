@@ -17,7 +17,12 @@ import {
   type CollectionFormValues,
 } from "../lib/collectionMappers";
 import type { Collection } from "../types/collection.types";
-import { SpinnerIcon } from "./CollectionIcons";
+import {
+  CheckIcon,
+  PlusIcon,
+  SpinnerIcon,
+  btnContent,
+} from "./CollectionIcons";
 
 interface Props {
   /** Present -> edit mode. Absent -> create mode. Mount with a `key` so state resets. */
@@ -163,7 +168,7 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
         <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
           <button
             type="button"
-            className={`${btnSecondary} w-full sm:w-auto`}
+            className={`${btnSecondary} ${btnContent} w-full sm:w-auto`}
             onClick={onClose}
             disabled={isMutating}
           >
@@ -174,9 +179,15 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
             type="submit"
             form="collection-form"
             disabled={isMutating}
-            className={`${btnPrimary} w-full gap-2 sm:w-auto sm:min-w-27.5`}
+            className={`${btnPrimary} ${btnContent} w-full sm:w-auto sm:min-w-32`}
           >
-            {isMutating && <SpinnerIcon />}
+            {isMutating ? (
+              <SpinnerIcon />
+            ) : isEdit ? (
+              <CheckIcon />
+            ) : (
+              <PlusIcon />
+            )}
             {isMutating
               ? t("common.saving", "Збереження…")
               : isEdit
@@ -297,7 +308,7 @@ export function CollectionFormModal({ collection, onClose, onSaved }: Props) {
               return (
                 <label
                   key={option.value}
-                  className="relative flex cursor-pointer flex-col gap-1 rounded-xl border border-gray-200 bg-white p-3.5 transition-colors hover:border-gray-300 has-checked:border-brand-500 has-checked:bg-brand-50/50 has-focus-visible:ring-2 has-focus-visible:ring-brand-500/40 dark:border-white/10 dark:bg-transparent dark:hover:border-white/20 dark:has-checked:border-brand-400 dark:has-checked:bg-brand-500/10"
+                  className="relative flex cursor-pointer flex-col gap-1 rounded-xl border border-gray-200 bg-white p-3.5 transition-all hover:border-gray-300 hover:bg-gray-50/60 has-checked:border-brand-500 has-checked:bg-brand-50/60 has-checked:shadow-xs has-checked:ring-1 has-checked:ring-brand-500/30 has-focus-visible:ring-2 has-focus-visible:ring-brand-500/40 dark:border-white/10 dark:bg-transparent dark:hover:border-white/20 dark:hover:bg-white/3 dark:has-checked:border-brand-400 dark:has-checked:bg-brand-500/10 dark:has-checked:ring-brand-400/30"
                 >
                   <input
                     type="radio"

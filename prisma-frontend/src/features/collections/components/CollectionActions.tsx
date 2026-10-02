@@ -17,7 +17,7 @@ interface Props {
 }
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-lg text-theme-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex min-w-0 items-center justify-center gap-2 rounded-lg text-theme-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 disabled:pointer-events-none disabled:opacity-50 [&>svg]:shrink-0";
 
 const iconBtn =
   "size-9 text-gray-500 hover:bg-gray-100 hover:text-gray-800 active:bg-gray-200 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white/90 dark:active:bg-white/10";
@@ -25,7 +25,7 @@ const iconBtnDanger =
   "hover:bg-error-50 hover:text-error-600 active:bg-error-100 dark:hover:bg-error-500/10 dark:hover:text-error-400 dark:active:bg-error-500/20";
 
 const labeledBtn =
-  "h-10 border border-gray-200 bg-white px-3 text-gray-700 shadow-xs hover:bg-gray-50 active:bg-gray-100 dark:border-white/10 dark:bg-white/3 dark:text-gray-300 dark:hover:bg-white/6 dark:active:bg-white/10";
+  "h-10 border border-gray-200 bg-white px-3 text-gray-700 shadow-xs hover:border-gray-300 hover:bg-gray-50 active:bg-gray-100 dark:border-white/10 dark:bg-white/3 dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-white/6 dark:active:bg-white/10";
 const labeledBtnDanger =
   "text-error-600 hover:border-error-200 hover:bg-error-50 active:bg-error-100 dark:text-error-400 dark:hover:border-error-500/30 dark:hover:bg-error-500/10";
 
@@ -52,7 +52,7 @@ function ActionButton({
         className={`${base} ${labeledBtn} ${danger ? labeledBtnDanger : ""}`}
       >
         {icon}
-        {label}
+        <span className="truncate">{label}</span>
       </button>
     );
   }

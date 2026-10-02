@@ -11,7 +11,7 @@ import {
 import type { Collection } from "../types/collection.types";
 import { CollectionActions } from "./CollectionActions";
 import { RoleBadge, VisibilityBadge } from "./CollectionBadges";
-import { FolderIcon } from "./CollectionIcons";
+import { FolderIcon, PlusIcon, btnContent } from "./CollectionIcons";
 
 interface Props {
   rows: Collection[];
@@ -29,6 +29,9 @@ const td =
   "px-5 py-4 align-middle text-theme-sm text-gray-700 dark:text-gray-300";
 const surface =
   "overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/3";
+/** Interactive card: lifts and highlights on hover / keyboard focus. */
+const cardInteractive =
+  "group/card relative transition-all duration-200 hover:border-brand-200 hover:shadow-sm focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-500/15 dark:hover:border-brand-500/30 dark:focus-within:border-brand-500/40 dark:focus-within:ring-brand-500/10";
 const skeleton =
   "animate-pulse rounded-md bg-gray-100 motion-reduce:animate-none dark:bg-white/5";
 const nameLink =
@@ -36,7 +39,7 @@ const nameLink =
 
 function FolderTile() {
   return (
-    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-gray-500 ring-1 ring-gray-200/70 ring-inset dark:bg-white/5 dark:text-gray-400 dark:ring-white/5">
+    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-gray-500 ring-1 ring-gray-200/70 transition-colors ring-inset group-hover/card:bg-brand-50 group-hover/card:text-brand-500 group-hover/card:ring-brand-200 group-hover/row:bg-brand-50 group-hover/row:text-brand-500 group-hover/row:ring-brand-200 dark:bg-white/5 dark:text-gray-400 dark:ring-white/5 dark:group-hover/card:bg-brand-500/15 dark:group-hover/card:text-brand-400 dark:group-hover/card:ring-brand-500/20 dark:group-hover/row:bg-brand-500/15 dark:group-hover/row:text-brand-400 dark:group-hover/row:ring-brand-500/20">
       <FolderIcon className="size-5" />
     </span>
   );
@@ -64,9 +67,10 @@ function EmptyState({ onCreate }: { onCreate?: () => void }) {
         <Can permission={COLLECTION_PERMISSIONS.create}>
           <button
             type="button"
-            className={`${btnPrimary} mt-6 gap-2`}
+            className={`${btnPrimary} ${btnContent} mt-6`}
             onClick={onCreate}
           >
+            <PlusIcon className="size-4.5" />
             {t("collections.toolbar.new")}
           </button>
         </Can>
@@ -182,7 +186,7 @@ export function CollectionsTable({
                 rows.map((c) => (
                   <tr
                     key={c.id}
-                    className="transition-colors hover:bg-gray-50/60 dark:hover:bg-white/2"
+                    className="group/row transition-colors focus-within:bg-brand-50/40 hover:bg-brand-50/40 dark:focus-within:bg-brand-500/5 dark:hover:bg-brand-500/5"
                   >
                     <td className={td}>
                       <div className="flex items-center gap-3">
@@ -235,13 +239,13 @@ export function CollectionsTable({
           <CardSkeletons />
         ) : (
           rows.map((c) => (
-            <li key={c.id} className={`${surface} p-4`}>
+            <li key={c.id} className={`${surface} ${cardInteractive} p-4`}>
               <div className="flex items-start gap-3">
                 <FolderTile />
                 <div className="min-w-0 flex-1">
                   <Link
                     to={COLLECTIONS_ROUTES.detail(c.id)}
-                    className={`${nameLink} block break-words`}
+                    className={`${nameLink} block wrap-break-word`}
                   >
                     {c.name}
                   </Link>
