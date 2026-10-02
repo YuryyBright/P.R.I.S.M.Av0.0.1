@@ -7,7 +7,7 @@ import { Modal } from "@/shared/ui/Modal";
 import { btnPrimary, btnSecondary, inputClass } from "@/shared/ui/classes";
 import { useDocumentActions } from "../hooks/useDocumentActions";
 import type { DocumentItem } from "../types/document.types";
-import { SpinnerIcon } from "./DocumentIcons";
+import { CheckIcon, SpinnerIcon, btnContent } from "./DocumentIcons";
 
 interface Props {
   document: DocumentItem;
@@ -31,7 +31,9 @@ export function RenameDocumentModal({ document: doc, onClose }: Props) {
       await renameDocument(doc.id, doc.collection_id, trimmed);
       onClose();
     } catch (err) {
-      setError(isNormalizedApiError(err) ? err.message : t("errors.unexpected"));
+      setError(
+        isNormalizedApiError(err) ? err.message : t("errors.unexpected"),
+      );
     }
   }
 
@@ -44,7 +46,7 @@ export function RenameDocumentModal({ document: doc, onClose }: Props) {
         <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
-            className={`${btnSecondary} w-full sm:w-auto`}
+            className={`${btnSecondary} ${btnContent} w-full sm:w-auto`}
             onClick={onClose}
             disabled={isMutating}
           >
@@ -53,10 +55,10 @@ export function RenameDocumentModal({ document: doc, onClose }: Props) {
           <button
             type="submit"
             form="rename-document-form"
-            className={`${btnPrimary} w-full gap-2 sm:w-auto`}
+            className={`${btnPrimary} ${btnContent} w-full sm:w-auto sm:min-w-32`}
             disabled={isMutating || !trimmed || unchanged}
           >
-            {isMutating && <SpinnerIcon />}
+            {isMutating ? <SpinnerIcon /> : <CheckIcon />}
             {t("common.save")}
           </button>
         </div>
