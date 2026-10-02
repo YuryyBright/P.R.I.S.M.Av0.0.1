@@ -19,7 +19,8 @@ const ACTIVE: Tone = {
   dot: "bg-brand-500",
 };
 const SUCCESS: Tone = {
-  badge: "bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400",
+  badge:
+    "bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400",
   dot: "bg-success-500",
 };
 const ERROR: Tone = {
@@ -44,16 +45,20 @@ const TONES: Record<DocumentStatus, Tone> = {
 
 export function DocumentStatusBadge({ status }: { status: DocumentStatus }) {
   const { t } = useTranslation();
-  const tone = TONES[status];
+  // Unknown / differently-cased API values must not crash the list.
+  const key = String(status ?? "")
+    .trim()
+    .toLowerCase() as DocumentStatus;
+  const tone = TONES[key] ?? NEUTRAL;
   return (
     <span className={`${base} ${tone.badge}`}>
       <span
         aria-hidden="true"
         className={`size-1.5 rounded-full ${tone.dot} ${
-          isActiveStatus(status) ? "animate-pulse motion-reduce:animate-none" : ""
+          isActiveStatus(key) ? "animate-pulse motion-reduce:animate-none" : ""
         }`}
       />
-      {t(`documents.status.${status}`)}
+      {t(`documents.status.${key}`, { defaultValue: key || "—" })}
     </span>
   );
 }

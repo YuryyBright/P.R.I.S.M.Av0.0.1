@@ -43,6 +43,9 @@ const ROLE_TONES: Record<CollectionRole, Tone> = {
   viewer: NEUTRAL,
 };
 
+/** API values can differ in case or be new/unknown: normalise and never crash. */
+const norm = (value: string) => value.trim().toLowerCase();
+
 function Badge({ tone, children }: { tone: Tone; children: React.ReactNode }) {
   return (
     <span className={`${base} ${tone.badge}`}>
@@ -61,9 +64,11 @@ export function VisibilityBadge({
   visibility: CollectionVisibility;
 }) {
   const { t } = useTranslation();
+  const key = norm(String(visibility ?? ""));
+  const tone = VISIBILITY_TONES[key as CollectionVisibility] ?? NEUTRAL;
   return (
-    <Badge tone={VISIBILITY_TONES[visibility]}>
-      {t(`collections.visibility.${visibility}.label`)}
+    <Badge tone={tone}>
+      {t(`collections.visibility.${key}.label`, { defaultValue: key || "—" })}
     </Badge>
   );
 }
@@ -80,7 +85,11 @@ export function RoleBadge({ role }: { role: CollectionRole | null }) {
       </span>
     );
   }
+  const key = norm(String(role));
+  const tone = ROLE_TONES[key as CollectionRole] ?? NEUTRAL;
   return (
-    <Badge tone={ROLE_TONES[role]}>{t(`collections.roles.${role}`)}</Badge>
+    <Badge tone={tone}>
+      {t(`collections.roles.${key}`, { defaultValue: key })}
+    </Badge>
   );
 }

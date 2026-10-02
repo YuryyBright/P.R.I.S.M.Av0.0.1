@@ -5,7 +5,13 @@ import type { UploadResult } from "../types/document.types";
 import { XIcon } from "./DocumentIcons";
 
 /** Shows only the problems; successful files simply appear in the list. */
-export function UploadResults({ results, onDismiss }: { results: UploadResult[]; onDismiss: () => void }) {
+export function UploadResults({
+  results,
+  onDismiss,
+}: {
+  results: UploadResult[];
+  onDismiss: () => void;
+}) {
   const { t } = useTranslation();
   const failed = results.filter((r) => !r.ok);
   if (failed.length === 0) return null;
@@ -22,11 +28,13 @@ export function UploadResults({ results, onDismiss }: { results: UploadResult[];
           </p>
           <ul className="space-y-1 text-theme-sm">
             {failed.map((r, i) => (
-              <li key={`${r.name}-${i}`} className="break-words">
+              <li key={`${r.name}-${i}`} className="wrap-break-word">
                 <span className="font-medium">{r.name}</span>:{" "}
                 {r.code === "server" && r.message
                   ? r.message
-                  : t(`documents.upload.errors.${r.code ?? "server"}`, { max: MAX_FILE_MB })}
+                  : t(`documents.upload.errors.${r.code ?? "server"}`, {
+                      max: MAX_FILE_MB,
+                    })}
               </li>
             ))}
           </ul>

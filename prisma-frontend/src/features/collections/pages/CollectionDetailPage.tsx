@@ -9,7 +9,11 @@ import { useGetCollectionByIdQuery } from "../api/collections.endpoints";
 import { CollectionActions } from "../components/CollectionActions";
 import { RoleBadge, VisibilityBadge } from "../components/CollectionBadges";
 import { CollectionFormModal } from "../components/CollectionFormModal";
-import { ArrowLeftIcon, ChevronRightIcon } from "../components/CollectionIcons";
+import {
+  ArrowLeftIcon,
+  ChevronRightIcon,
+  FolderIcon,
+} from "../components/CollectionIcons";
 import { DeleteCollectionDialog } from "../components/DeleteCollectionDialog";
 import { MembersModal } from "../components/MembersModal";
 import { COLLECTIONS_ROUTES } from "../constants/collections.constants";
@@ -102,25 +106,30 @@ export default function CollectionDetailPage() {
         </ol>
       </nav>
 
-      <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="min-w-0 flex-1 space-y-3">
-          <h1 className="text-title-sm font-semibold break-words text-gray-800 dark:text-white/90">
-            {collection.name}
-          </h1>
+      <header className="flex flex-col gap-5 rounded-2xl border border-gray-200 bg-white p-5 md:flex-row md:items-start md:justify-between md:p-6 dark:border-white/5 dark:bg-white/3">
+        <div className="flex min-w-0 flex-1 items-start gap-4">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-500 ring-1 ring-brand-200/60 ring-inset dark:bg-brand-500/15 dark:text-brand-400 dark:ring-brand-500/20">
+            <FolderIcon className="size-6" />
+          </span>
+          <div className="min-w-0 flex-1 space-y-3">
+            <h1 className="text-title-sm font-semibold wrap-break-word text-gray-800 dark:text-white/90">
+              {collection.name}
+            </h1>
 
-          {collection.description && (
-            <p className="max-w-2xl text-theme-sm leading-6 text-gray-500 dark:text-gray-400">
-              {collection.description}
-            </p>
-          )}
+            {collection.description && (
+              <p className="max-w-2xl text-theme-sm leading-6 text-gray-500 dark:text-gray-400">
+                {collection.description}
+              </p>
+            )}
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <VisibilityBadge visibility={collection.visibility} />
-            <RoleBadge role={collection.my_role} />
-            <span className="text-theme-xs text-gray-500 dark:text-gray-400">
-              {t("collections.detail.created", "Створено")}{" "}
-              {formatDateTime(collection.created_at)}
-            </span>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <VisibilityBadge visibility={collection.visibility} />
+              <RoleBadge role={collection.my_role} />
+              <span className="text-theme-xs text-gray-500 dark:text-gray-400">
+                {t("collections.detail.created", "Створено")}{" "}
+                {formatDateTime(collection.created_at)}
+              </span>
+            </div>
           </div>
         </div>
 

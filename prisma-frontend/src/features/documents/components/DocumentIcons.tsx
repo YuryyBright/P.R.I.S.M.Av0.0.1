@@ -14,7 +14,7 @@ function Icon({ children, className = "size-4", ...props }: IconProps) {
       strokeLinejoin="round"
       aria-hidden="true"
       focusable="false"
-      className={className}
+      className={`shrink-0 ${className}`}
       {...props}
     >
       {children}
@@ -83,3 +83,17 @@ export const SpinnerIcon = ({ className = "size-4", ...p }: IconProps) => (
     <path d="M21 12a9 9 0 1 1-6.219-8.56" />
   </Icon>
 );
+
+export const CheckIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M20 6 9 17l-5-5" />
+  </Icon>
+);
+
+/**
+ * Layout for any button that contains an icon/spinner + text.
+ * Tailwind preflight makes <svg> `display:block`, so without a flex row the
+ * icon drops above the label. Append to btnPrimary / btnSecondary / btnDanger.
+ */
+export const btnContent =
+  "inline-flex! flex-row! flex-nowrap! items-center! justify-center! gap-2! whitespace-nowrap [&>svg]:shrink-0";
