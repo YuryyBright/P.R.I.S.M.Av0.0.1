@@ -119,6 +119,8 @@ class IngestionSettings(BaseModel):
     # перепостановка job-ів, чий dispatch впав (QUEUED без celery_task_id)
     redispatch_interval_s: int = Field(60, gt=0)
     redispatch_min_age_s: int = Field(60, ge=0)       # не чіпати щойно створені
+    cleanup_sweep_interval_s: int = Field(300, gt=0)
+    cleanup_min_age_s: int = Field(300, ge=0)
 
 
 class ChatSettings(BaseModel):
