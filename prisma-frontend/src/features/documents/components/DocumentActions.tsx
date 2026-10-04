@@ -4,7 +4,7 @@ import { Can } from "@/features/auth";
 import { DOCUMENT_PERMISSIONS } from "../constants/documents.constants";
 import { isActiveStatus } from "../lib/documentFormat";
 import type { DocumentItem } from "../types/document.types";
-import { InfoIcon, PencilIcon, RefreshIcon, TrashIcon } from "./DocumentIcons";
+import { EyeIcon, PencilIcon, RefreshIcon, TrashIcon } from "./DocumentIcons";
 
 interface Props {
   document: DocumentItem;
@@ -111,8 +111,8 @@ export function DocumentActions({
       {onDetails && (
         <ActionButton
           variant={variant}
-          label={t("documents.details.open", "Інформація")}
-          icon={<InfoIcon />}
+          label={t("documents.details.open", "Відкрити документ")}
+          icon={<EyeIcon />}
           onClick={onDetails}
         />
       )}

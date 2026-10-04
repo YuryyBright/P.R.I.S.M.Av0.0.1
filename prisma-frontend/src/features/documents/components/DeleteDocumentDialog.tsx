@@ -1,24 +1,26 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Alert } from "@/shared/ui/Alert";
 import { Modal } from "@/shared/ui/Modal";
 import { btnDanger, btnSecondary } from "@/shared/ui/classes";
 import { useDocumentActions } from "../hooks/useDocumentActions";
+import { actionErrorMessage } from "../lib/errors";
+import { btnContent } from "../lib/styles";
 import type { DocumentItem } from "../types/document.types";
-import {
-  AlertTriangleIcon,
-  SpinnerIcon,
-  TrashIcon,
-  btnContent,
-} from "./DocumentIcons";
+import { AlertTriangleIcon, SpinnerIcon, TrashIcon } from "./DocumentIcons";
 
 interface Props {
   document: DocumentItem;
   onClose: () => void;
+  /** Called after a successful delete (e.g. leave the document page). */
+  onDeleted?: () => void;
 }
 
-export function DeleteDocumentDialog({ document: doc, onClose }: Props) {
+export function DeleteDocumentDialog({
+  document: doc,
+  onClose,
+  onDeleted,
+}: Props) {
   const { t } = useTranslation();
   const { deleteDocument, isMutating } = useDocumentActions();
   const [error, setError] = useState<string | null>(null);
@@ -27,9 +29,10 @@ export function DeleteDocumentDialog({ document: doc, onClose }: Props) {
     setError(null);
     try {
       await deleteDocument(doc.id, doc.collection_id); // 204, no body
+      onDeleted?.();
       onClose();
     } catch (e) {
-      setError(isNormalizedApiError(e) ? e.message : t("errors.unexpected"));
+      setError(actionErrorMessage(e, t("errors.unexpected")));
     }
   }
 

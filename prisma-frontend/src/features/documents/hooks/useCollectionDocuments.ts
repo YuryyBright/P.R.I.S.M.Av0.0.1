@@ -2,7 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { DEFAULT_PAGE_SIZE, type UUID } from "@/shared/types/api";
 import { useGetDocumentsPageQuery } from "../api/documents.endpoints";
-import { MAX_PAGE_SIZE, POLL_INTERVAL_MS } from "../constants/documents.constants";
+import {
+  MAX_PAGE_SIZE,
+  POLL_INTERVAL_MS,
+} from "../constants/documents.constants";
 import { isActiveStatus, parseStatus } from "../lib/documentFormat";
 import type { DocumentStatus } from "../types/document.types";
 
@@ -15,7 +18,10 @@ export function useCollectionDocuments(collectionId: UUID) {
   const [params, setParams] = useSearchParams();
 
   const page = Math.max(1, Number(params.get("page")) || 1);
-  const size = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(params.get("size")) || DEFAULT_PAGE_SIZE));
+  const size = Math.min(
+    MAX_PAGE_SIZE,
+    Math.max(1, Number(params.get("size")) || DEFAULT_PAGE_SIZE),
+  );
   const status = parseStatus(params.get("status"));
 
   const patch = useCallback(
@@ -34,8 +40,14 @@ export function useCollectionDocuments(collectionId: UUID) {
     [setParams],
   );
 
-  const setPage = useCallback((p: number) => patch({ page: p <= 1 ? null : String(p) }), [patch]);
-  const setSize = useCallback((s: number) => patch({ size: String(s), page: null }), [patch]);
+  const setPage = useCallback(
+    (p: number) => patch({ page: p <= 1 ? null : String(p) }),
+    [patch],
+  );
+  const setSize = useCallback(
+    (s: number) => patch({ size: String(s), page: null }),
+    [patch],
+  );
   const setStatus = useCallback(
     (s: DocumentStatus | undefined) => patch({ status: s ?? null, page: null }),
     [patch],
@@ -44,10 +56,16 @@ export function useCollectionDocuments(collectionId: UUID) {
   const [pollMs, setPollMs] = useState(0);
   const q = useGetDocumentsPageQuery(
     { collectionId, page, size, status },
-    { pollingInterval: pollMs },
+    { pollingInterval: pollMs, skipPollingIfUnfocused: true },
   );
 
-  const hasActive = q.data?.items.some((d) => isActiveStatus(d.status)) ?? false;
+  // `isFetching` is also true for every background poll (each POLL_INTERVAL_MS), which used to
+  // grey out the pagination and make it blink. `currentData` is undefined only when the query
+  // args changed (page/size/status), i.e. a real switch — that is what should disable controls.
+  const isSwitching = q.isFetching && q.currentData === undefined;
+
+  const hasActive =
+    q.data?.items.some((d) => isActiveStatus(d.status)) ?? false;
   useEffect(() => setPollMs(hasActive ? POLL_INTERVAL_MS : 0), [hasActive]);
 
   const total = q.data?.total ?? 0;
@@ -60,10 +78,17 @@ export function useCollectionDocuments(collectionId: UUID) {
 
   return {
     rows: q.data?.items ?? [],
-    page, size, status, total, pages,
-    setPage, setSize, setStatus,
+    page,
+    size,
+    status,
+    total,
+    pages,
+    setPage,
+    setSize,
+    setStatus,
     isLoading: q.isLoading,
     isFetching: q.isFetching,
+    isSwitching,
     isPolling: hasActive,
     error: q.error, // NormalizedApiError | undefined
     refetch: q.refetch,

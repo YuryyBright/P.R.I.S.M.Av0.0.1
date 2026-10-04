@@ -481,6 +481,7 @@
     "table": {
       "caption": "Documents list",
       "empty": "No documents yet",
+      "reindex": "Reindex",
       "columns": {
         "document": "Document",
         "size": "Size",
@@ -613,6 +614,7 @@
       "emptyFiltered": "No jobs with this status. Change the filter to see others.",
       "documentDeleted": "Document deleted",
       "retries": "retries: {count}",
+
       "columns": {
         "job": "Job",
         "status": "Status",

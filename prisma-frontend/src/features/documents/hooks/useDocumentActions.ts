@@ -2,8 +2,10 @@ import { useState } from "react";
 import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import type { UUID } from "@/shared/types/api";
 import {
-  useDeleteDocumentMutation, useReindexDocumentMutation,
-  useRenameDocumentMutation, useUploadDocumentMutation,
+  useDeleteDocumentMutation,
+  useReindexDocumentMutation,
+  useRenameDocumentMutation,
+  useUploadDocumentMutation,
 } from "../api/documents.endpoints";
 import { validateFile } from "../lib/documentFormat";
 import type { UploadResult } from "../types/document.types";
@@ -20,7 +22,10 @@ export function useDocumentActions() {
    * The backend takes ONE file per request, so files go sequentially: predictable
    * load on the API/Celery and a per-file result (e.g. 409 duplicate) instead of all-or-nothing.
    */
-  async function uploadFiles(collectionId: UUID, files: File[]): Promise<UploadResult[]> {
+  async function uploadFiles(
+    collectionId: UUID,
+    files: File[],
+  ): Promise<UploadResult[]> {
     setIsUploading(true);
     const results: UploadResult[] = [];
     try {
@@ -50,9 +55,12 @@ export function useDocumentActions() {
 
   return {
     uploadFiles,
-    renameDocument: (id: UUID, collectionId: UUID, title: string) => rename({ id, collectionId, title }).unwrap(),
-    deleteDocument: (id: UUID, collectionId: UUID) => remove({ id, collectionId }).unwrap(),
-    reindexDocument: (id: UUID, collectionId: UUID) => reindex({ id, collectionId }).unwrap(),
+    renameDocument: (id: UUID, collectionId: UUID, title: string) =>
+      rename({ id, collectionId, title }).unwrap(),
+    deleteDocument: (id: UUID, collectionId: UUID) =>
+      remove({ id, collectionId }).unwrap(),
+    reindexDocument: (id: UUID, collectionId: UUID) =>
+      reindex({ id, collectionId }).unwrap(),
     isUploading,
     isMutating: [renameS, removeS, reindexS].some((s) => s.isLoading),
   };

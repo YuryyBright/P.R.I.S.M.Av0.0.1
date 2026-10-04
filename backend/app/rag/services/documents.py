@@ -23,6 +23,7 @@ from fastapi import UploadFile
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.rag.document import Document
+from app.models.rag.document_chunk import DocumentChunk
 from app.models.rag.ingestion_job import IngestionJob
 from app.models.users.user_model import User
 from app.rag.domain.access import AccessPolicy, Action
@@ -33,7 +34,7 @@ from app.rag.domain.exceptions import (
 )
 from app.rag.domain.ports import BlobStorage
 from app.rag.domain.uploads import clean_filename, resolve_mime, title_from_filename
-from app.rag.repositories import DocumentRepository, IngestionJobRepository
+from app.rag.repositories import DocumentChunkRepository, DocumentRepository, IngestionJobRepository
 from app.rag.schemas import DocumentUpdate, UploadResponse
 from app.rag.services.dispatch import dispatch_parse, dispatch_purge_document
 from app.rag.settings import IngestionSettings, get_rag_settings
@@ -57,13 +58,15 @@ class DocumentService:
                  dispatcher: Callable[[uuid.UUID], str | None] = dispatch_parse,
                  purge_dispatcher: Callable[[uuid.UUID], str | None] = dispatch_purge_document,
                  docs: DocumentRepository | None = None,
-                 jobs: IngestionJobRepository | None = None) -> None:
+                 jobs: IngestionJobRepository | None = None,
+                 chunks: DocumentChunkRepository | None = None) -> None:
         self.db, self.policy, self.storage = db, policy, storage
         self.cfg = cfg or get_rag_settings().ingestion
         self.dispatcher = dispatcher
         self.purge_dispatcher = purge_dispatcher
         self.docs = docs or DocumentRepository(db)
         self.jobs = jobs or IngestionJobRepository(db)
+        self.chunks = chunks or DocumentChunkRepository(db)
 
     # ---- helpers ---------------------------------------------------------------
 
@@ -188,6 +191,24 @@ class DocumentService:
                 for j in jobs
             ],
         )
+
+    # ---- chunks (перегляд; доступ — як у get(): READ на колекцію) --------------
+
+    async def list_chunks(self, user: User, document_id: uuid.UUID, *, limit: int, offset: int,
+                          q: str | None = None):
+        doc = await self.get(user, document_id)
+        return await self.chunks.list_brief_page(doc.id, limit=limit, offset=offset, q=q)
+
+    async def get_chunk(self, user: User, document_id: uuid.UUID, chunk_index: int) -> DocumentChunk:
+        doc = await self.get(user, document_id)
+        chunk = await self.chunks.get_by_index(doc.id, chunk_index)
+        if chunk is None:
+            raise NotFoundError("Chunk not found")
+        return chunk
+
+    async def chunk_outline(self, user: User, document_id: uuid.UUID):
+        doc = await self.get(user, document_id)
+        return await self.chunks.outline(doc.id)
 
     async def list(self, user: User, collection_id: uuid.UUID, *, limit: int, offset: int,
                    status: DocumentStatus | None = None) -> tuple[list[Document], int]:

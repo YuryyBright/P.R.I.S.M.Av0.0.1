@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "@/shared/ui/Alert";
 import { Modal } from "@/shared/ui/Modal";
@@ -9,6 +9,7 @@ import { useGetDocumentDetailsQuery } from "../api/documents.endpoints";
 import { formatBytes, isActiveStatus } from "../lib/documentFormat";
 import type { DocumentItem } from "../types/document.types";
 import { SpinnerIcon, btnContent } from "./DocumentIcons";
+import { DocumentChunksList } from "./DocumentChunksList";
 import { DocumentStatusBadge } from "./DocumentStatusBadge";
 
 interface Props {
@@ -61,10 +62,15 @@ function Row({
 
 export function DocumentDetailsModal({ document: doc, onClose }: Props) {
   const { t } = useTranslation();
+  const [showChunks, setShowChunks] = useState(false);
+  const [live, setLive] = useState(isActiveStatus(doc.status));
   const { data, error, isLoading, isFetching } = useGetDocumentDetailsQuery(doc.id, {
     // Keep the card live while the worker is still processing the document.
-    pollingInterval: isActiveStatus(doc.status) ? POLL_INTERVAL_MS : 0,
+    pollingInterval: live ? POLL_INTERVAL_MS : 0,
+    skipPollingIfUnfocused: true,
   });
+  const liveNow = data ? isActiveStatus(data.status) : isActiveStatus(doc.status);
+  if (liveNow !== live) setLive(liveNow);
 
   // Live status from the card wins over the (possibly stale) list row.
   const status = data?.status ?? doc.status;
@@ -87,7 +93,7 @@ export function DocumentDetailsModal({ document: doc, onClose }: Props) {
         </div>
       }
     >
-      <div className="space-y-5" aria-busy={isLoading || isFetching}>
+      <div className="space-y-5" aria-busy={isLoading || (isFetching && !data)}>
         <div className="flex flex-wrap items-center gap-3">
           <p className="min-w-0 flex-1 text-base font-medium wrap-break-word text-gray-800 dark:text-white/90">
             {data?.title ?? doc.title}
@@ -178,6 +184,29 @@ export function DocumentDetailsModal({ document: doc, onClose }: Props) {
                 {dt(data.indexed_at)}
               </Row>
             </Section>
+
+            {data.chunks.total > 0 || showChunks ? (
+              <section className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-theme-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                    {t("documents.chunks.title", "Чанки")} ({data.chunks.total})
+                  </h3>
+                  <button
+                    type="button"
+                    aria-expanded={showChunks}
+                    onClick={() => setShowChunks((v) => !v)}
+                    className="text-theme-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
+                  >
+                    {showChunks
+                      ? t("documents.chunks.hide", "Сховати")
+                      : t("documents.chunks.show", "Переглянути чанки")}
+                  </button>
+                </div>
+                {showChunks && (
+                  <DocumentChunksList documentId={doc.id} active={isActiveStatus(status)} />
+                )}
+              </section>
+            ) : null}
 
             <Section title={t("documents.details.sections.technical", "Технічне")}>
               <Row label="ID" mono>

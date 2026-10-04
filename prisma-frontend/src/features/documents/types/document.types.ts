@@ -13,7 +13,8 @@ export type DocumentStatus =
   | "failed"
   | "deleted";
 
-export type DocumentSourceType = "upload" | "telegram" | "rss" | "web" | "api" | "generated";
+export type DocumentSourceType =
+  "upload" | "telegram" | "rss" | "web" | "api" | "generated";
 
 /** Named DocumentItem to avoid clashing with the DOM `Document` global. */
 export interface DocumentItem {
@@ -80,6 +81,51 @@ export interface DocumentDetails {
   indexed_at: ISODateString | null;
   chunks: ChunkStats;
   recent_jobs: DocumentJobBrief[];
+}
+
+/** GET /documents/{id}/chunks — app/rag/schemas.py ChunkRead */
+export interface ChunkItem {
+  id: UUID; // = point id in Qdrant
+  chunk_index: number;
+  content: string;
+  token_count: number;
+  content_hash: string;
+  page_number: number | null;
+  page_end: number | null;
+  char_start: number | null;
+  char_end: number | null;
+  heading_path: string[];
+  chunking_version: string;
+  embedding_model: string | null;
+  embedding_version: string | null;
+  indexed_at: ISODateString | null;
+  is_indexed: boolean;
+}
+
+/** GET /documents/{id}/chunks — ChunkBriefRead: a list row, preview only (no full text). */
+export interface ChunkBrief {
+  id: UUID;
+  chunk_index: number;
+  preview: string;
+  token_count: number;
+  page_number: number | null;
+  heading_path: string[];
+  is_indexed: boolean;
+}
+
+/** GET /documents/{id}/chunks/map — parallel arrays indexed by chunk_index. */
+export interface ChunkMap {
+  count: number;
+  tokens: number[];
+  indexed: boolean[];
+}
+
+export interface ChunksPageArgs {
+  id: UUID;
+  page?: number;
+  size?: number;
+  /** Substring search in chunk text (min 2 chars). */
+  q?: string;
 }
 
 /** Page[T] = {items, total, limit, offset} */

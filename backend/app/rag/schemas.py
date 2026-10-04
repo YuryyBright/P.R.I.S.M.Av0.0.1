@@ -306,3 +306,79 @@ class DocumentDetailRead(BaseModel):
 
     chunks: ChunkStatsRead = Field(default_factory=ChunkStatsRead)
     recent_jobs: list[DocumentJobBrief] = Field(default_factory=list)
+
+
+class ChunkRead(BaseModel):
+    """Один чанк повністю (для читача в UI). Вектора тут нема: він лише в Qdrant, id чанка = id точки."""
+
+    id: uuid.UUID
+    chunk_index: int
+    content: str
+    token_count: int
+    content_hash: str
+    page_number: int | None = None
+    page_end: int | None = None
+    char_start: int | None = None
+    char_end: int | None = None
+    heading_path: list[str] = []
+    chunking_version: str
+    embedding_model: str | None = None
+    embedding_version: str | None = None
+    indexed_at: datetime | None = None
+    is_indexed: bool = False
+
+    @classmethod
+    def from_chunk(cls, c) -> "ChunkRead":
+        meta = c.meta or {}
+        return cls(
+            id=c.id, chunk_index=c.chunk_index, content=c.content,
+            token_count=c.token_count, content_hash=c.content_hash,
+            page_number=c.page_number, page_end=meta.get("page_end"),
+            char_start=c.char_start, char_end=c.char_end,
+            heading_path=list(meta.get("heading_path") or []),
+            chunking_version=c.chunking_version,
+            embedding_model=c.embedding_model, embedding_version=c.embedding_version,
+            indexed_at=c.indexed_at, is_indexed=c.indexed_at is not None,
+        )
+
+
+class ChunkBriefRead(BaseModel):
+    """Рядок списку чанків: лише preview (перші ~240 символів)."""
+
+    id: uuid.UUID
+    chunk_index: int
+    preview: str
+    token_count: int
+    page_number: int | None = None
+    heading_path: list[str] = []
+    is_indexed: bool = False
+
+    @classmethod
+    def from_row(cls, r) -> "ChunkBriefRead":
+        # r: (id, chunk_index, preview, token_count, page_number, meta, indexed_at)
+        meta = r[5] or {}
+        return cls(
+            id=r[0], chunk_index=r[1], preview=r[2] or "", token_count=r[3],
+            page_number=r[4], heading_path=list(meta.get("heading_path") or []),
+            is_indexed=r[6] is not None,
+        )
+
+
+class ChunkBriefPageRead(BaseModel):
+    items: list[ChunkBriefRead]
+    total: int
+    limit: int
+    offset: int
+
+
+class ChunkMapRead(BaseModel):
+    """Карта документа: паралельні масиви, щоб JSON був компактним навіть на тисячі чанків."""
+
+    count: int
+    tokens: list[int]       # token_count за chunk_index
+    indexed: list[bool]     # чи є вектор у Qdrant
+
+    @classmethod
+    def from_rows(cls, rows) -> "ChunkMapRead":
+        # rows: (chunk_index, token_count, indexed), відсортовані за chunk_index
+        return cls(count=len(rows), tokens=[r[1] for r in rows], indexed=[bool(r[2]) for r in rows])
