@@ -31,6 +31,7 @@
       "menu": "Меню",
       "support": "Підтримка",
       "others": "Інше",
+      "ai": "AI",
       "tools": "Інструменти"
     },
     "badges": {
@@ -44,6 +45,7 @@
       "profile": "Мій профіль і доступи",
       "settings": "Налаштування",
       "changePassword": "Змінити пароль",
+      "aiWorkspace": "AI робочий простір",
       "jobs": "Job-и"
     },
     "widget": {

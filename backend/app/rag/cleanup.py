@@ -20,7 +20,10 @@ from app.rag.domain.ports import BlobStorage, VectorStore
 from app.rag.ingestion.stage_common import SessionFactory
 from app.rag.ingestion.storage import delete_canonical, delete_original
 from app.rag.repositories import CollectionRepository, DocumentChunkRepository, DocumentRepository
-
+from app.rag.repositories import (
+    CollectionRepository, DocumentChunkRepository,
+    DocumentRepository, IngestionJobRepository,
+)
 logger = logging.getLogger(__name__)
 
 
@@ -32,15 +35,17 @@ def _delete_blobs(storage: BlobStorage, storage_path: str | None, document_id: u
 
 async def purge_document(session_factory: SessionFactory, document_id: uuid.UUID, *,
                          store: VectorStore, storage: BlobStorage) -> dict[str, Any]:
-    """Повертає {"status": "purged"|"skipped", ...}."""
     async with session_factory() as db:
         doc = await DocumentRepository(db).get(document_id)
         if doc is None:
-            return {"status": "skipped", "reason": "document_not_found", "document_id": str(document_id)}
+            return {"status": "skipped", "reason": "document_not_found",
+                    "document_id": str(document_id)}
         if doc.status != DocumentStatus.DELETED:
-            return {"status": "skipped", "reason": "not_deleted", "document_id": str(document_id)}
+            return {"status": "skipped", "reason": "not_deleted",
+                    "document_id": str(document_id)}
         if "cleanup" in (doc.meta or {}):
-            return {"status": "skipped", "reason": "already_purged", "document_id": str(document_id)}
+            return {"status": "skipped", "reason": "already_purged",
+                    "document_id": str(document_id)}
         storage_path = doc.storage_path
 
     removed = await store.delete_document(str(document_id))
@@ -50,14 +55,52 @@ async def purge_document(session_factory: SessionFactory, document_id: uuid.UUID
         docs = DocumentRepository(db)
         doc = await docs.get(document_id)
         await DocumentChunkRepository(db).delete_for_document(document_id)
-        docs.merge_meta(doc, "cleanup", {"at": utcnow().isoformat(), "vectors_removed": removed})
+
+
+        jobs_removed = await IngestionJobRepository(db).delete_for_document(document_id)
+
+        docs.merge_meta(doc, "cleanup", {
+            "at": utcnow().isoformat(),
+            "vectors_removed": removed,
+            "jobs_removed": jobs_removed,
+        })
         doc.storage_path = None
         await db.commit()
 
-    logger.info("purged document=%s vectors=%s", document_id, removed)
-    return {"status": "purged", "document_id": str(document_id), "vectors_removed": removed}
+    logger.info("purged document=%s vectors=%s jobs=%s",
+                document_id, removed, jobs_removed)
+    return {"status": "purged", "document_id": str(document_id),
+            "vectors_removed": removed, "jobs_removed": jobs_removed}
 
+async def purge_collection(session_factory: SessionFactory, collection_id: uuid.UUID, *,
+                           store: VectorStore, storage: BlobStorage) -> dict[str, Any]:
+    async with session_factory() as db:
+        col = await CollectionRepository(db).get(collection_id)
+        if col is None:
+            return {"status": "skipped", "reason": "collection_not_found",
+                    "collection_id": str(collection_id)}
+        if col.deleted_at is None:
+            return {"status": "skipped", "reason": "not_deleted",
+                    "collection_id": str(collection_id)}
+        await DocumentRepository(db).soft_delete_in_collection(collection_id)
+        await db.commit()
+        doc_ids = await DocumentRepository(db).ids_in_collection(collection_id)
 
+    for doc_id in doc_ids:
+        await purge_document(session_factory, doc_id, store=store, storage=storage)
+
+    async with session_factory() as db:
+        # >>> НОВЕ: гарантовано прибираємо всі job-и колекції (включно з осиротілими)
+        jobs_removed = await IngestionJobRepository(db).delete_in_collection(collection_id)
+
+        await DocumentRepository(db).hard_delete_in_collection(collection_id)
+        await CollectionRepository(db).hard_delete(collection_id)
+        await db.commit()
+
+    logger.info("purged collection=%s documents=%s jobs=%s",
+                collection_id, len(doc_ids), jobs_removed)
+    return {"status": "purged", "collection_id": str(collection_id),
+            "documents": len(doc_ids), "jobs_removed": jobs_removed}
 async def purge_collection(session_factory: SessionFactory, collection_id: uuid.UUID, *,
                            store: VectorStore, storage: BlobStorage) -> dict[str, Any]:
     """Очистити всі документи колекції, потім фізично видалити документи й саму колекцію

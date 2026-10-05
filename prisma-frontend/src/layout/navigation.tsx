@@ -6,6 +6,7 @@ import {
   SettingsAltIcon,
   UserCircleIcon,
   FolderIcon,
+  AiIcon,
 } from "@/icons";
 import { ACCOUNT_ROUTES } from "@/features/account";
 import { AUTH_ROUTES } from "@/features/auth";
@@ -14,7 +15,7 @@ import { USER_PERMISSIONS, USERS_ROUTES } from "@/features/users";
 import { COLLECTIONS_ROUTES } from "@/features/collections";
 import { JOB_PERMISSIONS, JOBS_ROUTES } from "@/features/jobs";
 import { TaskIcon } from "@/icons";
-
+import { AI_ROUTES } from "@/features/ai/routes";
 export interface NavItem {
   /** i18n key under `sidebar.items.*` */
   key: string;
@@ -74,6 +75,16 @@ export const NAV_GROUPS: NavGroup[] = [
         path: JOBS_ROUTES.list,
         permission: JOB_PERMISSIONS.read,
         icon: <TaskIcon fontSize={ICON} />,
+      },
+    ],
+  },
+  {
+    key: "ai",
+    items: [
+      {
+        key: "aiWorkspace",
+        path: AI_ROUTES.workspace,
+        icon: <AiIcon />,
       },
     ],
   },

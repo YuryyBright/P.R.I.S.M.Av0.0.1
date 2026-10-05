@@ -31,6 +31,7 @@
       "menu": "Menu",
       "support": "Support",
       "others": "Others",
+      "ai": "AI",
       "tools": "Tools"
     },
     "badges": {
@@ -44,7 +45,8 @@
       "profile": "My profile & access",
       "settings": "Settings",
       "changePassword": "Change password",
-      "jobs": "Jobs"
+      "jobs": "Jobs",
+      "aiWorkspace": "AI Workspace"
     },
     "widget": {
       "title": "#1 Tailwind CSS Dashboard",
