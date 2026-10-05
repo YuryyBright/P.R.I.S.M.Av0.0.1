@@ -35,7 +35,7 @@ class IngestionJob(RagBaseModel, table=True):
     )
     document_id: Optional[uuid.UUID] = Field(
         default=None,
-        sa_column=fk_column("documents.id", ondelete="SET NULL", nullable=True),
+        sa_column=fk_column("documents.id", ondelete="CASCADE", nullable=True),
     )
     source_id: Optional[uuid.UUID] = Field(
         default=None,
