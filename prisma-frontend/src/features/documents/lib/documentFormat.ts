@@ -1,7 +1,15 @@
 import {
-  ACTIVE_STATUSES, ALLOWED_EXTENSIONS, DOCUMENT_STATUSES, MAX_FILE_BYTES,
+  ACTIVE_STATUSES,
+  ALLOWED_EXTENSIONS,
+  DOCUMENT_STATUSES,
+  MAX_FILE_BYTES,
 } from "../constants/documents.constants";
-import type { DocumentStatus, UploadErrorCode } from "../types/document.types";
+import type {
+  DocumentDetails,
+  DocumentItem,
+  DocumentStatus,
+  UploadErrorCode,
+} from "../types/document.types";
 
 export function formatBytes(bytes: number | null | undefined): string {
   if (bytes == null) return "—";
@@ -16,7 +24,8 @@ export function formatBytes(bytes: number | null | undefined): string {
   return `${v.toFixed(v < 10 ? 1 : 0)} ${units[i]}`;
 }
 
-export const isActiveStatus = (s: DocumentStatus): boolean => ACTIVE_STATUSES.includes(s);
+export const isActiveStatus = (s: DocumentStatus): boolean =>
+  ACTIVE_STATUSES.includes(s);
 
 export const parseStatus = (v: string | null): DocumentStatus | undefined =>
   DOCUMENT_STATUSES.find((s) => s === v);
@@ -30,3 +39,16 @@ export function validateFile(file: File): UploadErrorCode | null {
   if (!(ALLOWED_EXTENSIONS as readonly string[]).includes(ext)) return "type";
   return null;
 }
+
+/** Actions and dialogs are typed against the list row; the details card is a superset of it. */
+export const toDocumentItem = (d: DocumentDetails): DocumentItem => ({
+  id: d.id,
+  collection_id: d.collection_id,
+  title: d.title,
+  filename: d.filename,
+  mime_type: d.mime_type,
+  size_bytes: d.size_bytes,
+  source_type: d.source_type,
+  status: d.status,
+  created_at: d.created_at ?? "",
+});

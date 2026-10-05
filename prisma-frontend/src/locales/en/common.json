@@ -3,8 +3,8 @@
     "home": "Home",
     "edit": "Edit",
     "close": "Close",
-    "saveChanges": "Save Changes",
-    "viewMore": "View More",
+    "saveChanges": "Save changes",
+    "viewMore": "View more",
     "delete": "Delete",
     "filter": "Filter",
     "seeAll": "See all",
@@ -14,7 +14,9 @@
     "deleting": "Deleting…",
     "loading": "Loading…",
     "add": "Add",
-    "remove": "Remove"
+    "remove": "Remove",
+    "yes": "Yes",
+    "no": "No"
   },
 
   "app": {
@@ -31,12 +33,10 @@
       "others": "Others",
       "tools": "Tools"
     },
-
     "badges": {
       "new": "new",
       "pro": "pro"
     },
-
     "items": {
       "home": "Home",
       "users": "Users",
@@ -46,7 +46,6 @@
       "changePassword": "Change password",
       "jobs": "Jobs"
     },
-
     "widget": {
       "title": "#1 Tailwind CSS Dashboard",
       "description": "Leading Tailwind CSS Admin Template with 500+ UI components and pages.",
@@ -55,15 +54,15 @@
   },
 
   "header": {
-    "searchPlaceholder": "Search or type command...",
-    "toggleSidebar": "Toggle Sidebar",
+    "searchPlaceholder": "Search or type command…",
+    "toggleSidebar": "Toggle sidebar",
     "notifications": {
       "title": "Notifications",
       "requestsPermission": "requests permission to change",
       "project": "Project",
       "minAgo": "{count} min ago",
       "hrAgo": "{count} hr ago",
-      "viewAll": "View All Notifications"
+      "viewAll": "View all notifications"
     }
   },
 
@@ -231,7 +230,6 @@
       "subtext": "A secure workspace for managing your data, users and operations.",
       "secure": "Secure authentication"
     },
-
     "fields": {
       "email": "Email",
       "password": "Password",
@@ -242,7 +240,6 @@
       "newPassword": "New password",
       "confirmNewPassword": "Confirm new password"
     },
-
     "placeholders": {
       "email": "you@example.com",
       "enterPassword": "Enter your password",
@@ -252,16 +249,13 @@
       "createNewPassword": "Create a new password",
       "repeatNewPassword": "Repeat the new password"
     },
-
     "errors": {
       "passwordsMismatch": "Passwords do not match",
       "missingToken": "The link is missing its token."
     },
-
     "checkEmail": "Check your email",
     "goToSignIn": "Go to sign in",
     "backToSignIn": "Back to sign in",
-
     "signIn": {
       "title": "Welcome back.",
       "subtitle": "Sign in to continue to your P.R.I.S.M.A. workspace.",
@@ -275,7 +269,6 @@
       "resendIn": "Resend in {seconds}s",
       "agreement": "By continuing, you agree to the P.R.I.S.M.A. <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
     },
-
     "signUp": {
       "title": "Create account",
       "subtitle": "Fill in the details to get started.",
@@ -283,14 +276,12 @@
       "pending": "Creating account…",
       "haveAccount": "Already have an account? Sign in"
     },
-
     "forgot": {
       "title": "Forgot password?",
       "subtitle": "Enter your email and we will send you a reset link.",
       "submit": "Send reset link",
       "pending": "Sending…"
     },
-
     "reset": {
       "title": "Set a new password",
       "subtitle": "Choose a strong password you have not used before.",
@@ -298,14 +289,12 @@
       "pending": "Saving…",
       "doneTitle": "Password updated"
     },
-
     "verify": {
       "loadingTitle": "Verifying your email",
       "loadingText": "This will only take a moment.",
       "okTitle": "Email verified",
       "errorTitle": "Verification failed"
     },
-
     "changePassword": {
       "pageTitle": "Change password",
       "cardTitle": "Update your password",
@@ -313,7 +302,6 @@
       "submit": "Change password",
       "pending": "Saving…"
     },
-
     "logout": {
       "signOut": "Sign out",
       "signOutEverywhere": "Sign out everywhere"
@@ -323,19 +311,16 @@
   "users": {
     "title": "Users",
     "loadError": "Failed to load users",
-
     "pagination": {
       "total_one": "{count} user",
       "total_other": "{count} users"
     },
-
     "toolbar": {
       "searchPlaceholder": "Search by email",
       "orderDefault": "Default order",
       "orderCreatedAt": "By created date",
       "add": "+ Add user"
     },
-
     "table": {
       "selectAll": "Select all",
       "selectRow": "Select {email}",
@@ -348,14 +333,12 @@
       },
       "empty": "No users found."
     },
-
     "status": {
       "active": "Active",
       "inactive": "Inactive",
       "locked": "Locked",
       "unverified": "Unverified"
     },
-
     "form": {
       "titleAdd": "Add user",
       "titleEdit": "Edit user",
@@ -373,7 +356,6 @@
         "passwordRequired": "Password is required"
       }
     },
-
     "delete": {
       "title": "Delete user",
       "self": "You can't delete your own account.",
@@ -385,16 +367,16 @@
   "collections": {
     "title": "Collections",
     "loadError": "Failed to load collections",
-    "detail": { "back": "All collections" },
+    "detail": {
+      "back": "All collections"
+    },
     "pagination": {
       "total_one": "{count} collection",
       "total_other": "{count} collections"
     },
-
     "toolbar": {
       "new": "New collection"
     },
-
     "table": {
       "columns": {
         "collection": "Collection",
@@ -405,13 +387,11 @@
       "empty": "No collections found.",
       "members": "Members"
     },
-
     "visibility": {
       "private": {
         "label": "Private",
         "hint": "Only you and explicitly invited members"
       },
-
       "shared": {
         "label": "Shared",
         "hint": "You and explicitly invited members"
@@ -421,18 +401,15 @@
         "hint": "Everyone with collections read access"
       }
     },
-
     "memberRole": {
       "viewer": "Viewer",
       "editor": "Editor"
     },
-
     "roles": {
       "owner": "Owner",
       "editor": "Editor",
       "viewer": "Viewer"
     },
-
     "form": {
       "titleNew": "New collection",
       "titleEdit": "Edit collection",
@@ -444,7 +421,7 @@
       "namePlaceholder": "For example, Ukraine News",
       "nameHint": "Enter a clear name for the collection",
       "description": "Description",
-      "descriptionPlaceholder": "Briefly describe the purpose of this collection...",
+      "descriptionPlaceholder": "Briefly describe the purpose of this collection…",
       "visibility": "Visibility",
       "created": "Collection created",
       "updated": "Collection updated",
@@ -461,14 +438,12 @@
         "unexpected": "An unexpected error occurred"
       }
     },
-
     "delete": {
       "title": "Delete collection",
       "deleted": "Collection deleted",
-      "confirm": "Delete \"{name}\"? It disappears immediately; its documents and vectors are removed in the background. This cannot be undone.",
+      "confirm": "Delete “{name}”? It disappears immediately; its documents and vectors are removed in the background. This cannot be undone.",
       "confirmGeneric": "Delete this collection? It disappears immediately; its documents and vectors are removed in the background. This cannot be undone."
     },
-
     "members": {
       "title": "Members — {name}",
       "titleGeneric": "Members",
@@ -478,57 +453,134 @@
       "empty": "No members yet."
     }
   },
+
   "documents": {
     "title": "Documents",
     "loadError": "Failed to load documents",
     "noPermission": "You don't have permission to view documents.",
-    "filter": { "label": "Filter by status", "all": "All statuses" },
-    "pagination": { "total": " documents" },
+    "filter": {
+      "label": "Filter by status",
+      "all": "All statuses"
+    },
+    "pagination": {
+      "total": "Documents: {count}"
+    },
+    "upload": {
+      "button": "Upload files",
+      "uploading": "Uploading…",
+      "hint": "Drag files here or click “Upload files”. PDF, DOCX, TXT, MD, HTML, JSON — up to {max} MB each.",
+      "success": "Files uploaded",
+      "error": "Failed to upload files",
+      "errors": {
+        "type": "unsupported file type",
+        "size": "file is larger than {max} MB",
+        "empty": "file is empty",
+        "server": "upload failed"
+      }
+    },
     "table": {
+      "caption": "Documents list",
       "empty": "No documents yet",
       "reindex": "Reindex",
       "columns": {
         "document": "Document",
         "size": "Size",
         "status": "Status",
-        "added": "Added"
+        "added": "Added",
+        "actions": "Actions"
       }
     },
     "status": {
+      "uploaded": "Uploaded",
       "pending": "Queued",
       "processing": "Processing",
       "chunking": "Chunking",
       "embedding": "Embedding",
       "indexing": "Indexing",
+      "indexed": "Indexed",
       "ready": "Ready",
       "failed": "Failed",
       "deleted": "Deleted"
     },
-    "upload": {
-      "button": "Upload files",
-      "uploading": "Uploading…",
-      "hint": "Drag files here or click “Upload files”. PDF, DOCX, TXT, MD, HTML, JSON — up to max MB each.",
-      "errors": {
-        "type": "unsupported file type",
-        "size": "file is larger than {{max}} MB",
-        "empty": "file is empty",
-        "server": "upload failed"
-      }
+    "actions": {
+      "details": "Details",
+      "edit": "Edit",
+      "reindex": "Reindex",
+      "delete": "Delete"
     },
-    "rename": { "title": "Rename document" },
+    "size": {
+      "b": "B",
+      "kb": "KB",
+      "mb": "MB",
+      "gb": "GB"
+    },
+    "sourceType": {
+      "upload": "Upload",
+      "telegram": "Telegram",
+      "rss": "RSS",
+      "web": "Web",
+      "api": "API",
+      "generated": "Generated"
+    },
+    "details": {
+      "open": "Details",
+      "title": "Document details",
+      "loadError": "Failed to load document details",
+      "sections": {
+        "general": "General",
+        "source": "Source",
+        "indexing": "Indexing",
+        "technical": "Technical",
+        "meta": "Metadata (meta)",
+        "jobs": "Recent jobs"
+      },
+      "filename": "File",
+      "mime": "Type (MIME)",
+      "collection": "Collection",
+      "language": "Language",
+      "author": "Author",
+      "url": "Link",
+      "publishedAt": "Published",
+      "sourceType": "Source type",
+      "externalId": "External ID",
+      "sourceId": "Source ID",
+      "chunks": "Chunks",
+      "chunksValue": "{indexed} of {total} indexed",
+      "tokens": "Tokens",
+      "pages": "Pages",
+      "embeddingModel": "Embedding model",
+      "chunkingVersion": "Chunking version",
+      "version": "Document version",
+      "indexedAt": "Indexed",
+      "hash": "SHA-256",
+      "hasOriginal": "Original in storage",
+      "storagePath": "Storage path",
+      "owner": "Owner",
+      "acl": "Direct access entries",
+      "updatedAt": "Updated"
+    },
+    "rename": {
+      "title": "Rename document"
+    },
     "delete": {
       "title": "Delete document",
-      "confirm": "Delete “{{name}}”? Its indexed data will be removed."
+      "confirm": "Delete “{name}”? Its indexed data will be removed."
     }
   },
+
   "jobs": {
     "title": "Jobs",
     "subtitle": "Document processing status: parsing, chunking, embedding and indexing.",
     "live": "Updating automatically",
-    "loadError": "Failed to load jobs.",
+    "loadError": "Failed to load jobs",
     "noPermission": "You don't have permission to view jobs.",
-    "toolbar": { "refresh": "Refresh" },
-    "filter": { "label": "Filter by status", "all": "All statuses" },
+    "toolbar": {
+      "refresh": "Refresh"
+    },
+    "filter": {
+      "label": "Filter by status",
+      "all": "All statuses"
+    },
     "status": {
       "queued": "Queued",
       "processing": "Processing",
@@ -561,7 +613,8 @@
       "emptyHint": "Ingestion jobs appear here after you upload or reindex documents.",
       "emptyFiltered": "No jobs with this status. Change the filter to see others.",
       "documentDeleted": "Document deleted",
-      "retries": "retries: {{count}}",
+      "retries": "retries: {count}",
+
       "columns": {
         "job": "Job",
         "status": "Status",
@@ -579,7 +632,7 @@
     },
     "cancel": {
       "title": "Cancel job?",
-      "confirm": "Stop indexing “{{name}}”?",
+      "confirm": "Stop indexing “{name}”?",
       "hint": "A document that isn't ready yet will be marked as failed. You can reindex it with “Retry”.",
       "keep": "Keep running",
       "cancelling": "Cancelling…"
@@ -592,6 +645,8 @@
       "finished": "Finished",
       "retries": "Retries"
     },
-    "pagination": { "total": "Total: {{count}}" }
+    "pagination": {
+      "total": "Total: {count}"
+    }
   }
 }

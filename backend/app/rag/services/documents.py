@@ -23,6 +23,7 @@ from fastapi import UploadFile
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.rag.document import Document
+from app.models.rag.document_chunk import DocumentChunk
 from app.models.rag.ingestion_job import IngestionJob
 from app.models.users.user_model import User
 from app.rag.domain.access import AccessPolicy, Action
@@ -33,14 +34,17 @@ from app.rag.domain.exceptions import (
 )
 from app.rag.domain.ports import BlobStorage
 from app.rag.domain.uploads import clean_filename, resolve_mime, title_from_filename
-from app.rag.repositories import DocumentRepository, IngestionJobRepository
+from app.rag.repositories import DocumentChunkRepository, DocumentRepository, IngestionJobRepository
 from app.rag.schemas import DocumentUpdate, UploadResponse
 from app.rag.services.dispatch import dispatch_parse, dispatch_purge_document
 from app.rag.settings import IngestionSettings, get_rag_settings
 from app.rag.domain.access import AccessPolicy, Action, collections_with_role_where
 from app.rag.domain.enums import (CollectionRole, DocumentSourceType,
                                 DocumentStatus, JobStatus, JobType)
-from app.rag.schemas import DocumentUpdate, JobListItem, UploadResponse
+from app.rag.schemas import (
+    ChunkStatsRead, DocumentDetailRead, DocumentJobBrief, DocumentUpdate,
+    JobListItem, UploadResponse,
+)
 logger = logging.getLogger(__name__)
 
 _READ_CHUNK = 1024 * 1024
@@ -54,13 +58,15 @@ class DocumentService:
                  dispatcher: Callable[[uuid.UUID], str | None] = dispatch_parse,
                  purge_dispatcher: Callable[[uuid.UUID], str | None] = dispatch_purge_document,
                  docs: DocumentRepository | None = None,
-                 jobs: IngestionJobRepository | None = None) -> None:
+                 jobs: IngestionJobRepository | None = None,
+                 chunks: DocumentChunkRepository | None = None) -> None:
         self.db, self.policy, self.storage = db, policy, storage
         self.cfg = cfg or get_rag_settings().ingestion
         self.dispatcher = dispatcher
         self.purge_dispatcher = purge_dispatcher
         self.docs = docs or DocumentRepository(db)
         self.jobs = jobs or IngestionJobRepository(db)
+        self.chunks = chunks or DocumentChunkRepository(db)
 
     # ---- helpers ---------------------------------------------------------------
 
@@ -135,6 +141,74 @@ class DocumentService:
         doc = await self._get_active_or_404(document_id)
         await self.policy.require(user, doc.collection_id, Action.READ)   # 404, якщо колекція недоступна
         return doc
+
+    async def get_details(self, user: User, document_id: uuid.UUID) -> DocumentDetailRead:
+        """Повна картка документа: метадані + агрегати по чанках + останні job-и.
+
+        Доступ — як у get() (READ на колекцію). Чутливі поля віддаємо вужчому колу:
+        owner_email / acl_count — лише тим, хто має WRITE на колекцію; storage_path — superuser.
+        """
+        doc = await self.get(user, document_id)
+        is_superuser = bool(getattr(user, "is_superuser", False))
+        can_write = is_superuser or await self.policy.can(user, doc.collection_id, Action.WRITE)
+
+        stats = await self.docs.chunk_stats(doc.id)
+        jobs = await self.jobs.list_for_document(doc.id, limit=5)
+
+        owner_email = None
+        acl_count = None
+        if can_write:
+            acl_count = await self.docs.acl_count(doc.id)
+            if doc.owner_id is not None:
+                owner = await self.db.get(User, doc.owner_id)
+                owner_email = getattr(owner, "email", None)
+
+        def _val(x):  # Enum -> str
+            return getattr(x, "value", x)
+
+        return DocumentDetailRead(
+            id=doc.id, collection_id=doc.collection_id,
+            collection_name=getattr(doc.collection, "name", None),
+            title=doc.title, filename=doc.filename, mime_type=doc.mime_type,
+            size_bytes=doc.size_bytes,
+            source_type=_val(doc.source_type), source_id=doc.source_id,
+            external_id=doc.external_id,
+            language=doc.language, author=doc.author, url=doc.url,
+            published_at=doc.published_at,
+            status=_val(doc.status), version=doc.version, content_hash=doc.content_hash,
+            has_original=bool(doc.storage_path),
+            storage_path=doc.storage_path if is_superuser else None,
+            owner_id=doc.owner_id, owner_email=owner_email, acl_count=acl_count,
+            meta=doc.meta or {},
+            created_at=getattr(doc, "created_at", None),
+            updated_at=getattr(doc, "updated_at", None),
+            indexed_at=doc.indexed_at,
+            chunks=ChunkStatsRead(**stats),
+            recent_jobs=[
+                DocumentJobBrief(
+                    id=j.id, job_type=_val(j.job_type), status=_val(j.status),
+                    created_at=getattr(j, "created_at", None))
+                for j in jobs
+            ],
+        )
+
+    # ---- chunks (перегляд; доступ — як у get(): READ на колекцію) --------------
+
+    async def list_chunks(self, user: User, document_id: uuid.UUID, *, limit: int, offset: int,
+                          q: str | None = None):
+        doc = await self.get(user, document_id)
+        return await self.chunks.list_brief_page(doc.id, limit=limit, offset=offset, q=q)
+
+    async def get_chunk(self, user: User, document_id: uuid.UUID, chunk_index: int) -> DocumentChunk:
+        doc = await self.get(user, document_id)
+        chunk = await self.chunks.get_by_index(doc.id, chunk_index)
+        if chunk is None:
+            raise NotFoundError("Chunk not found")
+        return chunk
+
+    async def chunk_outline(self, user: User, document_id: uuid.UUID):
+        doc = await self.get(user, document_id)
+        return await self.chunks.outline(doc.id)
 
     async def list(self, user: User, collection_id: uuid.UUID, *, limit: int, offset: int,
                    status: DocumentStatus | None = None) -> tuple[list[Document], int]:

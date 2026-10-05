@@ -4,7 +4,7 @@ import { Can } from "@/features/auth";
 import { DOCUMENT_PERMISSIONS } from "../constants/documents.constants";
 import { isActiveStatus } from "../lib/documentFormat";
 import type { DocumentItem } from "../types/document.types";
-import { PencilIcon, RefreshIcon, TrashIcon } from "./DocumentIcons";
+import { EyeIcon, PencilIcon, RefreshIcon, TrashIcon } from "./DocumentIcons";
 
 interface Props {
   document: DocumentItem;
@@ -12,6 +12,8 @@ interface Props {
   canWrite: boolean;
   /** `icon` — compact icon buttons with tooltips (table); `labeled` — icon + text (cards). */
   variant: "icon" | "labeled";
+  /** Read-only action: available to everyone who can see the document. */
+  onDetails?: () => void;
   onRename: () => void;
   onReindex: () => void;
   onDelete: () => void;
@@ -88,6 +90,7 @@ export function DocumentActions({
   document: doc,
   canWrite,
   variant,
+  onDetails,
   onRename,
   onReindex,
   onDelete,
@@ -95,42 +98,52 @@ export function DocumentActions({
 }: Props) {
   const { t } = useTranslation();
 
-  if (!canWrite) return null;
+  if (!canWrite && !onDetails) return null;
 
   const busy = isActiveStatus(doc.status);
 
   return (
-    <Can permission={DOCUMENT_PERMISSIONS.write}>
-      <div
-        role="group"
-        aria-label={t("documents.table.actions", "Дії з документом")}
-        className={`flex items-center gap-1 ${className}`}
-      >
+    <div
+      role="group"
+      aria-label={t("documents.table.actions", "Дії з документом")}
+      className={`flex items-center gap-1 ${className}`}
+    >
+      {onDetails && (
         <ActionButton
           variant={variant}
-          label={t("common.edit")}
-          icon={<PencilIcon />}
-          onClick={onRename}
+          label={t("documents.details.open", "Відкрити документ")}
+          icon={<EyeIcon />}
+          onClick={onDetails}
         />
-        <ActionButton
-          variant={variant}
-          label={
-            busy && variant === "icon"
-              ? t("documents.table.reindexBusy", "Індексація вже триває")
-              : t("documents.table.reindex")
-          }
-          icon={<RefreshIcon />}
-          disabled={busy}
-          onClick={onReindex}
-        />
-        <ActionButton
-          variant={variant}
-          danger
-          label={t("common.delete")}
-          icon={<TrashIcon />}
-          onClick={onDelete}
-        />
-      </div>
-    </Can>
+      )}
+      {canWrite && (
+        <Can permission={DOCUMENT_PERMISSIONS.write}>
+          <ActionButton
+            variant={variant}
+            label={t("common.edit")}
+            icon={<PencilIcon />}
+            onClick={onRename}
+          />
+          <ActionButton
+            variant={variant}
+            label={
+              busy && variant === "icon"
+                ? t("documents.table.reindexBusy", "Індексація вже триває")
+                : t("documents.table.reindex")
+            }
+            icon={<RefreshIcon />}
+            disabled={busy}
+            onClick={onReindex}
+          />
+          <ActionButton
+            variant={variant}
+            danger
+            label={t("common.delete")}
+            icon={<TrashIcon />}
+            onClick={onDelete}
+          />
+        </Can>
+      )}
+    </div>
   );
 }

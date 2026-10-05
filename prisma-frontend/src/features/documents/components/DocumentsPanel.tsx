@@ -1,22 +1,26 @@
-import { useId, useRef, useState, type DragEvent } from "react";
+import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router";
 import { Can } from "@/features/auth";
-import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Alert } from "@/shared/ui/Alert";
 import { Pagination } from "@/shared/ui/Pagination";
 import { btnPrimary, inputClass } from "@/shared/ui/classes";
 import type { UUID } from "@/shared/types/api";
 import {
   DOCUMENT_PERMISSIONS,
+  DOCUMENTS_ROUTES,
   DOCUMENT_STATUSES,
   UPLOAD_ACCEPT,
 } from "../constants/documents.constants";
 import { useCollectionDocuments } from "../hooks/useCollectionDocuments";
 import { useDocumentActions } from "../hooks/useDocumentActions";
+import { useFileDrop } from "../hooks/useFileDrop";
+import { actionErrorMessage, queryErrorMessage } from "../lib/errors";
 import { parseStatus } from "../lib/documentFormat";
+import { btnContent, mutedText } from "../lib/styles";
 import type { DocumentItem, UploadResult } from "../types/document.types";
 import { DeleteDocumentDialog } from "./DeleteDocumentDialog";
-import { SpinnerIcon, UploadIcon, btnContent } from "./DocumentIcons";
+import { SpinnerIcon, UploadIcon } from "./DocumentIcons";
 import { DocumentsTable } from "./DocumentsTable";
 import { RenameDocumentModal } from "./RenameDocumentModal";
 import { UploadResults } from "./UploadResults";
@@ -32,77 +36,58 @@ interface Props {
   canWrite: boolean;
 }
 
-/**
- * Self-contained Documents tab:
- * list + filter + pagination + upload + row actions.
- */
+/** Visual only: never intercepts pointer events. */
+function DropOverlay() {
+  const { t } = useTranslation();
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute -inset-2 z-20 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-brand-500 bg-brand-50/80 text-brand-600 backdrop-blur-[1px] transition-opacity duration-150 dark:border-brand-400 dark:bg-brand-500/10 dark:text-brand-400 starting:opacity-0"
+    >
+      <UploadIcon className="size-8" />
+      <p className="text-theme-sm font-medium">
+        {t("documents.upload.drop", "Відпустіть файли, щоб завантажити")}
+      </p>
+    </div>
+  );
+}
+
+/** Self-contained documents tab: list + filter + pagination + upload + row actions. */
 export function DocumentsPanel({ collectionId, canWrite }: Props) {
   const { t } = useTranslation();
-
+  const navigate = useNavigate();
   const titleId = useId();
 
   const list = useCollectionDocuments(collectionId);
-
   const { uploadFiles, reindexDocument, isUploading } = useDocumentActions();
 
   const fileInput = useRef<HTMLInputElement>(null);
-
-  const [dragging, setDragging] = useState(false);
   const [results, setResults] = useState<UploadResult[]>([]);
   const [actionError, setActionError] = useState<string | null>(null);
   const [renameDoc, setRenameDoc] = useState<DocumentItem | null>(null);
   const [deleteDoc, setDeleteDoc] = useState<DocumentItem | null>(null);
 
-  async function handleFiles(files: FileList | File[]) {
-    const picked = Array.from(files);
-
-    if (!picked.length || isUploading) {
-      return;
-    }
-
-    setResults(await uploadFiles(collectionId, picked));
-
-    // New files are sorted first.
-    list.setPage(1);
+  async function handleFiles(files: File[]) {
+    if (!files.length || isUploading) return;
+    setResults(await uploadFiles(collectionId, files));
+    list.setPage(1); // new files are sorted first
   }
 
   async function handleReindex(doc: DocumentItem) {
     setActionError(null);
-
     try {
       await reindexDocument(doc.id, doc.collection_id);
     } catch (e) {
-      setActionError(
-        isNormalizedApiError(e) ? e.message : t("errors.unexpected"),
-      );
+      setActionError(actionErrorMessage(e, t("errors.unexpected")));
     }
   }
 
-  const dropProps = canWrite
-    ? {
-        onDragOver: (e: DragEvent<HTMLElement>) => {
-          e.preventDefault();
-          setDragging(true);
-        },
+  const { dragging, dropProps } = useFileDrop(
+    canWrite,
+    (files) => void handleFiles(files),
+  );
 
-        onDragLeave: (e: DragEvent<HTMLElement>) => {
-          // Moving over a child fires dragleave on the section.
-          // Ignore it to avoid flicker.
-          if (e.currentTarget.contains(e.relatedTarget as Node | null)) {
-            return;
-          }
-
-          setDragging(false);
-        },
-
-        onDrop: (e: DragEvent<HTMLElement>) => {
-          e.preventDefault();
-          setDragging(false);
-
-          void handleFiles(e.dataTransfer.files);
-        },
-      }
-    : {};
+  const openFilePicker = () => fileInput.current?.click();
 
   return (
     <section
@@ -111,12 +96,19 @@ export function DocumentsPanel({ collectionId, canWrite }: Props) {
       {...dropProps}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2
-          id={titleId}
-          className="text-lg font-semibold text-gray-800 dark:text-white/90"
-        >
-          {t("documents.title")}
-        </h2>
+        <div className="space-y-1">
+          <h2
+            id={titleId}
+            className="text-lg font-semibold text-gray-800 dark:text-white/90"
+          >
+            {t("documents.title")}
+          </h2>
+          {canWrite && (
+            <p className={`text-theme-xs ${mutedText}`}>
+              {t("documents.upload.hint")}
+            </p>
+          )}
+        </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <select
@@ -126,7 +118,6 @@ export function DocumentsPanel({ collectionId, canWrite }: Props) {
             aria-label={t("documents.filter.label")}
           >
             <option value="">{t("documents.filter.all")}</option>
-
             {DOCUMENT_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {t(`documents.status.${s}`)}
@@ -143,26 +134,22 @@ export function DocumentsPanel({ collectionId, canWrite }: Props) {
                 hidden
                 accept={UPLOAD_ACCEPT}
                 onChange={(e) => {
-                  void handleFiles(e.target.files ?? []);
-
-                  // Allow selecting the same file again.
-                  e.target.value = "";
+                  void handleFiles(Array.from(e.target.files ?? []));
+                  e.target.value = ""; // allow selecting the same file again
                 }}
               />
-
               <button
                 type="button"
                 className={`${btnPrimary} ${btnContent} h-10 w-full sm:w-auto`}
                 disabled={isUploading}
                 aria-busy={isUploading}
-                onClick={() => fileInput.current?.click()}
+                onClick={openFilePicker}
               >
                 {isUploading ? (
                   <SpinnerIcon className="size-5" />
                 ) : (
                   <UploadIcon className="size-5" />
                 )}
-
                 {isUploading
                   ? t("documents.upload.uploading")
                   : t("documents.upload.button")}
@@ -172,22 +159,9 @@ export function DocumentsPanel({ collectionId, canWrite }: Props) {
         </div>
       </div>
 
-      {canWrite && (
-        <p className="text-theme-xs text-gray-500 dark:text-gray-400">
-          {t("documents.upload.hint")}
-        </p>
-      )}
-
       {list.error && (
-        <Alert>
-          {(
-            list.error as {
-              message?: string;
-            }
-          ).message ?? t("documents.loadError")}
-        </Alert>
+        <Alert>{queryErrorMessage(list.error, t("documents.loadError"))}</Alert>
       )}
-
       {actionError && <Alert>{actionError}</Alert>}
 
       <UploadResults results={results} onDismiss={() => setResults([])} />
@@ -197,7 +171,10 @@ export function DocumentsPanel({ collectionId, canWrite }: Props) {
         isLoading={list.isLoading}
         canWrite={canWrite}
         isFiltered={Boolean(list.status)}
-        onUpload={() => fileInput.current?.click()}
+        onUpload={openFilePicker}
+        onDetails={(d) =>
+          navigate(DOCUMENTS_ROUTES.detail(d.collection_id, d.id))
+        }
         onRename={setRenameDoc}
         onReindex={handleReindex}
         onDelete={setDeleteDoc}
@@ -208,28 +185,13 @@ export function DocumentsPanel({ collectionId, canWrite }: Props) {
         pages={list.pages}
         total={list.total}
         size={list.size}
-        totalLabel={t("documents.pagination.total", {
-          count: list.total,
-        })}
-        disabled={list.isFetching}
+        totalLabel={t("documents.pagination.total", { count: list.total })}
+        disabled={list.isSwitching}
         onPage={list.setPage}
         onSize={list.setSize}
       />
 
-      {/* Drop-zone overlay: purely visual,
-          never intercepts pointer events. */}
-      {dragging && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -inset-2 z-20 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-brand-500 bg-brand-50/80 text-brand-600 backdrop-blur-[1px] transition-opacity duration-150 dark:border-brand-400 dark:bg-brand-500/10 dark:text-brand-400 starting:opacity-0"
-        >
-          <UploadIcon className="size-8" />
-
-          <p className="text-theme-sm font-medium">
-            {t("documents.upload.drop", "Відпустіть файли, щоб завантажити")}
-          </p>
-        </div>
-      )}
+      {dragging && <DropOverlay />}
 
       {renameDoc && (
         <RenameDocumentModal
@@ -238,7 +200,6 @@ export function DocumentsPanel({ collectionId, canWrite }: Props) {
           onClose={() => setRenameDoc(null)}
         />
       )}
-
       {deleteDoc && (
         <DeleteDocumentDialog
           document={deleteDoc}

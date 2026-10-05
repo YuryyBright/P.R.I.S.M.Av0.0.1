@@ -1,5 +1,9 @@
 // Public API of the documents feature. Import from "@/features/documents" only.
-// Documents have no page of their own: they are a panel inside a collection.
+// The list lives as a panel inside a collection; a single document has its own page (documentsRoutes).
 export { DocumentsPanel } from "./components/DocumentsPanel";
-export { DOCUMENT_PERMISSIONS } from "./constants/documents.constants";
+export { documentsRoutes } from "./routes";
+export {
+  DOCUMENT_PERMISSIONS,
+  DOCUMENTS_ROUTES,
+} from "./constants/documents.constants";
 export type { DocumentItem, DocumentStatus } from "./types/document.types";

@@ -11,6 +11,8 @@ from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.rag.document import Document
+from app.models.rag.document_acl import DocumentACL
+from app.models.rag.document_chunk import DocumentChunk
 from app.models.rag.rag_base import utcnow
 from app.rag.domain.enums import DocumentStatus
 
@@ -58,6 +60,37 @@ class DocumentRepository:
             select(Document).where(*conds)
             .order_by(Document.created_at.desc()).limit(limit).offset(offset))
         return list(rows.all()), total
+
+    # ---- агрегати для картки документа -------------------------------------
+
+    async def chunk_stats(self, document_id: uuid.UUID) -> dict[str, Any]:
+        """Зведення по чанках документа (без вмісту): кількість, токени, індексація, моделі."""
+        row = (await self.db.exec(
+            select(
+                func.count(DocumentChunk.id),
+                func.coalesce(func.sum(DocumentChunk.token_count), 0),
+                func.count(DocumentChunk.indexed_at),
+                func.max(DocumentChunk.indexed_at),
+                func.max(DocumentChunk.page_number),
+            ).where(DocumentChunk.document_id == document_id))).one()
+        models = (await self.db.exec(
+            select(DocumentChunk.embedding_model).where(
+                DocumentChunk.document_id == document_id,
+                DocumentChunk.embedding_model.is_not(None)).distinct())).all()
+        versions = (await self.db.exec(
+            select(DocumentChunk.chunking_version).where(
+                DocumentChunk.document_id == document_id).distinct())).all()
+        return {
+            "total": int(row[0]), "total_tokens": int(row[1]), "indexed": int(row[2]),
+            "last_indexed_at": row[3], "max_page": row[4],
+            "embedding_models": sorted(m for m in models if m),
+            "chunking_versions": sorted(v for v in versions if v),
+        }
+
+    async def acl_count(self, document_id: uuid.UUID) -> int:
+        return (await self.db.exec(
+            select(func.count()).select_from(DocumentACL)
+            .where(DocumentACL.document_id == document_id))).one()
 
     # ---- зміна стану (для ingestion-етапів) --------------------------------
 

@@ -14,6 +14,7 @@ import AppLayout from "@/layout/AppLayout"; // TailAdmin shell: sidebar + header
 import { FullPageLoader } from "@/shared/ui/FullPageLoader";
 import { collectionsRoutes } from "@/features/collections";
 import { jobsRoutes } from "@/features/jobs";
+import { documentsRoutes } from "@/features/documents/routes";
 /**
  * Composition only: each feature owns its routes, this file decides WHERE they sit
  * (public / guest-only / protected). New feature = spread its routes into the right group.
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
               ...authProtectedRoutes,
               ...usersRoutes,
               ...collectionsRoutes,
+              ...documentsRoutes,
               ...jobsRoutes,
               {
                 path: "/403",

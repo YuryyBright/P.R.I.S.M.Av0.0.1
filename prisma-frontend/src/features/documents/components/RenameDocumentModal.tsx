@@ -1,13 +1,14 @@
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Alert } from "@/shared/ui/Alert";
 import { Field } from "@/shared/ui/Field";
 import { Modal } from "@/shared/ui/Modal";
 import { btnPrimary, btnSecondary, inputClass } from "@/shared/ui/classes";
 import { useDocumentActions } from "../hooks/useDocumentActions";
+import { actionErrorMessage } from "../lib/errors";
+import { btnContent } from "../lib/styles";
 import type { DocumentItem } from "../types/document.types";
-import { CheckIcon, SpinnerIcon, btnContent } from "./DocumentIcons";
+import { CheckIcon, SpinnerIcon } from "./DocumentIcons";
 
 interface Props {
   document: DocumentItem;
@@ -31,9 +32,7 @@ export function RenameDocumentModal({ document: doc, onClose }: Props) {
       await renameDocument(doc.id, doc.collection_id, trimmed);
       onClose();
     } catch (err) {
-      setError(
-        isNormalizedApiError(err) ? err.message : t("errors.unexpected"),
-      );
+      setError(actionErrorMessage(err, t("errors.unexpected")));
     }
   }
 
@@ -91,7 +90,7 @@ export function RenameDocumentModal({ document: doc, onClose }: Props) {
                 {doc.filename && doc.filename !== doc.title
                   ? t("documents.rename.file", {
                       name: doc.filename,
-                      defaultValue: "Файл: {{name}}",
+                      defaultValue: "Файл: {name}",
                     })
                   : ""}
               </p>
