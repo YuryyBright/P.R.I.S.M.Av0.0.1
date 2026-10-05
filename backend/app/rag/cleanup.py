@@ -90,7 +90,6 @@ async def purge_collection(session_factory: SessionFactory, collection_id: uuid.
         await purge_document(session_factory, doc_id, store=store, storage=storage)
 
     async with session_factory() as db:
-        # >>> НОВЕ: гарантовано прибираємо всі job-и колекції (включно з осиротілими)
         jobs_removed = await IngestionJobRepository(db).delete_in_collection(collection_id)
 
         await DocumentRepository(db).hard_delete_in_collection(collection_id)
