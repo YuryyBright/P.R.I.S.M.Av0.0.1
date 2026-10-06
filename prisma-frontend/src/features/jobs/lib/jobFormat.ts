@@ -5,6 +5,26 @@ import {
 } from "../constants/jobs.constants";
 import type { JobStatus } from "../types/job.types";
 
+/**
+ * The API may send naive timestamps ("2026-10-06T10:00:00", no "Z"/offset) that
+ * are really UTC. `Date.parse` would treat them as LOCAL time and everything is
+ * shifted by the UTC offset. Add "Z" when no zone is present.
+ */
+const HAS_ZONE = /(?:Z|[+-]\d{2}(?::?\d{2})?)$/i;
+
+export function normalizeServerDate<T extends string | null | undefined>(
+  v: T,
+): T {
+  if (typeof v !== "string" || !v) return v;
+
+  const iso = v.includes(" ") ? v.replace(" ", "T") : v;
+
+  // Date-only strings (no "T") are left alone.
+  if (!iso.includes("T") || HAS_ZONE.test(iso)) return iso as T;
+
+  return `${iso}Z` as T;
+}
+
 export const isActiveJob = (s: JobStatus): boolean =>
   ACTIVE_JOB_STATUSES.includes(s);
 
@@ -26,37 +46,46 @@ export function formatDuration(
   finishedAt?: string | null,
 ): string {
   if (!startedAt) return "—";
-  const start = Date.parse(startedAt);
-  const end = finishedAt ? Date.parse(finishedAt) : Date.now();
+
+  const start = Date.parse(normalizeServerDate(startedAt));
+  const end = finishedAt
+    ? Date.parse(normalizeServerDate(finishedAt))
+    : Date.now();
+
   if (Number.isNaN(start) || Number.isNaN(end)) return "—";
 
   const total = Math.max(0, Math.round((end - start) / 1000));
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
+
   const pad = (n: number) => String(n).padStart(2, "0");
 
   if (h > 0) return `${h}h ${pad(m)}m`;
   if (m > 0) return `${m}m ${pad(s)}s`;
+
   return `${s}s`;
 }
 
-/** Moment the job "happened" for notification purposes: finished > started > created. */
-export function jobEventTime(job: {
-  finished_at: string | null;
-  started_at: string | null;
-  created_at: string;
-}): number {
-  const t = Date.parse(job.finished_at ?? job.started_at ?? job.created_at);
+/**
+ * Moment the job was created.
+ *
+ * Notifications use the same reference point as the job creation time,
+ * so the relative time stays consistent with the timestamp shown in the
+ * jobs list.
+ */
+export function jobEventTime(job: { created_at: string }): number {
+  const t = Date.parse(normalizeServerDate(job.created_at));
+
   return Number.isNaN(t) ? 0 : t;
 }
 
-/** A finished (completed / failed) job the user has not "seen" in the bell yet. */
+/**
+ * A finished (completed / failed) job the user has not "seen" in the bell yet.
+ */
 export function isUnreadJob(
   job: {
     status: JobStatus;
-    finished_at: string | null;
-    started_at: string | null;
     created_at: string;
   },
   lastSeenAt: number,
@@ -69,15 +98,29 @@ export function isUnreadJob(
 
 export type RelativeUnit = "now" | "min" | "hr" | "day";
 
-/** Coarse "5 min ago" parts; the component maps them to i18n keys. */
+/**
+ * Coarse "5 min ago" parts; the component maps them to i18n keys.
+ */
 export function relativeTimeParts(
   time: number,
   now: number = Date.now(),
 ): { unit: RelativeUnit; count: number } {
   const diffMin = Math.max(0, Math.floor((now - time) / 60000));
+
   if (diffMin < 1) return { unit: "now", count: 0 };
-  if (diffMin < 60) return { unit: "min", count: diffMin };
+
+  if (diffMin < 60) {
+    return { unit: "min", count: diffMin };
+  }
+
   const hrs = Math.floor(diffMin / 60);
-  if (hrs < 24) return { unit: "hr", count: hrs };
-  return { unit: "day", count: Math.floor(hrs / 24) };
+
+  if (hrs < 24) {
+    return { unit: "hr", count: hrs };
+  }
+
+  return {
+    unit: "day",
+    count: Math.floor(hrs / 24),
+  };
 }

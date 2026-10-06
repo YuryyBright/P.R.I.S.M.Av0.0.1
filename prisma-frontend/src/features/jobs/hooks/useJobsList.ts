@@ -57,7 +57,8 @@ export function useJobsList() {
   );
 
   const hasActive = q.data?.items.some((j) => isActiveJob(j.status)) ?? false;
-  useEffect(() => setPollMs(hasActive ? POLL_INTERVAL_MS : 0), [hasActive]);
+  const nextPollMs = hasActive ? POLL_INTERVAL_MS : 0;
+  if (nextPollMs !== pollMs) setPollMs(nextPollMs);
 
   const total = q.data?.total ?? 0;
   const pages = Math.ceil(total / size);

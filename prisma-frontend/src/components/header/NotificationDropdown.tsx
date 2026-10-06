@@ -6,7 +6,6 @@ import {
   JOB_PERMISSIONS,
   JOBS_ROUTES,
   JobNotificationBody,
-  jobNotificationLink,
   useJobNotifications,
   type BellTone,
 } from "@/features/jobs";
@@ -167,7 +166,7 @@ function JobsBell() {
               return (
                 <li key={job.id}>
                   <DropdownItem
-                    to={jobNotificationLink(job)}
+                    to={`${JOBS_ROUTES.list}?status=${job.status}`}
                     onItemClick={closeDropdown}
                     className={cn(
                       "flex gap-3 border-b border-gray-100 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5",

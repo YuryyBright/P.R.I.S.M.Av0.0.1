@@ -65,7 +65,7 @@
       "requestsPermission": "просить дозвіл змінити",
       "project": "Проєкт",
       "justNow": "щойно",
-
+      "minAgo": "{count} хв тому",
       "hrAgo": "{count} год тому",
       "dayAgo_one": "{count} день тому",
       "dayAgo_few": "{count} дні тому",
