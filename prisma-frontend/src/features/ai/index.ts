@@ -1,10 +1,13 @@
+// Public API of the AI feature. Import from "@/features/ai" only.
+// Deliberately NOT exported: endpoints/RTK hooks, components, reducers.
 export { aiRoutes } from "./routes";
-export { default as AiWorkspacePage } from "./pages/AiWorkspacePage";
+export { aiUiSlice } from "./store/aiUiSlice";
+export { configureAiTransport } from "./lib/sse";
+export { AI_PERMISSIONS, AI_ROUTES } from "./constants/ai.constants";
 export type {
-  AiMode,
-  AiRunStatus,
-  AiRunConfig,
-  AiAttachment,
-  AiRunEvent,
-  AiCitation,
+  Conversation,
+  ConversationSettings,
+  RunMode,
+  Task,
+  TaskStatus,
 } from "./types/ai.types";

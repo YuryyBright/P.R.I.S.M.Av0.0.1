@@ -3,7 +3,7 @@ import { authSlice } from "@/features/auth";
 import { usersUiSlice } from "@/features/users";
 import { baseApi } from "@/shared/api/baseApi";
 import { collectionsUiSlice } from "@/features/collections/store/collectionsUiSlice";
-
+import { aiUiSlice } from "@/features/ai";
 /**
  * The ONLY place that knows every slice. Each feature exports its slice; adding a
  * feature = one more argument here. Keys come from each slice's `name`, so there is
@@ -14,6 +14,7 @@ export const rootReducer = combineSlices(
   authSlice,
   usersUiSlice,
   collectionsUiSlice,
+  aiUiSlice,
 );
 
 export const store = configureStore({

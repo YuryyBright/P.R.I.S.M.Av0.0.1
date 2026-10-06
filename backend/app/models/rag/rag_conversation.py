@@ -26,8 +26,10 @@ class RagConversation(RagBaseModel, table=True):
         sa_column=fk_column("collections.id", ondelete="SET NULL", nullable=True),
     )
     title: Optional[str] = Field(default=None, max_length=255)
+
+    mode: str = Field(default="chat", max_length=16, sa_column_kwargs={"server_default": "chat"})
     is_archived: bool = Field(default=False, sa_column_kwargs={"server_default": text("false")})
-    # напр. {"collection_ids": [...], "filters": {...}} — дефолти діалогу
+
     settings: dict = Field(default_factory=dict, sa_column=jsonb_column("settings"))
 
     messages: list["RagMessage"] = Relationship(

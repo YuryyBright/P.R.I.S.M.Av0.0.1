@@ -37,6 +37,29 @@ PERM_COLLECTIONS_MANAGE = "rag.collections.manage"
 PERM_DOCUMENTS_READ = "rag.documents.read"
 PERM_DOCUMENTS_WRITE = "rag.documents.write"
 
+# AI: усі роути /ai/* захищені через get_current_user([PERM_AI_*]) — як і RAG.
+PERM_AI_CAPABILITIES_READ = "ai.capabilities.read"
+
+PERM_AI_CONVERSATIONS_READ = "ai.conversations.read"
+PERM_AI_CONVERSATIONS_CREATE = "ai.conversations.create"
+PERM_AI_CONVERSATIONS_MANAGE = "ai.conversations.manage"
+
+PERM_AI_RUNS_READ = "ai.runs.read"
+PERM_AI_RUNS_CREATE = "ai.runs.create"
+PERM_AI_RUNS_MANAGE = "ai.runs.manage"
+
+PERM_AI_PROMPTS_READ = "ai.prompts.read"
+PERM_AI_PROMPTS_CREATE = "ai.prompts.create"
+PERM_AI_PROMPTS_MANAGE = "ai.prompts.manage"
+
+PERM_AI_PROFILES_READ = "ai.profiles.read"
+PERM_AI_PROFILES_CREATE = "ai.profiles.create"
+PERM_AI_PROFILES_MANAGE = "ai.profiles.manage"
+
+PERM_AI_TASKS_READ = "ai.tasks.read"
+PERM_AI_TASKS_CREATE = "ai.tasks.create"
+PERM_AI_TASKS_MANAGE = "ai.tasks.manage"
+
 
 # Import CSRF protection for dependency injection
 csrf_protect = None  # Will be set by main.py during startup

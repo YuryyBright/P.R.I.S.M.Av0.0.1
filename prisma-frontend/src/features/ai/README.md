@@ -1,111 +1,69 @@
-# AI Workspace — frontend template
+# features/ai — UI для AI-чату, агента та завдань
 
-Цей feature додається поруч із `collections` та `documents` у твоєму frontend.
+Фронтенд до бекенду `ai_module_v2` (v0.3.0). Побудований за тією ж архітектурою, що й `features/collections`:
+`api/ types/ constants/ store/ hooks/ lib/ components/ pages/ routes.tsx index.ts`,
+Tailwind-токени (brand/gray/success/warning/error, `text-theme-*`), RTK Query, react-i18next, `Can`, `Modal/Alert/Field`.
 
-## UX-модель
+## Що всередині
 
-Не робити окремі сторінки `Chat` і `Agent`. Рекомендована модель:
+| Маршрут | Сторінка | Що робить |
+|---|---|---|
+| `/ai/chat/:conversationId?` | `AiChatPage` | діалоги, стрімінг відповіді (SSE), цитати `[n]`, режим **Чат/Агент**, таймлайн кроків агента, налаштування (модель, RAG-колекції, reranker, інтернет, профіль, промпт) |
+| `/ai/tasks` | `AiTasksPage` | список довготривалих завдань, фільтри, створення, Stop/Resume |
+| `/ai/tasks/:taskId` | `AiTaskDetailPage` | live-прогрес (SSE), етапи, лічильники, помилки елементів, журнал подій, артефакти |
+| `/ai/agents` | `AiProfilesPage` | профілі агента (промпт + модель + інструменти), «Використати в чаті» |
 
-- `/ai` — один AI Workspace.
-- верхній перемикач: `Chat | Agent`;
-- composer спільний для обох режимів;
-- attachments: image / video / document;
-- права панель: model + generation + Knowledge;
-- Knowledge:
-  - RAG on/off;
-  - collections;
-  - top K;
-  - reranker on/off;
-  - rerank K;
-- Agent додає нижче allow-list tools;
-- run execution показується timeline-ом із SSE;
-- sources/citations показуються окремим блоком після/під відповіддю.
+## Інтеграція (6 кроків)
 
-## Backend contract, який очікує цей шаблон
+1. **Скопіювати** папку `ai/` у `src/features/ai/`.
+2. **baseApi → `tagTypes`** додати:
+   `"AiConversation" | "AiMessages" | "AiCapabilities" | "AiProfile" | "AiTask" | "AiArtifact"`.
+3. **Store**: додати `aiUiSlice` у `combineReducers` (за аналогією з `collectionsUiSlice`):
+   `import { aiUiSlice } from "@/features/ai"` → `[aiUiSlice.reducerPath]: aiUiSlice.reducer`.
+4. **Маршрути**: `import { aiRoutes } from "@/features/ai"` і розкласти поруч із `collectionsRoutes`.
+5. **SSE-транспорт** (один раз при старті застосунку; ті самі заголовки, що й у `baseApi.prepareHeaders`):
+   ```ts
+   import { configureAiTransport } from "@/features/ai";
+   configureAiTransport({
+     baseUrl: API_BASE_URL,
+     getHeaders: () => ({ Authorization: `Bearer ${selectAccessToken(store.getState())}` }),
+   });
+   ```
+   `EventSource` не вміє `Authorization`, тому використано fetch-стрім із відновленням за `Last-Event-ID` (`?last_id=`).
+6. **Колекції**: у `features/collections/index.ts` додати один рядок (публічний API навмисно мінімальний):
+   `export { useGetCollectionsPageQuery } from "./api/collections.endpoints";`
 
-### Start
+Також: пункти меню (`AI_ROUTES.chat / tasks / agents`) і права `ai.tasks.read|create|manage` у seed RBAC
+(див. `docs/INTEGRATION.md` бекенду). Чат і профілі потребують лише авторизації.
 
-`POST /ai/runs`
+Локалізація: усі рядки мають українське значення за замовчуванням у `t(key, "…")`;
+`locales/uk.ai.json` — готовий словник для злиття (ключі `common.*`/`errors.*` беруться з вашого).
 
-`multipart/form-data`:
+## Ключові рішення
 
-- `message`: string
-- `config`: JSON string
-- `files`: zero or more files
+- **Бекенд — джерело правди.** Redux тримає лише UI-стан і «вказівник» активного run; живий run відновлюється
+  повтором SSE-стріму (Redis replay), завдання — `GET /ai/tasks/{id}` + SSE-накладка (reload дає ту саму картку).
+- **Протокол подій** згорнуто чистим редюсером (`lib/runReducer.ts`): `token.delta` належить останньому `llm_call`,
+  крок із tool-викликами — лише «коментар», відповідь — текст останнього кроку без викликів. Токени
+  застосовуються пачкою раз на кадр.
+- **Markdown** — власний безпечний рендерер без `dangerouslySetInnerHTML` (заголовки, списки, таблиці, код із копіюванням,
+  посилання http/https, маркери `[n]` → клікабельні джерела). За потреби замініть на `react-markdown`.
+- Список завдань оновлюється опитуванням (4 с, лише поки є активні), SSE — тільки на сторінці завдання
+  (ліміт ~6 з'єднань на origin).
+- Доступність: `role=log`, `aria-live`, `role=switch/radiogroup/progressbar`, фокус-кільця, `motion-reduce`.
 
-Response:
+## Прогалини бекенду, які варто закрити
 
-```json
-{
-  "id": "uuid",
-  "status": "queued",
-  "mode": "chat",
-  "createdAt": "2026-10-05T10:00:00Z",
-  "config": {}
-}
-```
+1. **Завантаження артефактів**: є лише список метаданих. UI вже викликає
+   `GET /ai/tasks/{id}/artifacts/{artifact_id}/download` (див. `AI_PATHS.taskArtifactDownload`) — потрібен endpoint,
+   що віддає байти з `ArtifactStore` з `Content-Disposition`.
+2. **Активний run діалогу**: після повного перезавантаження сторінки UI не знає `run_id` поточного запиту.
+   Рекомендація: додати `active_run_id` до `ConversationOut` (або `GET /conversations/{id}/active-run`).
+3. **Пошук/total для завдань**: `GET /ai/tasks` повертає масив без `total`; пагінація зроблена як «показати ще».
+4. Вкладення (`attachment_ids`) бекенд відхиляє — у UI їх немає.
 
-### SSE
+## Перевірено
 
-`GET /ai/runs/{run_id}/events`
-
-Recommended:
-
-```text
-event: run.started
-data: {"type":"run.started","runId":"...","timestamp":"...","data":{}}
-
-event: retrieval.started
-data: {"type":"retrieval.started","runId":"...","timestamp":"...","data":{}}
-
-event: retrieval.result
-data: {"type":"retrieval.result","runId":"...","timestamp":"...","data":{"chunks":[]}}
-
-event: llm.delta
-data: {"type":"llm.delta","runId":"...","timestamp":"...","data":{"text":"Hello"}}
-
-event: citation.created
-data: {"type":"citation.created","runId":"...","timestamp":"...","data":{"number":1,"chunkId":"..."}}
-
-event: run.completed
-data: {"type":"run.completed","runId":"...","timestamp":"...","data":{}}
-```
-
-### Cancel
-
-`POST /ai/runs/{run_id}/cancel`
-
-## SSE vs WebSocket
-
-Для цієї архітектури рекомендований **SSE**, а не WebSocket:
-
-- сервер → UI є основним напрямком після запуску run;
-- SSE природно відповідає event protocol;
-- reconnect простіший;
-- легко прокинути через nginx/load balancer;
-- browser має нативний `EventSource`;
-- cancel можна зробити окремим `POST`.
-
-WebSocket має сенс лише якщо пізніше з'являться вимоги до справжньої двосторонньої realtime-сесії: live voice, live tool control, interactive agent steering тощо.
-
-## Важливо для production
-
-1. `EventSource` не дозволяє довільний Authorization header. Якщо frontend і API на різних origins та auth = Bearer header, заміни `EventSource` на `fetch()` streaming parser або використай короткоживучий SSE ticket.
-2. SSE endpoint повинен віддавати `text/event-stream`, flush кожної події і heartbeat приблизно кожні 10–20 секунд.
-3. Підтримай `Last-Event-ID`, якщо потрібен reliable reconnect.
-4. Backend має зберігати `ai_run_steps`, а SSE — лише транслювати canonical `RunEvent`.
-5. UI не повинен інтерпретувати внутрішній Celery/vLLM state напряму. Йому потрібен лише `RunEvent` protocol.
-6. RAG authorization залишається на backend: collection IDs з UI — це запит, а не дозвіл.
-
-## Інтеграція
-
-Додай `aiRoutes` до authenticated router поруч із:
-
-```ts
-collectionsRoutes
-documentsRoutes
-```
-
-і зареєструй `AI` у `baseApi.tagTypes`, якщо пізніше додаси cache tags.
-
-Для collections у production заміни demo `<option>` у `KnowledgePanel` на дані з existing `useGetCollectionsPageQuery`.
+`tsc --strict --noUnusedLocals` проти заглушок `@/shared/*` — без помилок; юніт-перевірки парсера SSE
+(розрив кадрів між чанками, `\r\n`), редюсерів run/task (replay-safety, семантика агента) та Markdown-парсера.
+Візуально в браузері не запускалось — підтягніть у ваш dev-сервер і гляньте на стилі в темній/світлій темі.

@@ -34,7 +34,7 @@ from app.utils.client_address import ProxyHeadersMiddleware
 from app.utils.exceptions.user_exceptions import UserSelfDeleteException
 from app.utils.fastapi_globals import GlobalsMiddleware, g
 from app.utils.password_policy import PasswordRefused
-
+from app.ai.container import close_ai_container, init_ai_container
 # Coerce to str for Starlette CORSMiddleware (settings may type origins as str | AnyHttpUrl)
 allowed_origins: list[str] = [str(origin) for origin in (settings.BACKEND_CORS_ORIGINS or ["*"])]
 
@@ -132,31 +132,53 @@ celery = celery_app
 
 @asynccontextmanager
 async def lifespan(fastapi_instance: FastAPI) -> AsyncGenerator[None, None]:
-    # Startup
     redis_client = None
+    ai_container = None
 
-    # Get the Redis client using the async generator
-    async for client in get_redis_client():
-        redis_client = client
-        break  # Just get the first client from the generator
+    try:
+        # ------------------------------------------------------------------
+        # Startup
+        # ------------------------------------------------------------------
 
-    if redis_client:
-        FastAPICache.init(RedisBackend(redis_client), prefix="fastapi-cache")
+        # FastAPI request-scoped/session factory is provided by
+        # fastapi_async_sqlalchemy middleware. AI services expect a
+        # callable returning AsyncSession.
+        from app.db.session import SessionLocal
 
-    yield
-    # shutdown
-    await FastAPICache.clear()
-    if redis_client:
-        # Connection is returned to pool, pool cleanup happens below
-        pass
+        ai_container = init_ai_container(SessionLocal)
 
-    # Clean up Redis connection pool
-    from app.utils.redis_connection import RedisConnectionFactory
+        # Initialise AI infrastructure that must be ready before requests.
+        await ai_container.startup()
 
-    await RedisConnectionFactory.close_pool()
+        # Get the Redis client using the async generator.
+        async for client in get_redis_client():
+            redis_client = client
+            break
 
-    g.cleanup()
-    gc.collect()
+        if redis_client:
+            FastAPICache.init(
+                RedisBackend(redis_client),
+                prefix="fastapi-cache",
+            )
+
+        yield
+
+    finally:
+        # ------------------------------------------------------------------
+        # Shutdown
+        # ------------------------------------------------------------------
+
+        await FastAPICache.clear()
+
+        await close_ai_container()
+
+        # Connection is returned to pool; pool cleanup happens below.
+        from app.utils.redis_connection import RedisConnectionFactory
+
+        await RedisConnectionFactory.close_pool()
+
+        g.cleanup()
+        gc.collect()
 
 
 # Core Application Instance

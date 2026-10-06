@@ -19,12 +19,19 @@ class VectorSettings(BaseModel):
     backend: Literal["qdrant"] = "qdrant"
     collection_prefix: str = "rag"
     distance: Literal["cosine", "dot", "euclid"] = "cosine"
-    # qdrant
-    qdrant_url: str = "http://qdrant:6333"
+
+    # Qdrant
+    # Default for FastAPI running directly on the host.
+    # Docker deployment can override this with:
+    # RAG_VECTOR__QDRANT_URL=http://prisma_qdrant_dev:6333
+    qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: SecretStr | None = None
     qdrant_prefer_grpc: bool = False
+
+    # Qdrant HNSW index configuration
     hnsw_m: int = 16
     hnsw_ef_construct: int = 128
+
     # pgvector
     pgvector_schema: str = "rag"
 
@@ -55,12 +62,29 @@ class LLMSettings(BaseModel):
 
 
 class RerankerSettings(BaseModel):
-    # "api" — будь-який HTTP /rerank (Cohere v2, Jina, Voyage, власний); "bge" — локальний
-    backend: Literal["none"] = "none"
+    """
+    Configuration for RAG reranking.
+
+    Supported backends:
+    - none — reranking disabled;
+    - api — HTTP rerank-compatible API;
+    - bge — local BGE reranker;
+    - fake — test/development backend.
+    """
+
+    backend: Literal["none", "api", "bge", "fake"] = "none"
     model: str = "BAAI/bge-reranker-v2-m3"
     api_base: str | None = None
     api_key: SecretStr | None = None
     top_k: int = Field(8, gt=0)
+    timeout_s: float = Field(
+        30.0,
+        gt=0,
+    )
+    max_retries: int = Field(
+        2,
+        ge=0,
+    )
 
 
 class RetrievalSettings(BaseModel):

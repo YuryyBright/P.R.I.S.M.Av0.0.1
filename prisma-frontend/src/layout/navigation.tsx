@@ -15,7 +15,7 @@ import { USER_PERMISSIONS, USERS_ROUTES } from "@/features/users";
 import { COLLECTIONS_ROUTES } from "@/features/collections";
 import { JOB_PERMISSIONS, JOBS_ROUTES } from "@/features/jobs";
 import { TaskIcon } from "@/icons";
-import { AI_ROUTES } from "@/features/ai/routes";
+import { AI_PERMISSIONS, AI_ROUTES } from "@/features/ai";
 export interface NavItem {
   /** i18n key under `sidebar.items.*` */
   key: string;
@@ -82,8 +82,19 @@ export const NAV_GROUPS: NavGroup[] = [
     key: "ai",
     items: [
       {
-        key: "aiWorkspace",
-        path: AI_ROUTES.workspace,
+        key: "aiChat",
+        path: AI_ROUTES.chat,
+        icon: <AiIcon />,
+      },
+      {
+        key: "aiTasks",
+        path: AI_ROUTES.tasks,
+        permission: AI_PERMISSIONS.tasksRead,
+        icon: <TaskIcon fontSize={ICON} />,
+      },
+      {
+        key: "aiAgents",
+        path: AI_ROUTES.agents,
         icon: <AiIcon />,
       },
     ],
