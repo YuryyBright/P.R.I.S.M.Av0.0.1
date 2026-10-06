@@ -71,7 +71,6 @@ export const baseQuery: BaseQueryFn<
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery,
-
   tagTypes: [
     "User",
     "Session",
@@ -82,6 +81,13 @@ export const baseApi = createApi({
     "Collection",
     "CollectionMember",
     "Job",
+
+    "AiConversation",
+    "AiMessages",
+    "AiCapabilities",
+    "AiProfile",
+    "AiTask",
+    "AiArtifact",
   ],
 
   endpoints: () => ({}),

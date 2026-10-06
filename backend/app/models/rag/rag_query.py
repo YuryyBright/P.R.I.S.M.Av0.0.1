@@ -1,7 +1,8 @@
 import uuid
 from typing import Optional
 
-from sqlalchemy import Text
+from sqlalchemy import Column, Text
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlmodel import Field
 
 from app.models.rag.rag_base import (
@@ -30,6 +31,13 @@ class RagQuery(RagImmutableModel, table=True):
         default=None,
         sa_column=fk_column("rag_messages.id", ondelete="SET NULL", nullable=True),
     )
+
+    # [AI-PATCH] м'які посилання на ai_runs / ai_run_steps БЕЗ FK-констрейнту:
+    # rag не залежить від ai навіть на рівні схеми БД.
+    run_id: Optional[uuid.UUID] = Field(
+        default=None, sa_column=Column(PG_UUID(as_uuid=True), nullable=True, index=True))
+    step_id: Optional[uuid.UUID] = Field(
+        default=None, sa_column=Column(PG_UUID(as_uuid=True), nullable=True))
 
     query_text: str = Field(sa_type=Text)
     rewritten_query: Optional[str] = Field(default=None, sa_type=Text)

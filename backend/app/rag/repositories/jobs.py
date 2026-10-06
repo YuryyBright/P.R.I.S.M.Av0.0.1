@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Sequence
 
 from sqlalchemy import ColumnElement, func, or_, update
-from sqlmodel import select
+from sqlmodel import delete, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.rag.collection import Collection
@@ -17,7 +17,7 @@ from app.models.rag.ingestion_job import IngestionJob
 from app.models.rag.ingestion_stage import IngestionStage
 from app.models.rag.rag_base import utcnow
 from app.rag.domain.enums import IngestionStageName, JobStatus, StageStatus
-
+from sqlalchemy import delete as sa_delete
 
 ACTIVE_JOB_STATUSES = (
     JobStatus.QUEUED,
@@ -210,4 +210,47 @@ class IngestionJobRepository:
                     .limit(limit).offset(offset)
             )).all()
             return list(map(tuple, rows)), total
+    async def delete_for_document(self, document_id: uuid.UUID) -> int:
+        """Hard-delete всіх job-ів документа разом зі stages. Ідемпотентно.
+
+        Викликається з purge_document ПІСЛЯ того, як job-и вже скасовані
+        (soft-delete документа скасовує активні). Повертає кількість видалених job-ів.
+        """
+        return await self._hard_delete(IngestionJob.document_id == document_id)
+
+    async def delete_in_collection(self, collection_id: uuid.UUID) -> int:
+        """Страховка для purge_collection: добирає job-и, чиї документи ще не встигли
+        пройти purge_document (або вже втратили document_id)."""
+        doc_ids = select(Document.id).where(Document.collection_id == collection_id)
+        return await self._hard_delete(IngestionJob.document_id.in_(doc_ids))
+
+    async def _hard_delete(self, condition) -> int:
+        # stages мають FK на job — видаляємо першими (безпечно навіть без ON DELETE CASCADE)
+        job_ids = select(IngestionJob.id).where(condition)
+        await self.db.exec(
+            sa_delete(IngestionStage).where(IngestionStage.job_id.in_(job_ids))
+        )
+        res = await self.db.exec(sa_delete(IngestionJob).where(condition))
+        return getattr(res, "rowcount", 0) or 0
+    
+    async def hard_delete_for_document(self, document_id: uuid.UUID) -> int:
+        """Прибрати всі job-и документа разом зі stages. Ідемпотентно.
+
+        Stages зникають завдяки ON DELETE CASCADE на ingestion_stages.job_id,
+        тому додатково їх не чіпаємо.
+        """
+        res = await self.db.exec(
+            delete(IngestionJob).where(IngestionJob.document_id == document_id)
+        )
+        return getattr(res, "rowcount", 0) or 0
+
+    async def hard_delete_in_collection(self, collection_id: uuid.UUID) -> int:
+        """Страховка для purge_collection: добирає job-и, чиї документи вже
+        втратили document_id (SET NULL) або ще не пройшли purge_document."""
+        doc_ids = select(Document.id).where(Document.collection_id == collection_id)
+        res = await self.db.exec(
+            delete(IngestionJob).where(IngestionJob.document_id.in_(doc_ids))
+        )
+        return getattr(res, "rowcount", 0) or 0
+    
     

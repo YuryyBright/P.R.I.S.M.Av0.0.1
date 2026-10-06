@@ -47,14 +47,20 @@ export default function DefaultInputs() {
             />
             <button
               onClick={() => setShowPassword(!showPassword)}
-              className={cn("absolute end-4 top-1/2 z-30 -translate-y-1/2 cursor-pointer")}
+              className={cn(
+                "absolute end-4 top-1/2 z-30 -translate-y-1/2 cursor-pointer",
+              )}
               type="button"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
-                <EyeIcon className={cn("size-5 fill-gray-500 dark:fill-gray-400")} />
+                <EyeIcon
+                  className={cn("size-5 fill-gray-500 dark:fill-gray-400")}
+                />
               ) : (
-                <EyeCloseIcon className={cn("size-5 fill-gray-500 dark:fill-gray-400")} />
+                <EyeCloseIcon
+                  className={cn("size-5 fill-gray-500 dark:fill-gray-400")}
+                />
               )}
             </button>
           </div>
@@ -81,7 +87,11 @@ export default function DefaultInputs() {
               name="tm"
               onChange={(e) => console.log(e.target.value)}
             />
-            <span className={cn("pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400")}>
+            <span
+              className={cn(
+                "pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400",
+              )}
+            >
               <TimeIcon className={cn("size-6")} />
             </span>
           </div>
@@ -95,7 +105,11 @@ export default function DefaultInputs() {
               placeholder="Card number"
               className="ps-[62px]"
             />
-            <span className={cn("absolute start-0 top-1/2 flex h-11 w-[46px] -translate-y-1/2 items-center justify-center border-e border-gray-200 dark:border-gray-800")}>
+            <span
+              className={cn(
+                "absolute inset-s-0 top-1/2 flex h-11 w-[46px] -translate-y-1/2 items-center justify-center border-e border-gray-200 dark:border-gray-800",
+              )}
+            >
               <svg
                 width="20"
                 height="20"
@@ -117,4 +131,3 @@ export default function DefaultInputs() {
     </ComponentCard>
   );
 }
-

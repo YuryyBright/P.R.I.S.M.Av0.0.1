@@ -15,6 +15,7 @@ import { FullPageLoader } from "@/shared/ui/FullPageLoader";
 import { collectionsRoutes } from "@/features/collections";
 import { jobsRoutes } from "@/features/jobs";
 import { documentsRoutes } from "@/features/documents/routes";
+import { aiRoutes } from "@/features/ai";
 /**
  * Composition only: each feature owns its routes, this file decides WHERE they sit
  * (public / guest-only / protected). New feature = spread its routes into the right group.
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
               ...collectionsRoutes,
               ...documentsRoutes,
               ...jobsRoutes,
+              ...aiRoutes,
               {
                 path: "/403",
                 lazy: async () => ({

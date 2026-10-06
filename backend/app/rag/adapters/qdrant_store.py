@@ -117,10 +117,23 @@ class QdrantStore:
     def _filter(flt: SearchFilter | None) -> models.Filter | None:
         if flt is None:
             return None
+
         must = []
-        for key, vals in (("collection_id", flt.collection_ids), ("document_id", flt.document_ids)):
-            if vals is not None:
-                must.append(models.FieldCondition(key=key, match=models.MatchAny(any=list(vals))))
+
+        for key, values in (
+            ("collection_id", flt.collection_ids),
+            ("document_id", flt.document_ids),
+        ):
+            if values:
+                must.append(
+                    models.FieldCondition(
+                        key=key,
+                        match=models.MatchAny(
+                            any=[str(value) for value in values],
+                        ),
+                    )
+                )
+
         return models.Filter(must=must) if must else None
 
     @staticmethod
