@@ -23,6 +23,7 @@ import {
 } from "../components/AiIcons";
 import { IconTile, Pill, focusRing, skeleton, surface } from "../components/AiUi";
 import { AI_ROUTES } from "../constants/ai.constants";
+import { useFitViewport } from "../hooks/useFitViewport";
 import { aiUiActions, aiUiSlice } from "../store/aiUiSlice";
 import type { AgentProfile } from "../types/ai.types";
 
@@ -164,6 +165,7 @@ export default function AiProfilesPage() {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const ui = useSelector(aiUiSlice.selectors.selectAiUi);
+  const fitRef = useFitViewport<HTMLDivElement>(24);
   const profiles = useGetProfilesQuery();
   const caps = useGetCapabilitiesQuery();
 
@@ -174,8 +176,8 @@ export default function AiProfilesPage() {
   const agentAvailable = caps.data ? caps.data.modes.includes("agent") : true;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div ref={fitRef} className="flex min-h-80 flex-col gap-4">
+      <header className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 space-y-1">
           <h1 className="text-title-sm font-semibold text-gray-800 dark:text-white/90">
             {t("ai.agents.title", "Профілі агента")}
@@ -195,57 +197,60 @@ export default function AiProfilesPage() {
         </button>
       </header>
 
-      {!agentAvailable && (
-        <Alert>
-          {t("ai.agents.unavailable", "Режим агента недоступний: на сервері немає моделі з підтримкою інструментів.")}
-        </Alert>
-      )}
-      {profiles.error && (
-        <Alert>
-          {(profiles.error as { message?: string }).message ?? t("ai.agents.loadError", "Не вдалося завантажити профілі")}
-        </Alert>
-      )}
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pe-1">
+        {!agentAvailable && (
+          <Alert>
+            {t("ai.agents.unavailable", "Режим агента недоступний: на сервері немає моделі з підтримкою інструментів.")}
+          </Alert>
+        )}
+        {profiles.error && (
+          <Alert>
+            {(profiles.error as { message?: string }).message ?? t("ai.agents.loadError", "Не вдалося завантажити профілі")}
+          </Alert>
+        )}
 
-      {profiles.isLoading ? (
-        <ul aria-busy="true" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <span className="sr-only">{t("common.loading", "Завантаження…")}</span>
-          {[0, 1, 2].map((i) => (
-            <li key={i} className={`${surface} space-y-4 p-5`}>
-              <div className="flex items-center gap-3">
-                <div className={`${skeleton} size-10 rounded-xl`} />
-                <div className="flex-1 space-y-2">
-                  <div className={`${skeleton} h-3.5 w-2/3`} />
-                  <div className={`${skeleton} h-3 w-full`} />
+        {profiles.isLoading ? (
+          <ul aria-busy="true" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <span className="sr-only">{t("common.loading", "Завантаження…")}</span>
+            {[0, 1, 2].map((i) => (
+              <li key={i} className={`${surface} space-y-4 p-5`}>
+                <div className="flex items-center gap-3">
+                  <div className={`${skeleton} size-10 rounded-xl`} />
+                  <div className="flex-1 space-y-2">
+                    <div className={`${skeleton} h-3.5 w-2/3`} />
+                    <div className={`${skeleton} h-3 w-full`} />
+                  </div>
                 </div>
-              </div>
-              <div className={`${skeleton} h-5 w-3/4`} />
-            </li>
-          ))}
-        </ul>
-      ) : rows.length === 0 ? (
-        <div className={`${surface} flex flex-col items-center px-6 py-14 text-center`}>
-          <IconTile className="size-12 rounded-2xl">
-            <BotIcon className="size-6" />
-          </IconTile>
-          <h2 className="mt-4 text-theme-sm font-medium text-gray-800 dark:text-white/90">
-            {t("ai.agents.empty", "Профілів ще немає")}
-          </h2>
-          <p className="mt-1 max-w-sm text-theme-sm text-gray-500 dark:text-gray-400">
-            {t("ai.agents.emptyHint", "Створіть профіль, щоб швидко запускати агента з потрібними інструментами.")}
-          </p>
-        </div>
-      ) : (
-        <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {rows.map((p) => (
-            <ProfileCard
-              key={p.id}
-              profile={p}
-              modelLabel={modelLabel(p.model)}
-              onDelete={() => dispatch(aiUiActions.requestProfileDelete(p.id))}
-            />
-          ))}
-        </ul>
-      )}
+                <div className={`${skeleton} h-5 w-3/4`} />
+              </li>
+            ))}
+          </ul>
+        ) : rows.length === 0 ? (
+          <div className={`${surface} flex flex-col items-center px-6 py-14 text-center`}>
+            <IconTile className="size-12 rounded-2xl">
+              <BotIcon className="size-6" />
+            </IconTile>
+            <h2 className="mt-4 text-theme-sm font-medium text-gray-800 dark:text-white/90">
+              {t("ai.agents.empty", "Профілів ще немає")}
+            </h2>
+            <p className="mt-1 max-w-sm text-theme-sm text-gray-500 dark:text-gray-400">
+              {t("ai.agents.emptyHint", "Створіть профіль, щоб швидко запускати агента з потрібними інструментами.")}
+            </p>
+          </div>
+        ) : (
+          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {rows.map((p) => (
+              <ProfileCard
+                key={p.id}
+                profile={p}
+                modelLabel={modelLabel(p.model)}
+                onDelete={() => dispatch(aiUiActions.requestProfileDelete(p.id))}
+              />
+            ))}
+          </ul>
+        )}
+
+      </div>
 
       {ui.profileFormOpen && <ProfileFormModal onClose={() => dispatch(aiUiActions.closeProfileForm())} />}
       {deleteTarget && (

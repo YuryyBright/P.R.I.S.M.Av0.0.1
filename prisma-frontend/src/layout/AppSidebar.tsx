@@ -19,8 +19,6 @@ export default function AppSidebar() {
 
   const showLabels = isExpanded || isHovered || isMobileOpen;
 
-  // Hide items the current user cannot access.
-  // Remove groups that become empty after filtering.
   const groups = useMemo(
     () =>
       NAV_GROUPS.map((group) => ({
@@ -32,7 +30,6 @@ export default function AppSidebar() {
     [can],
   );
 
-  // Close mobile drawer after navigation.
   useEffect(() => {
     setIsMobileOpen(false);
   }, [pathname, setIsMobileOpen]);
@@ -46,7 +43,9 @@ export default function AppSidebar() {
         "transition-[width,transform] duration-300 ease-in-out",
         "xl:translate-x-0 xl:rtl:translate-x-0",
         "dark:border-gray-800/80 dark:bg-gray-950/95",
+
         showLabels ? "w-72.5" : "w-22.5",
+
         isMobileOpen
           ? "translate-x-0"
           : "-translate-x-full rtl:translate-x-full",
@@ -60,9 +59,7 @@ export default function AppSidebar() {
         setIsHovered(false);
       }}
     >
-      {/* ─────────────────────────────────────────────
-          Header / Brand
-      ───────────────────────────────────────────── */}
+      {/* Brand */}
       <div
         className={cn(
           "relative flex h-22 shrink-0 items-center",
@@ -72,11 +69,10 @@ export default function AppSidebar() {
       >
         <BrandLogo showText={showLabels} />
 
-        {/* Bottom separator / glow */}
         <div
           aria-hidden
           className={cn(
-            "inset-e-5bottom-0 pointer-events-none absolute inset-s-5 h-px",
+            "pointer-events-none absolute inset-s-5 inset-e-5 bottom-0 h-px",
             "bg-linear-to-r from-transparent via-gray-200 to-transparent",
             "dark:via-gray-800",
             !showLabels && "xl:inset-s-3 xl:inset-e-3",
@@ -84,24 +80,22 @@ export default function AppSidebar() {
         />
       </div>
 
-      {/* ─────────────────────────────────────────────
-          Navigation
-      ───────────────────────────────────────────── */}
+      {/* Navigation */}
       <nav
         aria-label={t("app.name")}
         className={cn(
           "no-scrollbar flex flex-1 flex-col overflow-y-auto",
-          "px-3 py-6",
+          "px-3 py-5",
           "scroll-smooth",
         )}
       >
-        <div className="flex flex-col gap-7">
+        <div className="flex flex-col gap-5">
           {groups.map((group) => (
             <section key={group.key}>
               {/* Group title */}
               <h2
                 className={cn(
-                  "mb-2.5 flex items-center",
+                  "mb-1.5 flex h-6 items-center",
                   "px-3",
                   "text-[10px] font-semibold uppercase",
                   "tracking-[0.14em]",
@@ -119,8 +113,8 @@ export default function AppSidebar() {
                 )}
               </h2>
 
-              {/* Navigation items */}
-              <ul className="flex flex-col gap-1">
+              {/* Items */}
+              <ul className="flex flex-col gap-0.5">
                 {group.items.map((item) => {
                   const label = t(`sidebar.items.${item.key}`);
 
@@ -133,23 +127,23 @@ export default function AppSidebar() {
                         className={({ isActive }) =>
                           cn(
                             "group relative flex h-11 items-center",
-                            "rounded-xl px-3",
+                            "rounded-xl px-2",
                             "text-sm font-medium",
                             "outline-none",
-                            "transition-all duration-200",
+                            "transition-colors duration-150",
+
                             !showLabels && "xl:justify-center xl:px-0",
 
                             isActive
                               ? [
                                   "bg-brand-50 text-brand-700",
-                                  "shadow-sm",
                                   "dark:bg-brand-500/10 dark:text-brand-400",
                                 ]
                               : [
                                   "text-gray-600",
                                   "hover:bg-gray-50 hover:text-gray-900",
                                   "dark:text-gray-400",
-                                  "dark:hover:bg-white/4",
+                                  "dark:hover:bg-white/[0.04]",
                                   "dark:hover:text-gray-100",
                                 ],
 
@@ -165,10 +159,10 @@ export default function AppSidebar() {
                             <span
                               aria-hidden
                               className={cn(
-                                "absolute inset-s-0 top-1/2 h-6 w-0.5",
-                                "-translate-y-1/2 rounded-full",
-                                "bg-brand-500",
-                                "transition-all duration-200",
+                                "absolute inset-s-0 top-1/2",
+                                "h-5 w-0.5 -translate-y-1/2",
+                                "rounded-full bg-brand-500",
+                                "transition-opacity duration-150",
                                 isActive ? "opacity-100" : "opacity-0",
                               )}
                             />
@@ -178,18 +172,14 @@ export default function AppSidebar() {
                               className={cn(
                                 "flex size-9 shrink-0 items-center justify-center",
                                 "rounded-lg",
-                                "transition-all duration-200",
+                                "transition-colors duration-150",
+
                                 isActive
-                                  ? [
-                                      "bg-brand-100 text-brand-600",
-                                      "dark:bg-brand-500/15 dark:text-brand-400",
-                                    ]
+                                  ? ["text-brand-600", "dark:text-brand-400"]
                                   : [
                                       "text-gray-500",
-                                      "group-hover:bg-gray-100",
                                       "group-hover:text-gray-700",
                                       "dark:text-gray-500",
-                                      "dark:group-hover:bg-white/6",
                                       "dark:group-hover:text-gray-200",
                                     ],
                               )}
@@ -203,14 +193,6 @@ export default function AppSidebar() {
                                 {label}
                               </span>
                             )}
-
-                            {/* Subtle active dot */}
-                            {showLabels && isActive && (
-                              <span
-                                aria-hidden
-                                className="ms-auto size-1.5 shrink-0 rounded-full bg-brand-500"
-                              />
-                            )}
                           </>
                         )}
                       </NavLink>
@@ -223,9 +205,7 @@ export default function AppSidebar() {
         </div>
       </nav>
 
-      {/* ─────────────────────────────────────────────
-          Bottom fade
-      ───────────────────────────────────────────── */}
+      {/* Bottom fade */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-white to-transparent dark:from-gray-950"

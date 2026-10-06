@@ -56,6 +56,9 @@ export const MESSAGES_MAX_LIMIT = 200;
 export const MAX_MESSAGE_LENGTH = 32000;
 export const MAX_CHAT_ATTACHMENTS = 5;
 export const MAX_CHAT_ATTACHMENT_SIZE = 25 * 1024 * 1024;
+/** Pasted text at least this long (chars) or this many lines becomes a .txt attachment instead of filling the input. */
+export const PASTE_AS_ATTACHMENT_CHARS = 5000;
+export const PASTE_AS_ATTACHMENT_LINES = 60;
 export const TASKS_PAGE_STEP = 30;
 export const TASKS_MAX_LIMIT = 200;
 export const TASKS_POLL_MS = 4000;

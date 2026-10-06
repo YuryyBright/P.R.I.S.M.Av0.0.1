@@ -16,6 +16,7 @@ import {
   TASKS_PAGE_STEP,
   TASKS_POLL_MS,
 } from "../constants/ai.constants";
+import { useFitViewport } from "../hooks/useFitViewport";
 import { aiUiActions, aiUiSlice, type TasksFilter } from "../store/aiUiSlice";
 
 function EmptyState({ filtered }: { filtered: boolean }) {
@@ -55,6 +56,7 @@ export default function AiTasksPage() {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const ui = useSelector(aiUiSlice.selectors.selectAiUi);
+  const fitRef = useFitViewport<HTMLDivElement>(24);
   const [limit, setLimit] = useState(TASKS_PAGE_STEP);
 
   // The task list is a projection of the API: poll while anything is active (SSE only on the detail page).
@@ -74,8 +76,8 @@ export default function AiTasksPage() {
   const canLoadMore = rows.length >= limit && limit < TASKS_MAX_LIMIT;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div ref={fitRef} className="flex min-h-80 flex-col gap-4">
+      <header className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 space-y-1">
           <h1 className="text-title-sm font-semibold text-gray-800 dark:text-white/90">
             {t("ai.tasks.title", "Завдання AI")}
@@ -100,7 +102,7 @@ export default function AiTasksPage() {
         permission={AI_PERMISSIONS.tasksRead}
         fallback={<Alert>{t("ai.tasks.noPermission", "Недостатньо прав для перегляду завдань.")}</Alert>}
       >
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
           <Segmented<TasksFilter>
             label={t("ai.tasks.filter", "Фільтр")}
             value={ui.tasksFilter}
@@ -122,51 +124,53 @@ export default function AiTasksPage() {
           )}
         </div>
 
-        {q.error && (
-          <Alert>
-            {(q.error as { message?: string }).message ?? t("ai.tasks.loadError", "Не вдалося завантажити завдання")}
-          </Alert>
-        )}
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pe-1">
+          {q.error && (
+            <Alert>
+              {(q.error as { message?: string }).message ?? t("ai.tasks.loadError", "Не вдалося завантажити завдання")}
+            </Alert>
+          )}
 
-        {q.isLoading ? (
-          <ul aria-busy="true" className="grid gap-4 lg:grid-cols-2">
-            <span className="sr-only">{t("common.loading", "Завантаження…")}</span>
-            {[0, 1, 2, 3].map((i) => (
-              <li key={i} className={`${surface} space-y-4 p-5`}>
-                <div className="flex items-center gap-3">
-                  <div className={`${skeleton} size-10 rounded-xl`} />
-                  <div className="flex-1 space-y-2">
-                    <div className={`${skeleton} h-3.5 w-2/3`} />
-                    <div className={`${skeleton} h-3 w-full`} />
+          {q.isLoading ? (
+            <ul aria-busy="true" className="grid gap-4 lg:grid-cols-2">
+              <span className="sr-only">{t("common.loading", "Завантаження…")}</span>
+              {[0, 1, 2, 3].map((i) => (
+                <li key={i} className={`${surface} space-y-4 p-5`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`${skeleton} size-10 rounded-xl`} />
+                    <div className="flex-1 space-y-2">
+                      <div className={`${skeleton} h-3.5 w-2/3`} />
+                      <div className={`${skeleton} h-3 w-full`} />
+                    </div>
                   </div>
-                </div>
-                <div className={`${skeleton} h-2 w-full rounded-full`} />
-              </li>
-            ))}
-          </ul>
-        ) : filtered.length === 0 ? (
-          <EmptyState filtered={ui.tasksFilter !== "all" && rows.length > 0} />
-        ) : (
-          <ul className="grid gap-4 lg:grid-cols-2">
-            {filtered.map((task) => (
-              <TaskCard key={task.id} task={task} />
-            ))}
-          </ul>
-        )}
+                  <div className={`${skeleton} h-2 w-full rounded-full`} />
+                </li>
+              ))}
+            </ul>
+          ) : filtered.length === 0 ? (
+            <EmptyState filtered={ui.tasksFilter !== "all" && rows.length > 0} />
+          ) : (
+            <ul className="grid gap-4 lg:grid-cols-2">
+              {filtered.map((task) => (
+                <TaskCard key={task.id} task={task} />
+              ))}
+            </ul>
+          )}
 
-        {canLoadMore && !q.isLoading && (
-          <div className="flex justify-center">
-            <button
-              type="button"
-              className={`${btnSecondary} ${btnContent}`}
-              disabled={q.isFetching}
-              onClick={() => setLimit((l) => Math.min(l + TASKS_PAGE_STEP, TASKS_MAX_LIMIT))}
-            >
-              {q.isFetching && <SpinnerIcon className="size-4" />}
-              {t("ai.tasks.more", "Показати ще")}
-            </button>
-          </div>
-        )}
+          {canLoadMore && !q.isLoading && (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                className={`${btnSecondary} ${btnContent}`}
+                disabled={q.isFetching}
+                onClick={() => setLimit((l) => Math.min(l + TASKS_PAGE_STEP, TASKS_MAX_LIMIT))}
+              >
+                {q.isFetching && <SpinnerIcon className="size-4" />}
+                {t("ai.tasks.more", "Показати ще")}
+              </button>
+            </div>
+          )}
+        </div>
       </Can>
 
       {ui.taskCreateOpen && <CreateTaskModal onClose={() => dispatch(aiUiActions.closeTaskCreate())} />}

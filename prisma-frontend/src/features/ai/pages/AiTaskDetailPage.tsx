@@ -18,6 +18,7 @@ import {
   taskTypeLabel,
 } from "../components/tasks/TaskParts";
 import { AI_ROUTES, STAGE_LABELS } from "../constants/ai.constants";
+import { useFitViewport } from "../hooks/useFitViewport";
 import { useNow, useTaskStream } from "../hooks/useTaskStream";
 import { elapsedMs, formatDuration, formatNumber } from "../lib/format";
 import { formatDateTime } from "@/shared/lib/date";
@@ -42,6 +43,7 @@ function Card({ title, children, aside }: { title: string; children: React.React
 export default function AiTaskDetailPage() {
   const { t } = useTranslation();
   const { taskId = "" } = useParams();
+  const fitRef = useFitViewport<HTMLDivElement>(24);
   const { data: task, isLoading, error } = useGetTaskByIdQuery(taskId);
   const artifacts = useGetTaskArtifactsQuery(taskId, { skip: !task });
   const { live, connection } = useTaskStream(task);
@@ -86,8 +88,8 @@ export default function AiTaskDetailPage() {
   const artifactRows = artifacts.data ?? [];
 
   return (
-    <div className="space-y-6">
-      <nav aria-label={t("common.breadcrumb", "Навігаційний ланцюжок")}>
+    <div ref={fitRef} className="flex min-h-80 flex-col gap-4">
+      <nav className="shrink-0" aria-label={t("common.breadcrumb", "Навігаційний ланцюжок")}>
         <ol className="flex items-center gap-1.5 text-theme-sm text-gray-500 dark:text-gray-400">
           <li className="shrink-0">
             <Link to={AI_ROUTES.tasks} className={linkClass}>
@@ -106,7 +108,7 @@ export default function AiTaskDetailPage() {
       </nav>
 
       {/* header + live progress */}
-      <header className={`${surface} space-y-5 p-5 md:p-6`}>
+      <header className={`${surface} shrink-0 space-y-4 p-4 md:p-5`}>
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="flex min-w-0 flex-1 items-start gap-4">
             <IconTile tone="brand" className="size-12 rounded-2xl">
@@ -175,48 +177,50 @@ export default function AiTaskDetailPage() {
         {live.error && live.status === "failed" && <Alert>{live.error}</Alert>}
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <Card title={t("ai.tasks.instruction", "Інструкція")}>
-            <p className="text-theme-sm leading-6 wrap-break-word whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-              {task.instruction}
-            </p>
-          </Card>
-
-          <Card
-            title={t("ai.tasks.artifacts", "Результати")}
-            aside={
-              artifactRows.length > 0 ? (
-                <Pill tone="success">{artifactRows.length}</Pill>
-              ) : undefined
-            }
-          >
-            <ArtifactsList taskId={task.id} artifacts={artifactRows} isLoading={artifacts.isLoading} />
-          </Card>
-
-          {live.failedItems.length > 0 && (
-            <Card
-              title={t("ai.tasks.failedItems", "Помилки обробки")}
-              aside={<Pill tone="error">{live.failedItems.length}</Pill>}
-            >
-              <FailedItems items={live.failedItems} />
-            </Card>
-          )}
-        </div>
-
-        <div className="space-y-6">
-          <Card title={t("ai.tasks.pipeline", "Етапи")}>
-            {live.stages.length || live.totalStages ? (
-              <StageStepper stages={live.stages} totalStages={live.totalStages} />
-            ) : (
-              <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                {t("ai.tasks.pipelineEmpty", "Етапи з'являться після запуску.")}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pe-1">
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
+            <Card title={t("ai.tasks.instruction", "Інструкція")}>
+              <p className="text-theme-sm leading-6 wrap-break-word whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+                {task.instruction}
               </p>
+            </Card>
+
+            <Card
+              title={t("ai.tasks.artifacts", "Результати")}
+              aside={
+                artifactRows.length > 0 ? (
+                  <Pill tone="success">{artifactRows.length}</Pill>
+                ) : undefined
+              }
+            >
+              <ArtifactsList taskId={task.id} artifacts={artifactRows} isLoading={artifacts.isLoading} />
+            </Card>
+
+            {live.failedItems.length > 0 && (
+              <Card
+                title={t("ai.tasks.failedItems", "Помилки обробки")}
+                aside={<Pill tone="error">{live.failedItems.length}</Pill>}
+              >
+                <FailedItems items={live.failedItems} />
+              </Card>
             )}
-          </Card>
-          <Card title={t("ai.tasks.events", "Події")}>
-            <EventLog entries={live.log} />
-          </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card title={t("ai.tasks.pipeline", "Етапи")}>
+              {live.stages.length || live.totalStages ? (
+                <StageStepper stages={live.stages} totalStages={live.totalStages} />
+              ) : (
+                <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                  {t("ai.tasks.pipelineEmpty", "Етапи з'являться після запуску.")}
+                </p>
+              )}
+            </Card>
+            <Card title={t("ai.tasks.events", "Події")}>
+              <EventLog entries={live.log} />
+            </Card>
+          </div>
         </div>
       </div>
     </div>

@@ -211,7 +211,7 @@ function MessageListInner({
         ) : isEmpty ? (
           empty
         ) : (
-          <div className="mx-auto w-full max-w-3xl space-y-7 px-4 py-6">
+          <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-4">
             {error && <Alert>{error}</Alert>}
 
             {canLoadEarlier && (

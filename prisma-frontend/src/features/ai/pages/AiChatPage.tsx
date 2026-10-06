@@ -12,6 +12,7 @@ import { EmptyChat } from "../components/chat/EmptyChat";
 import { MessageList } from "../components/chat/MessageList";
 import { SettingsPanel } from "../components/chat/SettingsPanel";
 import { useChat } from "../hooks/useChat";
+import { useFitViewport } from "../hooks/useFitViewport";
 import { conversationTitle } from "../lib/format";
 import { aiUiActions, aiUiSlice } from "../store/aiUiSlice";
 import type { RunMode } from "../types/ai.types";
@@ -29,6 +30,7 @@ export default function AiChatPage() {
   const { conversationId } = useParams<{ conversationId?: string }>();
   const [params, setParams] = useSearchParams();
 
+  const fitRef = useFitViewport<HTMLDivElement>(24);
   const chat = useChat(conversationId as UUID | undefined);
   const [text, setText] = useState("");
   const [sendError, setSendError] = useState<string | null>(null);
@@ -91,17 +93,20 @@ export default function AiChatPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <header className="min-w-0 space-y-1">
-        <h1 className="text-title-sm font-semibold text-gray-800 dark:text-white/90">
+    <div className="flex flex-col gap-3">
+      <header className="flex min-w-0 items-baseline gap-3">
+        <h1 className="shrink-0 text-title-sm font-semibold text-gray-800 dark:text-white/90">
           {t("ai.title", "AI-асистент")}
         </h1>
-        <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+        <p className="hidden min-w-0 truncate text-theme-sm text-gray-500 md:block dark:text-gray-400">
           {t("ai.subtitle", "Чат з базами знань та автономний агент.")}
         </p>
       </header>
 
-      <div className="relative flex h-[calc(100dvh-14rem)] min-h-130 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/3">
+      <div
+        ref={fitRef}
+        className="relative flex min-h-80 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/3"
+      >
         <ConversationSidebar />
 
         <section className="flex min-w-0 flex-1 flex-col" aria-label={title}>

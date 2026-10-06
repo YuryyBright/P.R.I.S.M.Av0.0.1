@@ -3,6 +3,7 @@ import {
   useRef,
   useState,
   type ChangeEvent,
+  type ClipboardEvent,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
@@ -11,6 +12,8 @@ import {
   MAX_CHAT_ATTACHMENT_SIZE,
   MAX_CHAT_ATTACHMENTS,
   MAX_MESSAGE_LENGTH,
+  PASTE_AS_ATTACHMENT_CHARS,
+  PASTE_AS_ATTACHMENT_LINES,
 } from "../../constants/ai.constants";
 import type { SendBlock } from "../../hooks/useChat";
 import type {
@@ -119,6 +122,7 @@ export function Composer({
   const { t } = useTranslation();
   const ref = useRef<HTMLTextAreaElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const pasteSeq = useRef(0);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [deletingAttachmentId, setDeletingAttachmentId] = useState<string | null>(null);
@@ -128,7 +132,7 @@ export function Composer({
     const el = ref.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 208)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [value]);
 
   // focus when switching conversations / starting a new chat
@@ -191,6 +195,11 @@ export function Composer({
   async function handleFiles(e: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     e.target.value = "";
+    await addFiles(files);
+  }
+
+  /** Shared by the file picker and paste: validates limits and uploads each file. */
+  async function addFiles(files: File[]) {
     if (!files.length) return;
 
     setAttachmentError(null);
@@ -253,6 +262,45 @@ export function Composer({
     }
   }
 
+  const uploadsBlocked =
+    isRunActive ||
+    isSending ||
+    isUploadingAttachment ||
+    attachments.length >= MAX_CHAT_ATTACHMENTS;
+
+  /**
+   * Big paste -> .txt attachment (like "pasted text" chips in other chat apps), so the input and
+   * the page don't get flooded. Files/images from the clipboard are attached too. Small text pastes
+   * behave as usual. If attaching is currently impossible, the default paste is kept.
+   */
+  function onPaste(e: ClipboardEvent<HTMLTextAreaElement>) {
+    if (uploadsBlocked) return;
+    const data = e.clipboardData;
+
+    const text = data.getData("text/plain");
+    if (text) {
+      const lines = text.split("\n").length;
+      if (
+        text.length >= PASTE_AS_ATTACHMENT_CHARS ||
+        lines >= PASTE_AS_ATTACHMENT_LINES
+      ) {
+        e.preventDefault();
+        pasteSeq.current += 1;
+        const file = new File([text], `pasted-text-${pasteSeq.current}.txt`, {
+          type: "text/plain",
+        });
+        void addFiles([file]);
+      }
+      return;
+    }
+
+    // no text: pasted files (e.g. screenshots)
+    if (data.files.length > 0) {
+      e.preventDefault();
+      void addFiles(Array.from(data.files));
+    }
+  }
+
   async function removeAttachment(id: string) {
     if (deletingAttachmentId) return;
     setAttachmentError(null);
@@ -287,8 +335,8 @@ export function Composer({
         });
 
   return (
-    <div className="border-t border-gray-100 bg-white/80 px-3 pt-3 pb-3 backdrop-blur sm:px-4 dark:border-white/5 dark:bg-transparent">
-      <div className="mx-auto w-full max-w-3xl space-y-2.5">
+    <div className="border-t border-gray-100 bg-white/80 px-3 py-2 backdrop-blur sm:px-4 dark:border-white/5 dark:bg-transparent">
+      <div className="mx-auto w-full max-w-3xl space-y-2">
         {banner}
         {attachmentError && (
           <p
@@ -352,6 +400,9 @@ export function Composer({
           >
             {t("ai.composer.settings", "Налаштування")}
           </Chip>
+          <span className="ms-auto hidden text-theme-xs text-gray-400 xl:inline dark:text-gray-500">
+            {t("ai.composer.keys", "Enter — надіслати · Shift+Enter — новий рядок")}
+          </span>
         </div>
 
         <div className="relative flex flex-col gap-2 rounded-2xl border border-gray-200 bg-white p-2 shadow-xs transition-colors focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-500/15 dark:border-white/10 dark:bg-white/3 dark:focus-within:border-brand-500/40 dark:focus-within:ring-brand-500/10">
@@ -439,6 +490,7 @@ export function Composer({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={onKeyDown}
+            onPaste={onPaste}
             placeholder={
               settings.mode === "agent"
                 ? t(
@@ -447,7 +499,7 @@ export function Composer({
                   )
                 : t("ai.composer.placeholder", "Поставте запитання…")
             }
-            className="max-h-52 min-h-10 w-full flex-1 resize-none bg-transparent px-2.5 py-2 text-theme-sm leading-6 text-gray-800 outline-none placeholder:text-gray-400 dark:text-white/90 dark:placeholder:text-gray-500"
+            className="max-h-40 min-h-10 w-full flex-1 resize-none bg-transparent px-2.5 py-2 text-theme-sm leading-6 text-gray-800 outline-none placeholder:text-gray-400 dark:text-white/90 dark:placeholder:text-gray-500"
             aria-invalid={block === "tooLong"}
           />
 
@@ -485,32 +537,27 @@ export function Composer({
           </div>
         </div>
 
-        <div className="flex min-h-4 items-center justify-between gap-3 px-1">
-          <p
-            role={hint ? "alert" : undefined}
-            className={`text-theme-xs ${hint ? "text-warning-600 dark:text-warning-400" : "text-gray-400 dark:text-gray-500"}`}
-          >
-            {hint ?? (
-              <span className="hidden sm:inline">
-                {t(
-                  "ai.composer.keys",
-                  "Enter — надіслати · Shift+Enter — новий рядок · кнопка файлу — прикріпити",
-                )}
+        {(hint || value.length > MAX_MESSAGE_LENGTH * 0.8) && (
+          <div className="flex items-center justify-between gap-3 px-1">
+            <p
+              role={hint ? "alert" : undefined}
+              className="text-theme-xs text-warning-600 dark:text-warning-400"
+            >
+              {hint}
+            </p>
+            {value.length > MAX_MESSAGE_LENGTH * 0.8 && (
+              <span
+                className={`text-theme-xs tabular-nums ${
+                  value.length > MAX_MESSAGE_LENGTH
+                    ? "text-error-600 dark:text-error-400"
+                    : "text-gray-400 dark:text-gray-500"
+                }`}
+              >
+                {value.length}/{MAX_MESSAGE_LENGTH}
               </span>
             )}
-          </p>
-          {value.length > MAX_MESSAGE_LENGTH * 0.8 && (
-            <span
-              className={`text-theme-xs tabular-nums ${
-                value.length > MAX_MESSAGE_LENGTH
-                  ? "text-error-600 dark:text-error-400"
-                  : "text-gray-400 dark:text-gray-500"
-              }`}
-            >
-              {value.length}/{MAX_MESSAGE_LENGTH}
-            </span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
