@@ -13,6 +13,7 @@ import type {
 } from "../types/collection.types";
 
 const LIST = "LIST" as const;
+const ARCHIVE = "ARCHIVE" as const;
 
 /**
  * NOTE: add "Collection" and "CollectionMember" to `tagTypes` in baseApi.
@@ -40,6 +41,21 @@ export const collectionsApi = baseApi.injectEndpoints({
         })),
         { type: "Collection" as const, id: LIST },
       ],
+    }),
+
+    /** GET /collections/archived?limit&offset -> Page<Collection> (owner's soft-deleted collections) */
+    getArchivedCollectionsPage: build.query<
+      LimitOffsetPage<Collection>,
+      CollectionsPageArgs | void
+    >({
+      query: (args) => {
+        const { page = 1, size = DEFAULT_PAGE_SIZE } = args ?? {};
+        return {
+          url: COLLECTIONS_PATHS.archived,
+          params: { limit: size, offset: (page - 1) * size },
+        };
+      },
+      providesTags: [{ type: "Collection" as const, id: ARCHIVE }],
     }),
 
     /** GET /collections/{id} */
@@ -70,11 +86,31 @@ export const collectionsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    /** DELETE /collections/{id} -> 204, NO body. Soft delete; Celery cleans docs/vectors later. */
+    /** DELETE /collections/{id} -> 204, NO body. Soft delete = move to archive (restorable). */
     deleteCollection: build.mutation<void, UUID>({
       query: (id) => ({ url: COLLECTIONS_PATHS.byId(id), method: "DELETE" }),
-      // Its documents and jobs go away with it.
-      invalidatesTags: [{ type: "Collection", id: LIST }, "Document", "Job"],
+      invalidatesTags: [
+        { type: "Collection", id: LIST },
+        { type: "Collection", id: ARCHIVE },
+        "Document",
+        "Job",
+      ],
+    }),
+
+    /** POST /collections/{id}/restore -> Collection. Archive -> active. */
+    restoreCollection: build.mutation<Collection, UUID>({
+      query: (id) => ({ url: COLLECTIONS_PATHS.restore(id), method: "POST" }),
+      invalidatesTags: [
+        { type: "Collection", id: LIST },
+        { type: "Collection", id: ARCHIVE },
+        "Document",
+      ],
+    }),
+
+    /** DELETE /collections/{id}/purge -> 202. Permanent: Celery wipes documents/vectors, no way back. */
+    purgeCollection: build.mutation<void, UUID>({
+      query: (id) => ({ url: COLLECTIONS_PATHS.purge(id), method: "DELETE" }),
+      invalidatesTags: [{ type: "Collection", id: ARCHIVE }],
     }),
 
     /** GET /collections/{id}/members -> MemberRead[] (not paginated, owner not included) */
@@ -113,10 +149,13 @@ export const collectionsApi = baseApi.injectEndpoints({
 
 export const {
   useGetCollectionsPageQuery,
+  useGetArchivedCollectionsPageQuery,
   useGetCollectionByIdQuery,
   useCreateCollectionMutation,
   useUpdateCollectionMutation,
   useDeleteCollectionMutation,
+  useRestoreCollectionMutation,
+  usePurgeCollectionMutation,
   useListMembersQuery,
   useUpsertMemberMutation,
   useRemoveMemberMutation,

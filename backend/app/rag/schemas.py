@@ -92,6 +92,7 @@ class CollectionRead(_ORM):
     is_active: bool
     owner_id: uuid.UUID
     created_at: datetime
+    deleted_at: datetime | None = None   # != None лише в архіві
     my_role: CollectionRole | None = None
 
     @classmethod

@@ -11,14 +11,26 @@ import {
 import type { Collection } from "../types/collection.types";
 import { CollectionActions } from "./CollectionActions";
 import { RoleBadge, VisibilityBadge } from "./CollectionBadges";
-import { FolderIcon, PlusIcon, btnContent } from "./CollectionIcons";
+import {
+  ArchiveIcon,
+  FolderIcon,
+  PlusIcon,
+  btnContent,
+} from "./CollectionIcons";
 
 interface Props {
   rows: Collection[];
   isLoading: boolean;
-  onEdit: (id: UUID) => void;
-  onMembers: (id: UUID) => void;
-  onDelete: (id: UUID) => void;
+  /** "archived": soft-deleted collections with restore / delete-forever actions. */
+  mode?: "active" | "archived";
+  onEdit?: (id: UUID) => void;
+  onMembers?: (id: UUID) => void;
+  /** Active mode: move to archive. */
+  onDelete?: (id: UUID) => void;
+  onRestore?: (id: UUID) => void;
+  onPurge?: (id: UUID) => void;
+  /** Id of the collection being restored right now (spinner + disabled buttons). */
+  restoringId?: UUID | null;
   /** Optional: shows a call-to-action inside the empty state. */
   onCreate?: () => void;
 }
@@ -45,8 +57,34 @@ function FolderTile() {
   );
 }
 
-function EmptyState({ onCreate }: { onCreate?: () => void }) {
+function EmptyState({
+  onCreate,
+  archived,
+}: {
+  onCreate?: () => void;
+  archived?: boolean;
+}) {
   const { t } = useTranslation();
+  if (archived) {
+    return (
+      <div
+        className={`${surface} flex flex-col items-center px-6 py-14 text-center`}
+      >
+        <span className="flex size-12 items-center justify-center rounded-2xl bg-gray-50 text-gray-400 ring-1 ring-gray-200/70 ring-inset dark:bg-white/5 dark:text-gray-500 dark:ring-white/5">
+          <ArchiveIcon className="size-6" />
+        </span>
+        <h2 className="mt-4 text-theme-sm font-medium text-gray-800 dark:text-white/90">
+          {t("collections.archive.empty", "Архів порожній")}
+        </h2>
+        <p className="mt-1 max-w-sm text-theme-sm text-gray-500 dark:text-gray-400">
+          {t(
+            "collections.archive.emptyHint",
+            "Тут з’являться колекції, які ви перемістили в архів. Їх можна відновити або видалити назавжди.",
+          )}
+        </p>
+      </div>
+    );
+  }
   return (
     <div
       className={`${surface} flex flex-col items-center px-6 py-14 text-center`}
@@ -138,25 +176,38 @@ function CardSkeletons() {
 export function CollectionsTable({
   rows,
   isLoading,
+  mode = "active",
   onEdit,
   onMembers,
   onDelete,
+  onRestore,
+  onPurge,
+  restoringId = null,
   onCreate,
 }: Props) {
   const { t } = useTranslation();
+  const archived = mode === "archived";
 
   if (!isLoading && rows.length === 0) {
-    return <EmptyState onCreate={onCreate} />;
+    return <EmptyState onCreate={onCreate} archived={archived} />;
   }
+
+  const dateOf = (c: Collection) =>
+    formatDateTime(archived ? (c.deleted_at ?? c.created_at) : c.created_at);
+  const dateLabel = archived
+    ? t("collections.archive.archivedAt", "Архівовано")
+    : t("collections.table.columns.created");
 
   return (
     <div aria-busy={isLoading}>
       {/* ───────── Desktop / tablet: table ───────── */}
       <div className={`${surface} hidden md:block`}>
-        <div className="max-w-full overflow-x-auto">
-          <table className="min-w-full">
+        <div className="w-full">
+          <table className="w-full table-fixed">
             <caption className="sr-only">
-              {t("collections.table.caption", "Список колекцій")}
+              {archived
+                ? t("collections.archive.caption", "Архів колекцій")
+                : t("collections.table.caption", "Список колекцій")}
             </caption>
             <thead className="border-b border-gray-100 dark:border-white/5">
               <tr>
@@ -170,7 +221,7 @@ export function CollectionsTable({
                   {t("collections.table.columns.myRole")}
                 </th>
                 <th scope="col" className={th}>
-                  {t("collections.table.columns.created")}
+                  {dateLabel}
                 </th>
                 <th scope="col" className={th}>
                   <span className="sr-only">
@@ -192,12 +243,18 @@ export function CollectionsTable({
                       <div className="flex items-center gap-3">
                         <FolderTile />
                         <div className="min-w-0">
-                          <Link
-                            to={COLLECTIONS_ROUTES.detail(c.id)}
-                            className={nameLink}
-                          >
-                            {c.name}
-                          </Link>
+                          {archived ? (
+                            <span className="font-medium text-gray-800 dark:text-white/90">
+                              {c.name}
+                            </span>
+                          ) : (
+                            <Link
+                              to={COLLECTIONS_ROUTES.detail(c.id)}
+                              className={nameLink}
+                            >
+                              {c.name}
+                            </Link>
+                          )}
                           {c.description && (
                             <p className="max-w-md truncate text-theme-xs text-gray-500 dark:text-gray-400">
                               {c.description}
@@ -212,17 +269,19 @@ export function CollectionsTable({
                     <td className={td}>
                       <RoleBadge role={c.my_role} />
                     </td>
-                    <td className={`${td} whitespace-nowrap`}>
-                      {formatDateTime(c.created_at)}
-                    </td>
+                    <td className={`${td} whitespace-nowrap`}>{dateOf(c)}</td>
                     <td className={`${td} text-end`}>
                       <CollectionActions
                         collection={c}
                         variant="icon"
+                        mode={mode}
                         className="justify-end"
-                        onMembers={() => onMembers(c.id)}
-                        onEdit={() => onEdit(c.id)}
-                        onDelete={() => onDelete(c.id)}
+                        onMembers={() => onMembers?.(c.id)}
+                        onEdit={() => onEdit?.(c.id)}
+                        onDelete={() => onDelete?.(c.id)}
+                        onRestore={() => onRestore?.(c.id)}
+                        onPurge={() => onPurge?.(c.id)}
+                        isRestoring={restoringId === c.id}
                       />
                     </td>
                   </tr>
@@ -243,12 +302,18 @@ export function CollectionsTable({
               <div className="flex items-start gap-3">
                 <FolderTile />
                 <div className="min-w-0 flex-1">
-                  <Link
-                    to={COLLECTIONS_ROUTES.detail(c.id)}
-                    className={`${nameLink} block wrap-break-word`}
-                  >
-                    {c.name}
-                  </Link>
+                  {archived ? (
+                    <span className="block font-medium wrap-break-word text-gray-800 dark:text-white/90">
+                      {c.name}
+                    </span>
+                  ) : (
+                    <Link
+                      to={COLLECTIONS_ROUTES.detail(c.id)}
+                      className={`${nameLink} block wrap-break-word`}
+                    >
+                      {c.name}
+                    </Link>
+                  )}
                   {c.description && (
                     <p className="mt-0.5 line-clamp-2 text-theme-xs text-gray-500 dark:text-gray-400">
                       {c.description}
@@ -263,17 +328,20 @@ export function CollectionsTable({
               </div>
 
               <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
-                {t("collections.table.columns.created")}:{" "}
-                {formatDateTime(c.created_at)}
+                {dateLabel}: {dateOf(c)}
               </p>
 
               <CollectionActions
                 collection={c}
                 variant="labeled"
-                className="mt-4 grid grid-cols-3 gap-2 border-t border-gray-100 pt-4 dark:border-white/5"
-                onMembers={() => onMembers(c.id)}
-                onEdit={() => onEdit(c.id)}
-                onDelete={() => onDelete(c.id)}
+                mode={mode}
+                className={`mt-4 grid ${archived ? "grid-cols-2" : "grid-cols-3"} gap-2 border-t border-gray-100 pt-4 dark:border-white/5`}
+                onMembers={() => onMembers?.(c.id)}
+                onEdit={() => onEdit?.(c.id)}
+                onDelete={() => onDelete?.(c.id)}
+                onRestore={() => onRestore?.(c.id)}
+                onPurge={() => onPurge?.(c.id)}
+                isRestoring={restoringId === c.id}
               />
             </li>
           ))

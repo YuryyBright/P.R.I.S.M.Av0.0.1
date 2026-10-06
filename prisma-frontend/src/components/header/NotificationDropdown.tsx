@@ -93,7 +93,7 @@ function JobsBell() {
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="absolute -inset-s-13.5 mt-4.25 flex h-120 w-87.5 flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg sm:w-90.25 xl:inset-s-auto xl:inset-e-0 dark:border-gray-800 dark:bg-gray-dark"
+        className="absolute -inset-s-13.5 mt-4.25 flex max-h-[calc(100vh-6rem)] w-87.5 flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg sm:w-90.25 xl:inset-s-auto xl:inset-e-0 dark:border-gray-800 dark:bg-gray-dark"
       >
         <div className="mb-3 flex items-start justify-between border-b border-gray-100 pb-3 dark:border-gray-700">
           <div>
@@ -160,7 +160,7 @@ function JobsBell() {
             )}
           </div>
         ) : (
-          <ul className="flex custom-scrollbar h-auto flex-col overflow-y-auto">
+          <ul className="flex custom-scrollbar min-h-0 flex-col overflow-y-auto">
             {rows.map((job) => {
               const unread = isUnread(job);
               return (

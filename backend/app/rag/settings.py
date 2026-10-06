@@ -145,6 +145,8 @@ class IngestionSettings(BaseModel):
     redispatch_min_age_s: int = Field(60, ge=0)       # не чіпати щойно створені
     cleanup_sweep_interval_s: int = Field(300, gt=0)
     cleanup_min_age_s: int = Field(300, ge=0)
+    # скільки зберігається архів колекцій до автоматичного фізичного видалення (0 = необмежено)
+    archive_retention_s: int = Field(30 * 24 * 3600, ge=0)
 
 
 class ChatSettings(BaseModel):

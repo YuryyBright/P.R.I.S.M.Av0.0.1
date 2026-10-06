@@ -4,14 +4,29 @@ import { Can } from "@/features/auth";
 import { COLLECTION_PERMISSIONS } from "../constants/collections.constants";
 import { canManageCollection } from "../lib/collectionMappers";
 import type { Collection } from "../types/collection.types";
-import { PencilIcon, TrashIcon, UsersIcon } from "./CollectionIcons";
+import {
+  ArchiveIcon,
+  PencilIcon,
+  RestoreIcon,
+  SpinnerIcon,
+  TrashIcon,
+  UsersIcon,
+} from "./CollectionIcons";
 interface Props {
   collection: Collection;
   /** * icon: * Compact icon-only buttons with tooltips. * * labeled: * Icon + text buttons used in cards and collection header. */ variant:
     "icon" | "labeled";
-  onMembers: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  /** "active" (default): members / edit / archive. "archived": restore / delete forever. */
+  mode?: "active" | "archived";
+  onMembers?: () => void;
+  onEdit?: () => void;
+  /** Active mode: move to archive. */
+  onDelete?: () => void;
+  /** Archived mode. */
+  onRestore?: () => void;
+  /** Archived mode: permanent delete. */
+  onPurge?: () => void;
+  isRestoring?: boolean;
   className?: string;
 }
 const base =
@@ -30,6 +45,7 @@ interface ActionButtonProps {
   onClick: () => void;
   variant: Props["variant"];
   danger?: boolean;
+  disabled?: boolean;
 }
 function ActionButton({
   label,
@@ -37,12 +53,14 @@ function ActionButton({
   onClick,
   variant,
   danger,
+  disabled,
 }: ActionButtonProps) {
   if (variant === "labeled") {
     return (
       <button
         type="button"
         onClick={onClick}
+        disabled={disabled}
         className={`${base} ${labeledBtn} ${danger ? labeledBtnDanger : ""}`}
       >
         {" "}
@@ -61,6 +79,7 @@ function ActionButton({
         type="button"
         aria-label={label}
         onClick={onClick}
+        disabled={disabled}
         className={`${base} ${iconBtn} ${danger ? iconBtnDanger : ""}`}
       >
         {" "}
@@ -83,9 +102,13 @@ function ActionButton({
 export function CollectionActions({
   collection,
   variant,
+  mode = "active",
   onMembers,
   onEdit,
   onDelete,
+  onRestore,
+  onPurge,
+  isRestoring = false,
   className = "",
 }: Props) {
   const { t } = useTranslation();
@@ -103,25 +126,53 @@ export function CollectionActions({
         className={`flex items-center gap-1 ${className}`}
       >
         {" "}
-        <ActionButton
-          variant={variant}
-          label={t("collections.table.members")}
-          icon={<UsersIcon className="size-5" />}
-          onClick={onMembers}
-        />{" "}
-        <ActionButton
-          variant={variant}
-          label={t("common.edit")}
-          icon={<PencilIcon className="size-5" />}
-          onClick={onEdit}
-        />{" "}
-        <ActionButton
-          variant={variant}
-          danger
-          label={t("common.delete")}
-          icon={<TrashIcon className="size-5" />}
-          onClick={onDelete}
-        />{" "}
+        {mode === "archived" ? (
+          <>
+            <ActionButton
+              variant={variant}
+              label={t("collections.archive.restore", "Відновити")}
+              icon={
+                isRestoring ? (
+                  <SpinnerIcon className="size-5" />
+                ) : (
+                  <RestoreIcon className="size-5" />
+                )
+              }
+              disabled={isRestoring}
+              onClick={() => onRestore?.()}
+            />
+            <ActionButton
+              variant={variant}
+              danger
+              label={t("collections.archive.purge", "Видалити назавжди")}
+              icon={<TrashIcon className="size-5" />}
+              disabled={isRestoring}
+              onClick={() => onPurge?.()}
+            />
+          </>
+        ) : (
+          <>
+            <ActionButton
+              variant={variant}
+              label={t("collections.table.members")}
+              icon={<UsersIcon className="size-5" />}
+              onClick={() => onMembers?.()}
+            />
+            <ActionButton
+              variant={variant}
+              label={t("common.edit")}
+              icon={<PencilIcon className="size-5" />}
+              onClick={() => onEdit?.()}
+            />
+            <ActionButton
+              variant={variant}
+              danger
+              label={t("collections.archive.moveTo", "В архів")}
+              icon={<ArchiveIcon className="size-5" />}
+              onClick={() => onDelete?.()}
+            />
+          </>
+        )}
       </div>{" "}
     </Can>
   );

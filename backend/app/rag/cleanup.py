@@ -208,6 +208,15 @@ async def purge_collection(
                 "collection_id": str(collection_id),
             }
 
+        # Архівну колекцію (яку ще можна відновити) чіпати не можна:
+        # purge дозволений лише після «видалити назавжди» / спливу retention.
+        if collection.purge_requested_at is None:
+            return {
+                "status": "skipped",
+                "reason": "archived_not_purge_requested",
+                "collection_id": str(collection_id),
+            }
+
         document_repo = DocumentRepository(db)
         job_repo = IngestionJobRepository(db)
 
@@ -293,8 +302,12 @@ async def find_pending_cleanup(
     *,
     min_age_s: int,
     limit: int,
+    archive_retention_s: int = 0,
 ) -> tuple[list[uuid.UUID], list[uuid.UUID]]:
     """Знайти collection/document, для яких cleanup не завершено.
+
+    Колекції в архіві (без purge_requested_at) пропускаються; після retention
+    вони автоматично позначаються на purge.
 
     Документи deleted collection не повертаються окремо,
     оскільки їх очищає purge_collection().
@@ -303,7 +316,18 @@ async def find_pending_cleanup(
     older_than = utcnow() - timedelta(seconds=min_age_s)
 
     async with session_factory() as db:
-        collections = await CollectionRepository(db).list_deleted(
+        collection_repo = CollectionRepository(db)
+
+        # Архів, що перевищив retention, переходить у «purge requested».
+        if archive_retention_s > 0:
+            expired = await collection_repo.mark_expired_for_purge(
+                archived_before=utcnow() - timedelta(seconds=archive_retention_s),
+            )
+            if expired:
+                await db.commit()
+                logger.info("archive retention: %s collection(s) queued for purge", expired)
+
+        collections = await collection_repo.list_deleted(
             older_than=older_than,
             limit=limit,
         )

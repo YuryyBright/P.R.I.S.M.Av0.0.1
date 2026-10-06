@@ -20,6 +20,8 @@ export interface Collection {
   is_active: boolean;
   owner_id: UUID;
   created_at: ISODateString;
+  /** Set only for archived (soft-deleted) collections. */
+  deleted_at?: ISODateString | null;
   my_role: CollectionRole | null;
 }
 
@@ -66,6 +68,9 @@ export interface MemberUpsertPayload {
  * ===================================================================== */
 
 /** UI speaks page/size; the endpoint converts to limit/offset. */
+/** Which list the page shows: live collections or the archive (soft-deleted, restorable). */
+export type CollectionsView = "active" | "archived";
+
 export interface CollectionsPageArgs {
   page?: number;
   size?: number;

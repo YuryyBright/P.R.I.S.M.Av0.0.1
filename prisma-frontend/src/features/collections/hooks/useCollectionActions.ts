@@ -2,7 +2,9 @@ import type { UUID } from "@/shared/types/api";
 import {
   useCreateCollectionMutation,
   useDeleteCollectionMutation,
+  usePurgeCollectionMutation,
   useRemoveMemberMutation,
+  useRestoreCollectionMutation,
   useUpdateCollectionMutation,
   useUpsertMemberMutation,
 } from "../api/collections.endpoints";
@@ -16,17 +18,24 @@ export function useCollectionActions() {
   const [create, createS] = useCreateCollectionMutation();
   const [update, updateS] = useUpdateCollectionMutation();
   const [remove, removeS] = useDeleteCollectionMutation();
+  const [restore, restoreS] = useRestoreCollectionMutation();
+  const [purge, purgeS] = usePurgeCollectionMutation();
   const [upsert, upsertS] = useUpsertMemberMutation();
   const [dropMember, dropS] = useRemoveMemberMutation();
 
   return {
     createCollection: (body: CollectionCreatePayload) => create(body).unwrap(),
     updateCollection: (id: UUID, body: CollectionUpdatePayload) => update({ id, body }).unwrap(),
+    /** Soft delete: moves the collection to the archive. */
     deleteCollection: (id: UUID) => remove(id).unwrap(),
+    /** Archive -> active. */
+    restoreCollection: (id: UUID) => restore(id).unwrap(),
+    /** Permanent delete of an archived collection (irreversible). */
+    purgeCollection: (id: UUID) => purge(id).unwrap(),
     /** Adds the member or changes the role. */
     upsertMember: (collectionId: UUID, member: { user_id: UUID; role: MemberRole }) =>
       upsert({ collectionId, ...member }).unwrap(),
     removeMember: (collectionId: UUID, userId: UUID) => dropMember({ collectionId, userId }).unwrap(),
-    isMutating: [createS, updateS, removeS, upsertS, dropS].some((s) => s.isLoading),
+    isMutating: [createS, updateS, removeS, restoreS, purgeS, upsertS, dropS].some((s) => s.isLoading),
   };
 }

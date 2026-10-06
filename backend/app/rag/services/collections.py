@@ -11,7 +11,7 @@ from app.models.rag.collection import Collection
 from app.models.rag.collection_member import CollectionMember
 from app.models.users.user_model import User
 
-from app.rag.domain.access import AccessPolicy, Action, visible_where
+from app.rag.domain.access import AccessPolicy, Action, archived_where, visible_where
 from app.rag.domain.enums import CollectionRole
 from app.rag.domain.exceptions import (
     ConflictError,
@@ -93,6 +93,37 @@ class CollectionService:
 
         async with self._transaction("Unable to delete collection"):
             await self.repo.soft_delete(collection)
+
+    # ---------------- Archive ----------------
+
+    async def list_archived(self, user, *, limit: int, offset: int):
+        """Архів користувача. Роль у відповіді — owner (керувати архівом може лише власник)."""
+        where = archived_where(user)
+        total = await self.repo.count_archived(where)
+        collections = await self.repo.list_archived(where, limit=limit, offset=offset)
+        return [(c, CollectionRole.OWNER) for c in collections], total
+
+    async def restore(self, user, collection_id):
+        collection = await self.policy.require_archived(user, collection_id)
+
+        async with self._transaction("Unable to restore collection"):
+            await self.repo.restore(collection)
+
+        await self.repo.refresh(collection)
+        return collection, self.policy.role_of(user, collection)
+
+    async def delete_permanently(self, user, collection_id) -> uuid.UUID:
+        """Позначає архівну колекцію на фізичне видалення (після цього відновлення неможливе).
+
+        Повертає id: роутер після commit ставить dispatch_purge_collection(id).
+        Якщо dispatch упаде — sweep підбере колекцію за purge_requested_at.
+        """
+        collection = await self.policy.require_archived(user, collection_id)
+
+        async with self._transaction("Unable to delete collection permanently"):
+            await self.repo.request_purge(collection)
+
+        return collection.id
 
     # ---------------- Members ----------------
 

@@ -64,7 +64,8 @@ async def _find_pending(limit: int) -> tuple[list[uuid.UUID], list[uuid.UUID]]:
     from app.rag.ingestion.tasks import _get_session_factory
 
     return await find_pending_cleanup(
-        _get_session_factory(), min_age_s=_cfg.cleanup_min_age_s, limit=limit)
+        _get_session_factory(), min_age_s=_cfg.cleanup_min_age_s, limit=limit,
+        archive_retention_s=_cfg.archive_retention_s)
 
 
 # ---- спільна обгортка: timeout / retry з backoff -----------------------------------

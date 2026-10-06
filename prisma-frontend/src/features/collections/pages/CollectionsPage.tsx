@@ -1,15 +1,20 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
+
+import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Alert } from "@/shared/ui/Alert";
 import { Modal } from "@/shared/ui/Modal";
 import { Pagination } from "@/shared/ui/Pagination";
 import { btnSecondary } from "@/shared/ui/classes";
+
 import { useGetCollectionByIdQuery } from "../api/collections.endpoints";
 import { CollectionFormModal } from "../components/CollectionFormModal";
 import { CollectionsTable } from "../components/CollectionsTable";
 import { CollectionsToolbar } from "../components/CollectionsToolbar";
 import { DeleteCollectionDialog } from "../components/DeleteCollectionDialog";
 import { MembersModal } from "../components/MembersModal";
+import { useCollectionActions } from "../hooks/useCollectionActions";
 import { useCollectionsList } from "../hooks/useCollectionsList";
 import {
   collectionsUiActions,
@@ -19,12 +24,15 @@ import {
 const skeleton =
   "animate-pulse rounded-lg bg-gray-100 motion-reduce:animate-none dark:bg-white/5";
 
-/** Fetches the collection, shows a skeleton while loading and an error if it fails. */
 function EditCollectionModal({ collectionId }: { collectionId: string }) {
   const { t } = useTranslation();
   const dispatch = useDispatch();
+
   const { data: collection, error } = useGetCollectionByIdQuery(collectionId);
-  const close = () => dispatch(collectionsUiActions.closeForm());
+
+  const close = () => {
+    dispatch(collectionsUiActions.closeForm());
+  };
 
   if (collection) {
     return (
@@ -59,6 +67,7 @@ function EditCollectionModal({ collectionId }: { collectionId: string }) {
       ) : (
         <div aria-busy="true" className="space-y-5">
           <span className="sr-only">{t("common.loading")}</span>
+
           <div className={`${skeleton} h-10 w-full`} />
           <div className={`${skeleton} h-28 w-full`} />
           <div className={`${skeleton} h-10 w-full`} />
@@ -71,8 +80,54 @@ function EditCollectionModal({ collectionId }: { collectionId: string }) {
 export default function CollectionsPage() {
   const { t } = useTranslation();
   const dispatch = useDispatch();
+
   const ui = useSelector(collectionsUiSlice.selectors.selectCollectionsUi);
+
   const list = useCollectionsList();
+  const { restoreCollection } = useCollectionActions();
+
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const isArchivedView = list.view === "archived";
+
+  const getCollectionName = (id: string) =>
+    list.rows.find((collection) => collection.id === id)?.name;
+
+  const handleRestore = async (id: string) => {
+    setActionError(null);
+    setRestoringId(id);
+
+    try {
+      await restoreCollection(id);
+    } catch (error) {
+      setActionError(
+        isNormalizedApiError(error) ? error.message : t("errors.unexpected"),
+      );
+    } finally {
+      setRestoringId(null);
+    }
+  };
+
+  const openCreateForm = () => {
+    dispatch(collectionsUiActions.openCreateForm());
+  };
+
+  const openEditForm = (id: string) => {
+    dispatch(collectionsUiActions.openEditForm(id));
+  };
+
+  const openMembers = (id: string) => {
+    dispatch(collectionsUiActions.openMembers(id));
+  };
+
+  const requestDelete = (id: string) => {
+    dispatch(collectionsUiActions.requestDelete(id));
+  };
+
+  const requestPurge = (id: string) => {
+    dispatch(collectionsUiActions.requestPurge(id));
+  };
 
   return (
     <div className="space-y-6">
@@ -81,13 +136,20 @@ export default function CollectionsPage() {
           <h1 className="text-title-sm font-semibold text-gray-800 dark:text-white/90">
             {t("collections.title")}
           </h1>
+
           <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-            {t(
-              "collections.subtitle",
-              "Керуйте колекціями матеріалів та доступом учасників.",
-            )}
+            {isArchivedView
+              ? t(
+                  "collections.archive.subtitle",
+                  "Заархівовані колекції не видно в пошуку. Відновіть їх або видаліть назавжди.",
+                )
+              : t(
+                  "collections.subtitle",
+                  "Керуйте колекціями матеріалів та доступом учасників.",
+                )}
           </p>
         </div>
+
         <CollectionsToolbar />
       </header>
 
@@ -98,13 +160,19 @@ export default function CollectionsPage() {
         </Alert>
       )}
 
+      {actionError && <Alert>{actionError}</Alert>}
+
       <CollectionsTable
         rows={list.rows}
         isLoading={list.isLoading}
-        onEdit={(id) => dispatch(collectionsUiActions.openEditForm(id))}
-        onMembers={(id) => dispatch(collectionsUiActions.openMembers(id))}
-        onDelete={(id) => dispatch(collectionsUiActions.requestDelete(id))}
-        onCreate={() => dispatch(collectionsUiActions.openCreateForm())}
+        mode={list.view}
+        restoringId={restoringId}
+        onRestore={handleRestore}
+        onPurge={requestPurge}
+        onEdit={openEditForm}
+        onMembers={openMembers}
+        onDelete={requestDelete}
+        onCreate={openCreateForm}
       />
 
       <Pagination
@@ -112,10 +180,12 @@ export default function CollectionsPage() {
         pages={list.pages}
         total={list.total}
         size={list.size}
-        totalLabel={t("collections.pagination.total", { count: list.total })}
+        totalLabel={t("collections.pagination.total", {
+          count: list.total,
+        })}
         disabled={list.isFetching}
-        onPage={(p) => dispatch(collectionsUiActions.setPage(p))}
-        onSize={(s) => dispatch(collectionsUiActions.setSize(s))}
+        onPage={(page) => dispatch(collectionsUiActions.setPage(page))}
+        onSize={(size) => dispatch(collectionsUiActions.setSize(size))}
       />
 
       {ui.form.mode === "create" && (
@@ -124,15 +194,28 @@ export default function CollectionsPage() {
           onClose={() => dispatch(collectionsUiActions.closeForm())}
         />
       )}
+
       {ui.form.mode === "edit" && (
         <EditCollectionModal collectionId={ui.form.collectionId} />
       )}
+
       {ui.deleteTargetId && (
         <DeleteCollectionDialog
           collectionId={ui.deleteTargetId}
+          collectionName={getCollectionName(ui.deleteTargetId)}
           onClose={() => dispatch(collectionsUiActions.cancelDelete())}
         />
       )}
+
+      {ui.purgeTargetId && (
+        <DeleteCollectionDialog
+          mode="purge"
+          collectionId={ui.purgeTargetId}
+          collectionName={getCollectionName(ui.purgeTargetId)}
+          onClose={() => dispatch(collectionsUiActions.cancelPurge())}
+        />
+      )}
+
       {ui.membersTargetId && (
         <MembersModal
           collectionId={ui.membersTargetId}

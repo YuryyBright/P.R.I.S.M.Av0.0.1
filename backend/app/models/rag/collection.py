@@ -39,7 +39,10 @@ class Collection(RagBaseModel, table=True):
     is_active: bool = Field(
         default=True, sa_column_kwargs={"server_default": text("true")}
     )
+    # Архів: deleted_at != NULL, purge_requested_at IS NULL — колекцію можна відновити.
+    # purge_requested_at != NULL — «видалити назавжди»: відновлення заборонене, purge-задача очистить дані.
     deleted_at: Optional[datetime] = Field(default=None)
+    purge_requested_at: Optional[datetime] = Field(default=None)
 
     # one-way до User: існуюча модель User не змінюється
     owner: Optional["User"] = Relationship(sa_relationship_kwargs={"lazy": "selectin"})

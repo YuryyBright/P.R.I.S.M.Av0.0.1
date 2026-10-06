@@ -112,6 +112,24 @@ class AccessPolicy:
     def role_of(self, user: Any, collection: Any) -> CollectionRole | None:
         return effective_role(user, collection)
 
+    async def require_archived(self, user: Any, collection_id: uuid.UUID) -> Collection:
+        """Архівна колекція (soft-deleted, purge ще не запрошено). Керує лише власник/superuser.
+
+        effective_role() для неактивних колекцій повертає None, тож `require` тут не годиться.
+        """
+        collection = await self.db.get(Collection, collection_id)
+        if (
+            collection is None
+            or collection.deleted_at is None
+            or collection.purge_requested_at is not None
+        ):
+            raise NotFoundError("Archived collection not found")
+        if not (
+            getattr(user, "is_superuser", False) or collection.owner_id == user.id
+        ):
+            raise ForbiddenError("Insufficient permissions")
+        return collection
+
 
 def visible_where(user: Any) -> ColumnElement[bool]:
     """SQL-фільтр колекцій, видимих користувачу."""
@@ -126,6 +144,14 @@ def visible_where(user: Any) -> ColumnElement[bool]:
         Collection.visibility == CollectionVisibility.PUBLIC,
         Collection.id.in_(member_subquery),
     )
+
+def archived_where(user: Any) -> ColumnElement[bool]:
+    """SQL-фільтр архіву: власні заархівовані колекції (superuser — усі)."""
+    base = Collection.deleted_at.is_not(None) & Collection.purge_requested_at.is_(None)
+    if getattr(user, "is_superuser", False):
+        return base
+    return base & (Collection.owner_id == user.id)
+
 
 def collections_with_role_where(user: Any, minimum: CollectionRole) -> ColumnElement[bool]:
     """SQL-фільтр колекцій, де користувач має роль НЕ нижче `minimum`.

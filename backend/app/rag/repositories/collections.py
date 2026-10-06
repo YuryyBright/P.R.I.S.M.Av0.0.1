@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ColumnElement, delete
+from sqlalchemy import ColumnElement, delete, update
 from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -65,6 +65,18 @@ class CollectionRepository:
     async def soft_delete(self, collection: Collection) -> None:
         collection.is_active = False
         collection.deleted_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        self.db.add(collection)
+        await self.db.flush()
+
+    async def restore(self, collection: Collection) -> None:
+        """Archive -> active. Документи не чіпаємо: до purge вони лишаються ACTIVE."""
+        collection.is_active = True
+        collection.deleted_at = None
+        self.db.add(collection)
+        await self.db.flush()
+
+    async def request_purge(self, collection: Collection) -> None:
+        collection.purge_requested_at = datetime.now(timezone.utc).replace(tzinfo=None)
         self.db.add(collection)
         await self.db.flush()
 
@@ -215,17 +227,68 @@ class CollectionRepository:
     # Cleanup / physical deletion
     # ------------------------------------------------------------------
 
+    async def list_archived(
+        self,
+        where: ColumnElement[bool],
+        *,
+        limit: int,
+        offset: int,
+    ) -> list[Collection]:
+        result = await self.db.exec(
+            select(Collection)
+            .where(where)
+            .order_by(Collection.deleted_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+
+        return list(result.all())
+
+    async def count_archived(
+        self,
+        where: ColumnElement[bool],
+    ) -> int:
+        result = await self.db.exec(
+            select(func.count())
+            .select_from(Collection)
+            .where(where)
+        )
+
+        return result.one()
+
+    async def mark_expired_for_purge(
+        self,
+        *,
+        archived_before: datetime,
+    ) -> int:
+        """Архів старший за retention -> purge_requested_at = now (далі purge як зазвичай)."""
+        result = await self.db.exec(
+            update(Collection)
+            .where(
+                Collection.deleted_at.is_not(None),
+                Collection.deleted_at <= archived_before,
+                Collection.purge_requested_at.is_(None),
+            )
+            .values(
+                purge_requested_at=datetime.now(timezone.utc).replace(tzinfo=None)
+            )
+        )
+
+        return int(getattr(result, "rowcount", 0) or 0)
+
     async def list_deleted(
         self,
         *,
         older_than: datetime,
         limit: int,
     ) -> list[uuid.UUID]:
+        """Колекції, для яких запрошено purge (явно або після retention), але не завершено."""
         result = await self.db.exec(
             select(Collection.id)
             .where(
                 Collection.deleted_at.is_not(None),
-                Collection.deleted_at <= older_than,
+                Collection.purge_requested_at.is_not(None),
+                Collection.purge_requested_at <= older_than,
             )
             .limit(limit)
         )

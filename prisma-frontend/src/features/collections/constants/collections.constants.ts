@@ -7,6 +7,9 @@ import type {
 export const COLLECTIONS_PATHS = {
   root: "/collections",
   byId: (id: string) => `/collections/${id}`,
+  archived: "/collections/archived",
+  restore: (id: string) => `/collections/${id}/restore`,
+  purge: (id: string) => `/collections/${id}/purge`,
   members: (id: string) => `/collections/${id}/members`,
   member: (id: string, userId: string) =>
     `/collections/${id}/members/${userId}`,

@@ -139,5 +139,21 @@ export const CheckIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** Archive box. */
+export const ArchiveIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="4" width="18" height="4" rx="1" />
+    <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8M10 12h4" />
+  </Icon>
+);
+
+/** Counter-clockwise arrow: restore from archive. */
+export const RestoreIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+    <path d="M3 3v5h5" />
+  </Icon>
+);
+
 export const btnContent =
   "inline-flex flex-row flex-nowrap items-center justify-center gap-2 whitespace-nowrap [&>svg]:block [&>svg]:shrink-0";
