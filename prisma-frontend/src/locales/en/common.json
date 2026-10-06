@@ -64,8 +64,16 @@
       "title": "Notifications",
       "requestsPermission": "requests permission to change",
       "project": "Project",
-      "minAgo": "{count} min ago",
-      "hrAgo": "{count} hr ago",
+      "hrAgo": "ago",
+      "justNow": "just now",
+      "dayAgo_one": "{count} day ago",
+      "dayAgo_other": "{count} days ago",
+      "summaryActive": "{count} processing",
+      "summaryFailed": "{count} failed",
+      "failedFallback": "Processing failed",
+      "unread": "Unread",
+      "empty": "No notifications yet",
+      "emptyHint": "Indexing results for your documents will show up here.",
       "viewAll": "View all notifications"
     }
   },

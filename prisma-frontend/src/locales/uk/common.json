@@ -64,9 +64,20 @@
       "title": "Сповіщення",
       "requestsPermission": "просить дозвіл змінити",
       "project": "Проєкт",
-      "minAgo": "{count} хв тому",
+      "justNow": "щойно",
+
       "hrAgo": "{count} год тому",
-      "viewAll": "Усі сповіщення"
+      "dayAgo_one": "{count} день тому",
+      "dayAgo_few": "{count} дні тому",
+      "dayAgo_many": "{count} днів тому",
+      "dayAgo_other": "{count} дня тому",
+      "summaryActive": "{count} в обробці",
+      "summaryFailed": "{count} з помилкою",
+      "failedFallback": "Обробка завершилась помилкою",
+      "unread": "Непрочитане",
+      "empty": "Сповіщень поки немає",
+      "emptyHint": "Тут з'являтимуться результати індексації ваших документів.",
+      "viewAll": "Переглянути всі сповіщення"
     }
   },
 

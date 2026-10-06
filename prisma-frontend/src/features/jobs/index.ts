@@ -9,3 +9,11 @@ export type {
   JobType,
   StageName,
 } from "./types/job.types";
+
+// Header bell integration
+export { useJobNotifications } from "./hooks/useJobNotifications";
+export type { BellTone } from "./hooks/useJobNotifications";
+export {
+  JobNotificationBody,
+  jobNotificationLink,
+} from "./components/JobNotificationItem";

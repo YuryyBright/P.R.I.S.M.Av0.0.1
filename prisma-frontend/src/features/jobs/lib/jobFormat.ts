@@ -40,3 +40,44 @@ export function formatDuration(
   if (m > 0) return `${m}m ${pad(s)}s`;
   return `${s}s`;
 }
+
+/** Moment the job "happened" for notification purposes: finished > started > created. */
+export function jobEventTime(job: {
+  finished_at: string | null;
+  started_at: string | null;
+  created_at: string;
+}): number {
+  const t = Date.parse(job.finished_at ?? job.started_at ?? job.created_at);
+  return Number.isNaN(t) ? 0 : t;
+}
+
+/** A finished (completed / failed) job the user has not "seen" in the bell yet. */
+export function isUnreadJob(
+  job: {
+    status: JobStatus;
+    finished_at: string | null;
+    started_at: string | null;
+    created_at: string;
+  },
+  lastSeenAt: number,
+): boolean {
+  return (
+    (job.status === "completed" || job.status === "failed") &&
+    jobEventTime(job) > lastSeenAt
+  );
+}
+
+export type RelativeUnit = "now" | "min" | "hr" | "day";
+
+/** Coarse "5 min ago" parts; the component maps them to i18n keys. */
+export function relativeTimeParts(
+  time: number,
+  now: number = Date.now(),
+): { unit: RelativeUnit; count: number } {
+  const diffMin = Math.max(0, Math.floor((now - time) / 60000));
+  if (diffMin < 1) return { unit: "now", count: 0 };
+  if (diffMin < 60) return { unit: "min", count: diffMin };
+  const hrs = Math.floor(diffMin / 60);
+  if (hrs < 24) return { unit: "hr", count: hrs };
+  return { unit: "day", count: Math.floor(hrs / 24) };
+}
