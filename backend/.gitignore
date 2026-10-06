@@ -34,9 +34,9 @@ pgadmin-data/
 postgres-data/
 redis-data/
 *.bak
+*.dat
+*.dir
 *.log
 *.crt
 *.key
 *.db
-*.dat
-*.dir
