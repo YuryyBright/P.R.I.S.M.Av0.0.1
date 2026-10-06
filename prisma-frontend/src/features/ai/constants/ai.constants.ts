@@ -11,6 +11,7 @@ export const AI_PATHS = {
   conversations: "/ai/conversations",
   conversation: (id: string) => `/ai/conversations/${id}`,
   messages: (id: string) => `/ai/conversations/${id}/messages`,
+  attachments: "/ai/attachments",
   startRun: (conversationId: string) =>
     `/ai/conversations/${conversationId}/runs`,
   run: (id: string) => `/ai/runs/${id}`,
@@ -53,6 +54,8 @@ export const CONVERSATIONS_PAGE_SIZE = 30;
 export const MESSAGES_PAGE_STEP = 50;
 export const MESSAGES_MAX_LIMIT = 200;
 export const MAX_MESSAGE_LENGTH = 32000;
+export const MAX_CHAT_ATTACHMENTS = 5;
+export const MAX_CHAT_ATTACHMENT_SIZE = 25 * 1024 * 1024;
 export const TASKS_PAGE_STEP = 30;
 export const TASKS_MAX_LIMIT = 200;
 export const TASKS_POLL_MS = 4000;

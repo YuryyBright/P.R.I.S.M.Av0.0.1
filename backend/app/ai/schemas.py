@@ -3,22 +3,18 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any
-
-from pydantic import BaseModel, ConfigDict, Field
-
-from app.ai.domain.enums import PromptKind, RunMode, RunStatus, StepStatus, StepType
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.ai.domain.enums import PromptKind, RunMode, RunStatus, StepStatus, StepType
+
 T = TypeVar("T")
+
 
 class _Out(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-
-# ---- settings діалогу (rag_conversations.settings) -----------------------------------
 
 class RerankerIn(BaseModel):
     enabled: bool = False
@@ -26,7 +22,6 @@ class RerankerIn(BaseModel):
 
 
 class ConversationSettings(BaseModel):
-    """Єдине джерело налаштувань діалогу. collection_ids: None = усі доступні; [] при RAG → помилка."""
     model_config = ConfigDict(extra="ignore")
     mode: RunMode = RunMode.CHAT
     model: str | None = None
@@ -35,13 +30,12 @@ class ConversationSettings(BaseModel):
     collection_ids: list[uuid.UUID] | None = None
     reranker: RerankerIn = Field(default_factory=RerankerIn)
     prompt_template_id: uuid.UUID | None = None
-    prompt_version_id: uuid.UUID | None = None       # явне «закріплення» версії
+    prompt_version_id: uuid.UUID | None = None
     prompt_variables: dict[str, str] = Field(default_factory=dict)
     profile_id: uuid.UUID | None = None
 
 
 class ConversationSettingsPatch(BaseModel):
-    """Те саме, але кожне поле опційне: застосовуються лише передані (exclude_unset)."""
     mode: RunMode | None = None
     model: str | None = None
     rag_enabled: bool | None = None
@@ -53,8 +47,6 @@ class ConversationSettingsPatch(BaseModel):
     prompt_variables: dict[str, str] | None = None
     profile_id: uuid.UUID | None = None
 
-
-# ---- conversations ---------------------------------------------------------------------
 
 class ConversationCreate(BaseModel):
     title: str | None = Field(default=None, max_length=255)
@@ -93,6 +85,13 @@ class CitationOut(_Out):
     meta: dict[str, Any]
 
 
+class AttachmentOut(BaseModel):
+    id: uuid.UUID
+    filename: str
+    mime_type: str
+    size: int
+
+
 class MessageOut(BaseModel):
     id: uuid.UUID
     role: str
@@ -102,15 +101,14 @@ class MessageOut(BaseModel):
     created_at: datetime
     run_id: uuid.UUID | None = None
     citations: list[CitationOut] = Field(default_factory=list)
+    attachments: list[AttachmentOut] = Field(default_factory=list)
 
-
-# ---- runs ------------------------------------------------------------------------------
 
 class StartRunRequest(BaseModel):
     content: str = Field(min_length=1, max_length=32000)
-    mode: RunMode | None = None                      # None → settings.mode діалогу
-    settings: ConversationSettingsPatch | None = None  # зміни налаштувань разом з повідомленням
-    attachment_ids: list[uuid.UUID] = Field(default_factory=list)   # етап 7
+    mode: RunMode | None = None
+    settings: ConversationSettingsPatch | None = None
+    attachment_ids: list[uuid.UUID] = Field(default_factory=list, max_length=5)
 
 
 class StartRunResponse(BaseModel):
@@ -147,8 +145,6 @@ class StepOut(_Out):
     prompt_tokens: int | None
     completion_tokens: int | None
 
-
-# ---- prompts / profiles ----------------------------------------------------------------
 
 class PromptTemplateCreate(BaseModel):
     slug: str = Field(min_length=1, max_length=128, pattern=r"^[a-z0-9][a-z0-9_\-]*$")
@@ -221,8 +217,6 @@ class ProfileOut(_Out):
     default_collection_ids: list[uuid.UUID]
     max_steps: int
 
-
-# ---- capabilities ----------------------------------------------------------------------
 
 class ModelCap(BaseModel):
     alias: str

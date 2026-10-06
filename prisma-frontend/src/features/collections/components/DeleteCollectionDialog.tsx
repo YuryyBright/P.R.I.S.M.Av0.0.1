@@ -4,7 +4,7 @@ import { isNormalizedApiError } from "@/shared/api/normalizeError";
 import { Alert } from "@/shared/ui/Alert";
 import { Modal } from "@/shared/ui/Modal";
 import { btnDanger, btnSecondary } from "@/shared/ui/classes";
-import { useGetCollectionByIdQuery } from "../api/collections.endpoints";
+
 import { useCollectionActions } from "../hooks/useCollectionActions";
 import {
   AlertTriangleIcon,
@@ -14,16 +14,18 @@ import {
 } from "./CollectionIcons";
 interface Props {
   collectionId: string;
+  collectionName?: string;
   onClose: () => void;
   onDeleted?: (message: string) => void;
 }
 export function DeleteCollectionDialog({
   collectionId,
+  collectionName,
   onClose,
   onDeleted,
 }: Props) {
   const { t } = useTranslation();
-  const { data: collection } = useGetCollectionByIdQuery(collectionId);
+
   const { deleteCollection, isMutating } = useCollectionActions();
   const [error, setError] = useState<string | null>(null);
   async function confirm() {
@@ -88,9 +90,9 @@ export function DeleteCollectionDialog({
           {" "}
           <p className="text-theme-sm leading-6 wrap-break-word text-gray-700 dark:text-gray-300">
             {" "}
-            {collection
-              ? t("collections.delete.confirm", { name: collection.name })
-              : t("collections.delete.confirmGeneric")}{" "}
+            {collectionName
+              ? t("collections.delete.confirm", { name: collectionName })
+              : t("collections.delete.confirmGeneric")}
           </p>{" "}
           <p className="text-theme-xs text-gray-500 dark:text-gray-400">
             {" "}

@@ -73,11 +73,8 @@ export const collectionsApi = baseApi.injectEndpoints({
     /** DELETE /collections/{id} -> 204, NO body. Soft delete; Celery cleans docs/vectors later. */
     deleteCollection: build.mutation<void, UUID>({
       query: (id) => ({ url: COLLECTIONS_PATHS.byId(id), method: "DELETE" }),
-      invalidatesTags: (_r, _e, id) => [
-        { type: "Collection", id },
-        { type: "Collection", id: LIST },
-        { type: "CollectionMember", id },
-      ],
+      // Its documents and jobs go away with it.
+      invalidatesTags: [{ type: "Collection", id: LIST }, "Document", "Job"],
     }),
 
     /** GET /collections/{id}/members -> MemberRead[] (not paginated, owner not included) */

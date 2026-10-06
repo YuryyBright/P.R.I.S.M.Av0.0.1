@@ -22,6 +22,9 @@ const listTag = (collectionId: UUID) => ({
   id: `LIST:${collectionId}`,
 });
 
+/** Upload / reindex / delete create or cancel jobs, so the jobs list must refetch too. */
+const JOB_LIST = { type: "Job" as const, id: "LIST" };
+
 /**
  * NOTE: add "Document" to `tagTypes` in baseApi.
  * Upload sends multipart/form-data: baseApi.prepareHeaders must NOT force
@@ -97,7 +100,10 @@ export const documentsApi = baseApi.injectEndpoints({
           body,
         };
       },
-      invalidatesTags: (_r, _e, { collectionId }) => [listTag(collectionId)],
+      invalidatesTags: (_r, _e, { collectionId }) => [
+        listTag(collectionId),
+        JOB_LIST,
+      ],
     }),
 
     /** PATCH /documents/{id} {title} */
@@ -119,6 +125,7 @@ export const documentsApi = baseApi.injectEndpoints({
       invalidatesTags: (_r, _e, { id, collectionId }) => [
         { type: "Document", id },
         listTag(collectionId),
+        JOB_LIST,
       ],
     }),
 
@@ -131,6 +138,7 @@ export const documentsApi = baseApi.injectEndpoints({
       invalidatesTags: (_r, _e, { id, collectionId }) => [
         { type: "Document", id },
         listTag(collectionId),
+        JOB_LIST,
       ],
     }),
   }),

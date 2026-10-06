@@ -7,6 +7,7 @@ import {
 } from "../constants/ai.constants";
 import type {
   AgentProfile,
+  ChatAttachment,
   Capabilities,
   Conversation,
   ConversationCreatePayload,
@@ -77,6 +78,33 @@ export const aiApi = baseApi.injectEndpoints({
     getConversationById: build.query<Conversation, UUID>({
       query: (id) => AI_PATHS.conversation(id),
       providesTags: (_r, _e, id) => [{ type: "AiConversation", id }],
+    }),
+
+    /* ───────── chat attachments ───────── */
+
+    /**
+     * POST /ai/attachments (multipart/form-data, field: `file`).
+     * The backend persists the file and returns metadata; the returned id is
+     * passed to POST /ai/conversations/{id}/runs as `attachment_ids`.
+     */
+    uploadAttachment: build.mutation<ChatAttachment, File>({
+      query: (file) => {
+        const body = new FormData();
+        body.append("file", file);
+        return {
+          url: AI_PATHS.attachments,
+          method: "POST",
+          body,
+        };
+      },
+    }),
+
+    /** DELETE /ai/attachments/{id} -> 204. Removes an uploaded but unsent attachment. */
+    deleteAttachment: build.mutation<void, UUID>({
+      query: (id) => ({
+        url: `${AI_PATHS.attachments}/${id}`,
+        method: "DELETE",
+      }),
     }),
 
     /** POST /ai/conversations -> 201 */
@@ -248,6 +276,8 @@ export const {
   useGetCapabilitiesQuery,
   useGetConversationsPageQuery,
   useGetConversationByIdQuery,
+  useUploadAttachmentMutation,
+  useDeleteAttachmentMutation,
   useCreateConversationMutation,
   useUpdateConversationMutation,
   useDeleteConversationMutation,

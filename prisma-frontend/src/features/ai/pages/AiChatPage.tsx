@@ -49,24 +49,28 @@ export default function AiChatPage() {
     setSendError(null);
   }, [conversationId, dispatch]);
 
-  async function handleSend(override?: string) {
+  async function handleSend(attachmentIds: UUID[] = [], override?: string): Promise<boolean> {
     const content = override ?? text;
     setSendError(null);
-    const res = await chat.send(content);
+    const res = await chat.send(content, attachmentIds);
     if (res.ok) {
       setText("");
-      return;
+      return true;
     }
     if (res.message || chat.sendBlock(content) === null) {
       setSendError(res.message ?? t("errors.unexpected", "Сталася неочікувана помилка"));
     }
+    return false;
   }
 
   function retry() {
-    const last = chat.lastUserMessage?.content;
+    const last = chat.lastUserMessage;
     if (!last) return;
     chat.dismissRun();
-    void handleSend(last);
+    void handleSend(
+      last.attachments?.map((a) => a.id) ?? [],
+      last.content,
+    );
   }
 
   const notFound = Boolean(conversationId && chat.conversation.error && !chat.conversation.isLoading);
@@ -166,7 +170,10 @@ export default function AiChatPage() {
                   setText(v);
                   if (sendError) setSendError(null);
                 }}
-                onSend={() => void handleSend()}
+                onSend={(attachmentIds) => handleSend(attachmentIds)}
+                onUploadAttachment={chat.uploadAttachment}
+                onDeleteAttachment={chat.deleteAttachment}
+                isUploadingAttachment={chat.isUploadingAttachment}
                 onStop={() => void chat.stop()}
                 isRunActive={chat.isRunActive}
                 isSending={chat.isStarting}

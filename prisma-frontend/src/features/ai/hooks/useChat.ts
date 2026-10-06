@@ -7,10 +7,12 @@ import {
   aiApi,
   useCancelRunMutation,
   useCreateConversationMutation,
+  useDeleteAttachmentMutation,
   useGetCapabilitiesQuery,
   useGetConversationByIdQuery,
   useGetMessagesQuery,
   useStartRunMutation,
+  useUploadAttachmentMutation,
 } from "../api/ai.endpoints";
 import {
   AI_ROUTES,
@@ -68,6 +70,8 @@ export function useChat(conversationId: UUID | undefined) {
   const [createConversation, createS] = useCreateConversationMutation();
   const [startRun, startS] = useStartRunMutation();
   const [cancelRun, cancelS] = useCancelRunMutation();
+  const [uploadAttachment, uploadAttachmentS] = useUploadAttachmentMutation();
+  const [deleteAttachment, deleteAttachmentS] = useDeleteAttachmentMutation();
 
   /* ───────── settings: defaults <- conversation <- unsent draft ───────── */
 
@@ -146,7 +150,7 @@ export function useChat(conversationId: UUID | undefined) {
   );
 
   const send = useCallback(
-    async (text: string): Promise<SendResult> => {
+    async (text: string, attachmentIds: UUID[] = []): Promise<SendResult> => {
       const content = text.trim();
       if (sendBlock(text)) return { ok: false, message: null };
 
@@ -158,7 +162,7 @@ export function useChat(conversationId: UUID | undefined) {
         }
         const res = await startRun({
           conversationId: id,
-          body: { content, mode: settings.mode, settings },
+          body: { content, mode: settings.mode, settings, attachment_ids: attachmentIds },
         }).unwrap();
 
         dispatch(aiUiActions.runStarted({ conversationId: id, runId: res.run_id }));
@@ -184,6 +188,18 @@ export function useChat(conversationId: UUID | undefined) {
       draftKey,
       navigate,
     ],
+  );
+
+  const upload = useCallback(
+    async (file: File) => uploadAttachment(file).unwrap(),
+    [uploadAttachment],
+  );
+
+  const removeAttachment = useCallback(
+    async (id: UUID) => {
+      await deleteAttachment(id).unwrap();
+    },
+    [deleteAttachment],
   );
 
   const stop = useCallback(async () => {
@@ -223,6 +239,10 @@ export function useChat(conversationId: UUID | undefined) {
     streamState: stream,
     isRunActive,
     isStarting: createS.isLoading || startS.isLoading,
+    uploadAttachment: upload,
+    deleteAttachment: removeAttachment,
+    isDeletingAttachment: deleteAttachmentS.isLoading,
+    isUploadingAttachment: uploadAttachmentS.isLoading,
     isStopping: cancelS.isLoading,
     dismissRun,
     sendBlock,

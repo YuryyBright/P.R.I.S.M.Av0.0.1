@@ -60,10 +60,72 @@ Tailwind-токени (brand/gray/success/warning/error, `text-theme-*`), RTK Qu
 2. **Активний run діалогу**: після повного перезавантаження сторінки UI не знає `run_id` поточного запиту.
    Рекомендація: додати `active_run_id` до `ConversationOut` (або `GET /conversations/{id}/active-run`).
 3. **Пошук/total для завдань**: `GET /ai/tasks` повертає масив без `total`; пагінація зроблена як «показати ще».
-4. Вкладення (`attachment_ids`) бекенд відхиляє — у UI їх немає.
+4. Вкладення: UI тепер підтримує до 5 файлів на повідомлення. Перед відправленням файл завантажується через `POST /ai/attachments` (`multipart/form-data`, поле `file`), після чого отриманий `id` передається в `POST /ai/conversations/{id}/runs` як `attachment_ids`. Backend має повертати метадані вкладення та дозволяти ці IDs для поточного користувача. `GET /ai/conversations/{id}/messages` має повертати `attachments` у user-message, щоб вкладення зберігалися після reload.
 
 ## Перевірено
 
 `tsc --strict --noUnusedLocals` проти заглушок `@/shared/*` — без помилок; юніт-перевірки парсера SSE
 (розрив кадрів між чанками, `\r\n`), редюсерів run/task (replay-safety, семантика агента) та Markdown-парсера.
 Візуально в браузері не запускалось — підтягніть у ваш dev-сервер і гляньте на стилі в темній/світлій темі.
+
+
+## Chat attachments contract
+
+The frontend expects the following backend contract:
+
+### `POST /ai/attachments`
+
+`multipart/form-data`:
+
+```text
+file=<binary>
+```
+
+Response:
+
+```json
+{
+  "id": "uuid",
+  "filename": "document.pdf",
+  "mime_type": "application/pdf",
+  "size": 123456
+}
+```
+
+The attachment must be owned by the authenticated user. The backend should enforce its own MIME/size/security policy; the UI additionally limits each file to 25 MiB and each message to 5 files.
+
+### `POST /ai/conversations/{conversation_id}/runs`
+
+The existing JSON body may contain:
+
+```json
+{
+  "content": "Проаналізуй цей файл",
+  "mode": "agent",
+  "settings": {},
+  "attachment_ids": ["uuid"]
+}
+```
+
+The backend must validate that every attachment belongs to the authenticated user and is available to the requested conversation/run.
+
+### `GET /ai/conversations/{conversation_id}/messages`
+
+User messages should expose:
+
+```json
+{
+  "attachments": [
+    {
+      "id": "uuid",
+      "filename": "document.pdf",
+      "mime_type": "application/pdf",
+      "size": 123456
+    }
+  ]
+}
+```
+
+This keeps attachment chips visible after a page reload and lets retry reuse the same attachment IDs.
+
+> Important: this archive contains the frontend feature only. If the backend still rejects `attachment_ids`, the backend endpoint/schema/service must be updated according to the contract above.

@@ -1,5 +1,4 @@
 """RunService.start_run(): валідація → snapshot config → user message + AiRun(queued) → dispatch.
-
 Послідовність коротких сесій (жодна не живе довго): читання → резолв промптів/scope →
 одна транзакція запису → commit → dispatch (після commit!).
 """
@@ -13,6 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.ai.agent.tools.registry import ToolRegistry
+from app.ai.attachments import AttachmentService
 from app.ai.domain.config import LimitsConfig, RerankConfig, RunConfig
 from app.ai.domain.enums import PromptKind, RunMode, RunStatus
 from app.ai.domain.exceptions import (
@@ -31,6 +31,7 @@ from app.models.ai.ai_run import AiRun
 from app.models.rag.rag_conversation import RagConversation
 from app.models.rag.rag_message import RagMessage
 from app.models.rag.rag_base import utcnow
+from app.rag.container import get_container
 from app.rag.domain.enums import MessageRole
 from app.rag.retrieval.scope import resolve_scope
 
@@ -53,12 +54,8 @@ class RunService:
         self._models, self._prompts, self._tools = registry, prompts, tools
         self._retrieval, self._launchers, self._cancel = retrieval, launchers, cancel
 
-    # ---- start ---------------------------------------------------------------------
-
     async def start_run(self, user: Any, conversation_id: uuid.UUID, body: StartRunRequest) -> StartRunResponse:
-        if body.attachment_ids:
-            raise InvalidInputError("Attachments are not supported yet")
-        async with self._sf() as db:                                     # A: читання
+        async with self._sf() as db:
             conv = await ConversationRepository(db).get_owned(conversation_id, user.id)
             if conv is None:
                 raise NotFoundError("Conversation not found")
@@ -67,20 +64,29 @@ class RunService:
             current = ConversationSettings.model_validate(conv.settings or {})
             has_title = bool(conv.title)
 
+        attachments: list[dict[str, Any]] = []
+        if body.attachment_ids:
+            storage = get_container().blobs
+            attachments = await AttachmentService(storage).validate_many(user, body.attachment_ids)
+
         merged = ConversationSettings.model_validate({
             **current.model_dump(),
             **(body.settings.model_dump(exclude_unset=True) if body.settings else {}),
             **({"mode": body.mode} if body.mode else {}),
         })
         plan = await self._plan(user, merged)
-
-        try:                                                             # B: запис
+        try:
             async with self._sf() as db:
                 conv = await ConversationRepository(db).get_owned(conversation_id, user.id)
                 if conv is None:
                     raise NotFoundError("Conversation not found")
-                msg = RagMessage(conversation_id=conversation_id, role=MessageRole.USER,
-                                 content=body.content, meta={"settings_mode": plan.mode.value})
+                msg_meta: dict[str, Any] = {"settings_mode": plan.mode.value}
+                if attachments:
+                    msg_meta["attachments"] = attachments
+                msg = RagMessage(
+                    conversation_id=conversation_id, role=MessageRole.USER,
+                    content=body.content, meta=msg_meta,
+                )
                 db.add(msg)
                 await db.flush()
                 run = AiRun(
@@ -94,14 +100,13 @@ class RunService:
                     conv.title = body.content.strip().replace("\n", " ")[:TITLE_CHARS]
                 await db.commit()
                 run_id, msg_id = run.id, msg.id
-        except IntegrityError:                                           # partial unique: гонка двох POST
+        except IntegrityError:
             raise ConversationBusyError("This conversation already has an active run") from None
-
-        await self._launchers[plan.mode].dispatch(run_id)                # після commit
-        return StartRunResponse(run_id=run_id, user_message_id=msg_id, conversation_id=conversation_id,
-                                mode=plan.mode, status=RunStatus.QUEUED)
-
-    # ---- planning (валідація + snapshot) --------------------------------------------
+        await self._launchers[plan.mode].dispatch(run_id)
+        return StartRunResponse(
+            run_id=run_id, user_message_id=msg_id, conversation_id=conversation_id,
+            mode=plan.mode, status=RunStatus.QUEUED,
+        )
 
     async def _plan(self, user: Any, s: ConversationSettings) -> _Plan:
         mode = s.mode
@@ -111,13 +116,9 @@ class RunService:
                 profile = await ProfileRepository(db).get(s.profile_id)
             if profile is None or profile.is_archived or profile.owner_id not in (None, user.id):
                 raise NotFoundError("Agent profile not found")
-
         web_enabled = bool(s.web_enabled and self._s.agent.allow_web_search)
-
         model = self._models.require(
             s.model or (profile.model if profile else None), tools=(mode == RunMode.AGENT))
-
-        # --- RAG / колекції
         collection_ids = s.collection_ids
         if profile is not None and collection_ids is None and profile.default_collection_ids:
             collection_ids = [uuid.UUID(str(c)) for c in profile.default_collection_ids]
@@ -133,19 +134,14 @@ class RunService:
                 collection_ids, unavailable = scope.collection_ids, scope.denied
         else:
             collection_ids = None
-
         rerank = RerankConfig(
             enabled=s.reranker.enabled and s.rag_enabled and self._retrieval.reranker_available,
             top_k=s.reranker.top_k)
-
-        # --- інструменти
         allowed: list[str] = []
         if mode == RunMode.AGENT:
             allowed = self._tools.resolve_allowed(
                 list(profile.allowed_tools) if profile and profile.allowed_tools else None,
                 rag_enabled=s.rag_enabled)
-
-        # --- промпти (версії фіксуються в snapshot)
         sys_kind = PromptKind.AGENT_SYSTEM if mode == RunMode.AGENT else PromptKind.CHAT_SYSTEM
         template_id = s.prompt_template_id or (profile.prompt_template_id if profile else None)
         system = await self._prompts.resolve(
@@ -155,20 +151,22 @@ class RunService:
         if mode == RunMode.CHAT and s.rag_enabled and self._s.chat.query_rewrite:
             rw = await self._prompts.resolve(user, PromptKind.QUERY_REWRITE)
             versions["rewrite"] = rw.version_id
-
         agent = self._s.agent
         max_steps = min(profile.max_steps, agent.max_steps) if profile else agent.max_steps
         config = RunConfig(
-            mode=mode, model=model.alias, rag_enabled=s.rag_enabled, web_enabled=web_enabled, collection_ids=collection_ids,
-            unavailable_collection_ids=unavailable, rerank=rerank, prompt_version_ids=versions,
-            prompt_variables=s.prompt_variables, profile_id=profile.id if profile else None,
-            allowed_tools=allowed,
-            limits=LimitsConfig(max_steps=max_steps, max_tool_calls=agent.max_tool_calls,
-                                token_budget=agent.token_budget, wall_clock_s=agent.wall_clock_s),
+            mode=mode, model=model.alias, rag_enabled=s.rag_enabled, web_enabled=web_enabled,
+            collection_ids=collection_ids, unavailable_collection_ids=unavailable, rerank=rerank,
+            prompt_version_ids=versions, prompt_variables=s.prompt_variables,
+            profile_id=profile.id if profile else None, allowed_tools=allowed,
+            limits=LimitsConfig(
+                max_steps=max_steps, max_tool_calls=agent.max_tool_calls,
+                token_budget=agent.token_budget, wall_clock_s=agent.wall_clock_s),
             temperature=system.model_params.get("temperature"),
             max_tokens=system.model_params.get("max_tokens"))
-        stored = s.model_copy(update={"mode": mode, "web_enabled": web_enabled, "reranker": s.reranker.model_copy(
-            update={"enabled": rerank.enabled})})
+        stored = s.model_copy(update={
+            "mode": mode, "web_enabled": web_enabled,
+            "reranker": s.reranker.model_copy(update={"enabled": rerank.enabled}),
+        })
         return _Plan(stored, mode, config, config.profile_id)
 
     @staticmethod
@@ -181,8 +179,6 @@ class RunService:
         missing = required - set(variables)
         if missing:
             raise InvalidInputError(f"Missing prompt variables: {', '.join(sorted(missing))}")
-
-    # ---- read / cancel ---------------------------------------------------------------
 
     async def get_run(self, user: Any, run_id: uuid.UUID) -> AiRun:
         async with self._sf() as db:
@@ -201,5 +197,5 @@ class RunService:
         if run.user_id != user.id:
             raise ForbiddenError("Only the run owner can cancel it")
         if run.status in (RunStatus.QUEUED, RunStatus.RUNNING, RunStatus.WAITING_APPROVAL):
-            await self._cancel.request(run_id)       # раннер/sidecar побачить прапорець
+            await self._cancel.request(run_id)
         return run

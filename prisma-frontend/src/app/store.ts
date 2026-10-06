@@ -4,6 +4,7 @@ import { usersUiSlice } from "@/features/users";
 import { baseApi } from "@/shared/api/baseApi";
 import { collectionsUiSlice } from "@/features/collections/store/collectionsUiSlice";
 import { aiUiSlice } from "@/features/ai";
+import { setupListeners } from "@reduxjs/toolkit/query";
 /**
  * The ONLY place that knows every slice. Each feature exports its slice; adding a
  * feature = one more argument here. Keys come from each slice's `name`, so there is
@@ -21,6 +22,6 @@ export const store = configureStore({
   reducer: rootReducer,
   middleware: (getDefault) => getDefault().concat(baseApi.middleware),
 });
-
+setupListeners(store.dispatch);
 export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = typeof store.dispatch;

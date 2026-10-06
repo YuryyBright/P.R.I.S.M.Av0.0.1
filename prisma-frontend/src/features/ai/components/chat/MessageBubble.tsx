@@ -10,6 +10,7 @@ import {
 import type { Message } from "../../types/ai.types";
 import {
   BotIcon,
+  FileIcon,
   CheckIcon,
   CopyIcon,
   RefreshIcon,
@@ -98,14 +99,73 @@ function Meta({ children }: { children: ReactNode }) {
 
 /* ───────── user ───────── */
 
-export const UserBubble = memo(function UserBubble({ message }: { message: Pick<Message, "content" | "created_at"> }) {
+const LONG_TEXT_THRESHOLD = 2400;
+const LONG_TEXT_PREVIEW = 700;
+
+export const UserBubble = memo(function UserBubble({
+  message,
+}: {
+  message: Pick<Message, "content" | "created_at" | "attachments">;
+}) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+  const isLongText = message.content.length > LONG_TEXT_THRESHOLD;
+  const preview = message.content.slice(0, LONG_TEXT_PREVIEW).trimEnd();
+
   return (
     <div className="flex flex-row-reverse items-start gap-3">
       <Avatar role="user" />
       <div className="flex min-w-0 max-w-[85%] flex-col items-end sm:max-w-[75%]">
-        <div className="rounded-2xl rounded-te-md bg-brand-500 px-4 py-2.5 text-theme-sm leading-6 wrap-break-word whitespace-pre-wrap text-white shadow-xs">
-          {message.content}
-        </div>
+        {message.attachments?.length ? (
+          <div className="mb-1.5 flex max-w-full flex-wrap justify-end gap-1.5">
+            {message.attachments.map((attachment) => (
+              <span
+                key={attachment.id}
+                title={attachment.filename}
+                className="inline-flex max-w-full items-center gap-1.5 rounded-xl border border-brand-300/40 bg-brand-50 px-2.5 py-1.5 text-theme-xs text-brand-800 dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-200"
+              >
+                <FileIcon className="size-3.5 shrink-0" />
+                <span className="max-w-52 truncate">{attachment.filename}</span>
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        {isLongText && !expanded ? (
+          <div className="max-w-full rounded-2xl rounded-te-md border border-brand-300/40 bg-brand-50 px-3 py-2.5 text-brand-900 shadow-xs dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-100">
+            <div className="flex items-center gap-2 text-theme-xs font-medium">
+              <FileIcon className="size-3.5 shrink-0" />
+              <span>
+                {t("ai.chat.longText", "Великий текст")} · {message.content.length.toLocaleString()}{" "}
+                {t("ai.chat.characters", "символів")}
+              </span>
+            </div>
+            <p className="mt-1.5 max-w-[min(70vw,36rem)] whitespace-pre-wrap wrap-break-word text-theme-sm leading-6">
+              {preview}…
+            </p>
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="mt-1.5 rounded-lg px-1.5 py-1 text-theme-xs font-medium text-brand-700 hover:bg-brand-100 focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:outline-none dark:text-brand-300 dark:hover:bg-brand-500/15"
+            >
+              {t("ai.chat.showFullText", "Показати повністю")}
+            </button>
+          </div>
+        ) : (
+          <div className="rounded-2xl rounded-te-md bg-brand-500 px-4 py-2.5 text-theme-sm leading-6 wrap-break-word whitespace-pre-wrap text-white shadow-xs">
+            {message.content}
+            {isLongText && (
+              <button
+                type="button"
+                onClick={() => setExpanded(false)}
+                className="mt-2 block rounded-lg bg-white/10 px-2 py-1 text-theme-xs font-medium text-white hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
+              >
+                {t("ai.chat.collapseText", "Згорнути")}
+              </button>
+            )}
+          </div>
+        )}
+
         <Meta>{formatTime(message.created_at)}</Meta>
       </div>
     </div>

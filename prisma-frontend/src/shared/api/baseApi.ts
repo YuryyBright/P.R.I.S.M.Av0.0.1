@@ -71,6 +71,9 @@ export const baseQuery: BaseQueryFn<
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery,
+  refetchOnMountOrArgChange: 30,
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
   tagTypes: [
     "User",
     "Session",
@@ -80,8 +83,8 @@ export const baseApi = createApi({
     "RoleGroup",
     "Collection",
     "CollectionMember",
+    "Document",
     "Job",
-
     "AiConversation",
     "AiMessages",
     "AiCapabilities",
@@ -89,6 +92,5 @@ export const baseApi = createApi({
     "AiTask",
     "AiArtifact",
   ],
-
   endpoints: () => ({}),
 });

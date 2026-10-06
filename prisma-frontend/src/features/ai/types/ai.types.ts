@@ -84,6 +84,13 @@ export interface Citation {
 
 export type MessageRole = "user" | "assistant" | "system" | "tool";
 
+export interface ChatAttachment {
+  id: UUID;
+  filename: string;
+  mime_type: string;
+  size: number;
+}
+
 export interface Message {
   id: UUID;
   role: MessageRole | (string & {});
@@ -93,6 +100,7 @@ export interface Message {
   created_at: ISODateString;
   run_id: UUID | null;
   citations: Citation[];
+  attachments?: ChatAttachment[];
 }
 
 export interface StartRunPayload {

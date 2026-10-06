@@ -173,6 +173,7 @@ const skeleton =
       {dialog === "delete" && (
         <DeleteCollectionDialog
           collectionId={collection.id}
+          collectionName={collection.name}
           onClose={close}
           onDeleted={() => navigate(COLLECTIONS_ROUTES.list, { replace: true })}
         />
