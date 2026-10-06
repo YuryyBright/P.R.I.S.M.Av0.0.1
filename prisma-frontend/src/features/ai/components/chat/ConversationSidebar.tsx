@@ -12,7 +12,10 @@ import {
   useGetConversationsPageQuery,
   useUpdateConversationMutation,
 } from "../../api/ai.endpoints";
-import { AI_ROUTES, CONVERSATIONS_PAGE_SIZE } from "../../constants/ai.constants";
+import {
+  AI_ROUTES,
+  CONVERSATIONS_PAGE_SIZE,
+} from "../../constants/ai.constants";
 import {
   conversationTitle,
   dayBucket,
@@ -75,7 +78,11 @@ function ConversationRow({
           aria-label={t("ai.sidebar.rename", "Перейменувати")}
           className={`${inputClass} h-8 min-w-0 flex-1 px-2 text-theme-sm`}
         />
-        <button type="submit" className={rowAction} aria-label={t("common.save", "Зберегти")}>
+        <button
+          type="submit"
+          className={rowAction}
+          aria-label={t("common.save", "Зберегти")}
+        >
           <CheckIcon className="size-4" />
         </button>
         <button
@@ -110,7 +117,7 @@ function ConversationRow({
         )}
         <span className="min-w-0 flex-1 truncate">{conversationTitle(c)}</span>
       </NavLink>
-      <div className="absolute end-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 opacity-0 transition-opacity group-focus-within/row:opacity-100 group-hover/row:opacity-100 dark:bg-gray-800">
+      <div className="absolute inset-e-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 opacity-0 transition-opacity group-focus-within/row:opacity-100 group-hover/row:opacity-100 dark:bg-gray-800">
         <button
           type="button"
           className={rowAction}
@@ -125,7 +132,11 @@ function ConversationRow({
         <button
           type="button"
           className={rowAction}
-          aria-label={c.is_archived ? t("ai.sidebar.unarchive", "Повернути з архіву") : t("ai.sidebar.archive", "В архів")}
+          aria-label={
+            c.is_archived
+              ? t("ai.sidebar.unarchive", "Повернути з архіву")
+              : t("ai.sidebar.archive", "В архів")
+          }
           onClick={() => onArchive(c)}
         >
           <ArchiveIcon className="size-3.5" />
@@ -143,7 +154,13 @@ function ConversationRow({
   );
 }
 
-function DeleteDialog({ target, onClose }: { target: Conversation; onClose: () => void }) {
+function DeleteDialog({
+  target,
+  onClose,
+}: {
+  target: Conversation;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [remove, { isLoading }] = useDeleteConversationMutation();
@@ -156,7 +173,11 @@ function DeleteDialog({ target, onClose }: { target: Conversation; onClose: () =
       navigate(AI_ROUTES.chat, { replace: true });
       onClose();
     } catch (e) {
-      setError(isNormalizedApiError(e) ? e.message : t("errors.unexpected", "Сталася неочікувана помилка"));
+      setError(
+        isNormalizedApiError(e)
+          ? e.message
+          : t("errors.unexpected", "Сталася неочікувана помилка"),
+      );
     }
   }
 
@@ -183,15 +204,21 @@ function DeleteDialog({ target, onClose }: { target: Conversation; onClose: () =
             disabled={isLoading}
           >
             {isLoading ? <SpinnerIcon /> : <TrashIcon />}
-            {isLoading ? t("common.deleting", "Видалення…") : t("common.delete", "Видалити")}
+            {isLoading
+              ? t("common.deleting", "Видалення…")
+              : t("common.delete", "Видалити")}
           </button>
         </div>
       }
     >
       <p className="text-theme-sm leading-6 wrap-break-word text-gray-700 dark:text-gray-300">
-        {t("ai.sidebar.deleteConfirm", "Діалог «{{name}}» і всі його повідомлення буде видалено безповоротно.", {
-          name: conversationTitle(target),
-        })}
+        {t(
+          "ai.sidebar.deleteConfirm",
+          "Діалог «{{name}}» і всі його повідомлення буде видалено безповоротно.",
+          {
+            name: conversationTitle(target),
+          },
+        )}
       </p>
       {error && (
         <div className="mt-4">
@@ -211,13 +238,19 @@ export function ConversationSidebar() {
   const [toDelete, setToDelete] = useState<Conversation | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const q = useGetConversationsPageQuery({ page: 1, size, archived: ui.showArchived });
+  const q = useGetConversationsPageQuery({
+    page: 1,
+    size,
+    archived: ui.showArchived,
+  });
   const [update] = useUpdateConversationMutation();
 
   const items = useMemo(() => {
     const f = filter.trim().toLowerCase();
     const rows = q.data?.items ?? [];
-    return f ? rows.filter((c) => conversationTitle(c).toLowerCase().includes(f)) : rows;
+    return f
+      ? rows.filter((c) => conversationTitle(c).toLowerCase().includes(f))
+      : rows;
   }, [q.data, filter]);
 
   const groups = useMemo(() => {
@@ -226,7 +259,10 @@ export function ConversationSidebar() {
       const b = dayBucket(c.updated_at);
       map.set(b, [...(map.get(b) ?? []), c]);
     }
-    return BUCKET_ORDER.filter((b) => map.has(b)).map((b) => ({ bucket: b, rows: map.get(b)! }));
+    return BUCKET_ORDER.filter((b) => map.has(b)).map((b) => ({
+      bucket: b,
+      rows: map.get(b)!,
+    }));
   }, [items]);
 
   const total = q.data?.total ?? 0;
@@ -237,7 +273,11 @@ export function ConversationSidebar() {
     try {
       await fn();
     } catch (e) {
-      setError(isNormalizedApiError(e) ? e.message : t("errors.unexpected", "Сталася неочікувана помилка"));
+      setError(
+        isNormalizedApiError(e)
+          ? e.message
+          : t("errors.unexpected", "Сталася неочікувана помилка"),
+      );
     }
   }
 
@@ -255,8 +295,10 @@ export function ConversationSidebar() {
 
       <aside
         aria-label={t("ai.sidebar.title", "Діалоги")}
-        className={`absolute inset-y-0 start-0 z-30 flex w-72 max-w-[85%] flex-col border-e border-gray-200 bg-white transition-transform duration-200 md:static md:z-auto md:w-72 md:max-w-none md:translate-x-0 md:bg-transparent dark:border-white/5 dark:bg-gray-900 md:dark:bg-transparent ${
-          ui.sidebarOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"
+        className={`absolute inset-y-0 inset-s-0 z-30 flex w-72 max-w-[85%] flex-col border-e border-gray-200 bg-white transition-transform duration-200 md:static md:z-auto md:w-72 md:max-w-none md:translate-x-0 md:bg-transparent dark:border-white/5 dark:bg-gray-900 md:dark:bg-transparent ${
+          ui.sidebarOpen
+            ? "translate-x-0"
+            : "-translate-x-full rtl:translate-x-full"
         }`}
       >
         <div className="space-y-3 p-3">
@@ -269,7 +311,10 @@ export function ConversationSidebar() {
             aria-label={t("ai.sidebar.search", "Пошук у діалогах…")}
             className={`${inputClass} h-9 w-full`}
           />
-          <div className="flex gap-1 rounded-lg bg-gray-100 p-0.5 dark:bg-white/5" role="tablist">
+          <div
+            className="flex gap-1 rounded-lg bg-gray-100 p-0.5 dark:bg-white/5"
+            role="tablist"
+          >
             {[false, true].map((arch) => (
               <button
                 key={String(arch)}
@@ -283,17 +328,24 @@ export function ConversationSidebar() {
                     : "text-gray-500 hover:text-gray-800 dark:text-gray-400"
                 }`}
               >
-                {arch ? t("ai.sidebar.archived", "Архів") : t("ai.sidebar.active", "Активні")}
+                {arch
+                  ? t("ai.sidebar.archived", "Архів")
+                  : t("ai.sidebar.active", "Активні")}
               </button>
             ))}
           </div>
           {error && <Alert>{error}</Alert>}
         </div>
 
-        <nav className="min-h-0 flex-1 overflow-y-auto px-2 pb-3" aria-busy={q.isLoading}>
+        <nav
+          className="min-h-0 flex-1 overflow-y-auto px-2 pb-3"
+          aria-busy={q.isLoading}
+        >
           {q.isLoading && (
             <div className="space-y-2 px-1">
-              <span className="sr-only">{t("common.loading", "Завантаження…")}</span>
+              <span className="sr-only">
+                {t("common.loading", "Завантаження…")}
+              </span>
               {[0, 1, 2, 3, 4].map((i) => (
                 <div key={i} className={`${skeleton} h-9 w-full rounded-lg`} />
               ))}
@@ -302,7 +354,10 @@ export function ConversationSidebar() {
 
           {q.error && !q.isLoading && (
             <div className="px-1">
-              <Alert>{(q.error as { message?: string }).message ?? t("ai.sidebar.loadError", "Не вдалося завантажити діалоги")}</Alert>
+              <Alert>
+                {(q.error as { message?: string }).message ??
+                  t("ai.sidebar.loadError", "Не вдалося завантажити діалоги")}
+              </Alert>
             </div>
           )}
 
@@ -327,9 +382,16 @@ export function ConversationSidebar() {
                     key={c.id}
                     c={c}
                     onNavigate={closeDrawer}
-                    onRename={(id, title) => guard(() => update({ id, body: { title } }).unwrap())}
+                    onRename={(id, title) =>
+                      guard(() => update({ id, body: { title } }).unwrap())
+                    }
                     onArchive={(conv) =>
-                      guard(() => update({ id: conv.id, body: { is_archived: !conv.is_archived } }).unwrap())
+                      guard(() =>
+                        update({
+                          id: conv.id,
+                          body: { is_archived: !conv.is_archived },
+                        }).unwrap(),
+                      )
                     }
                     onDelete={setToDelete}
                   />
@@ -352,7 +414,9 @@ export function ConversationSidebar() {
         </nav>
       </aside>
 
-      {toDelete && <DeleteDialog target={toDelete} onClose={() => setToDelete(null)} />}
+      {toDelete && (
+        <DeleteDialog target={toDelete} onClose={() => setToDelete(null)} />
+      )}
     </>
   );
 }

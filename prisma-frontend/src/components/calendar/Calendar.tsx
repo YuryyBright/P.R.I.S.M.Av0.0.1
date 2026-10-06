@@ -295,7 +295,7 @@ const Calendar: React.FC = () => {
               moreLinkClass:
                 "border-0! bg-transparent! p-0! hover:bg-transparent! focus:outline-none",
               rowMoreLinkClass:
-                "absolute! -top-0.5! sm:-top-1! start-0.5! z-10! border-0! aria-hidden:hidden! bg-transparent! p-0!",
+                "absolute! -top-0.5! sm:-top-1! inset-s-0.5! z-10! border-0! aria-hidden:hidden! bg-transparent! p-0!",
               rowMoreLinkInnerClass: "overflow-visible!",
               moreLinkContent() {
                 return (
@@ -332,7 +332,7 @@ const Calendar: React.FC = () => {
                 return data.isToday ? "rounded-sm!" : "";
               },
               rowMoreLinkClass: isMobile
-                ? "absolute! -top-1! -start-0.5! z-10! border-0! bg-transparent! p-0!"
+                ? "absolute! -top-1! -inset-s-0.5! z-10! border-0! bg-transparent! p-0!"
                 : "",
               rowMoreLinkInnerClass: isMobile ? "overflow-visible!" : "",
               moreLinkClass:
@@ -360,7 +360,7 @@ const Calendar: React.FC = () => {
               moreLinkClass:
                 "border-0! bg-transparent! p-0! hover:bg-transparent! focus:outline-none",
               rowMoreLinkClass: isMobile
-                ? "absolute! -top-1! -start-0.5! z-10! border-0! bg-transparent! p-0!"
+                ? "absolute! -top-1! -inset-s-0.5! z-10! border-0! bg-transparent! p-0!"
                 : "",
               rowMoreLinkInnerClass: isMobile ? "overflow-visible!" : "",
               moreLinkContent: isMobile
@@ -415,7 +415,7 @@ const Calendar: React.FC = () => {
               moreLinkClass:
                 "border-0! bg-transparent! p-0! hover:bg-transparent! focus:outline-none",
               rowMoreLinkClass: isMobile
-                ? "absolute! -top-1! -start-0.5! z-10! border-0! bg-transparent! p-0!"
+                ? "absolute! -top-1! -inset-s-0.5! z-10! border-0! bg-transparent! p-0!"
                 : "",
               rowMoreLinkInnerClass: isMobile ? "overflow-visible!" : "",
               moreLinkContent: isMobile

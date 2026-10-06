@@ -20,7 +20,13 @@ interface SwitchProps {
 }
 
 /** Labeled on/off row (role=switch, keyboard + screen reader friendly). */
-export function Switch({ checked, onChange, label, hint, disabled }: SwitchProps) {
+export function Switch({
+  checked,
+  onChange,
+  label,
+  hint,
+  disabled,
+}: SwitchProps) {
   const id = useId();
   return (
     <div className="flex items-start justify-between gap-4">
@@ -55,7 +61,7 @@ export function Switch({ checked, onChange, label, hint, disabled }: SwitchProps
       >
         <span
           aria-hidden="true"
-          className={`absolute top-0.5 start-0.5 size-5 rounded-full bg-white shadow-sm transition-transform ${
+          className={`absolute inset-s-0.5 top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform ${
             checked ? "translate-x-4.5 rtl:-translate-x-4.5" : ""
           }`}
         />
@@ -100,7 +106,9 @@ export function Segmented<T extends string>({
             disabled={o.disabled}
             onClick={() => onChange(o.value)}
             className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-[10px] font-medium whitespace-nowrap transition-all disabled:cursor-not-allowed disabled:opacity-50 ${focusRing} ${
-              size === "sm" ? "h-7 px-2.5 text-theme-xs" : "h-8.5 px-3.5 text-theme-sm"
+              size === "sm"
+                ? "h-7 px-2.5 text-theme-xs"
+                : "h-8.5 px-3.5 text-theme-sm"
             } ${
               active
                 ? "bg-white text-gray-900 shadow-xs dark:bg-white/10 dark:text-white"
@@ -153,12 +161,14 @@ export function Pill({
 }) {
   const tones = {
     neutral: "bg-gray-100 text-gray-700 dark:bg-white/5 dark:text-gray-300",
-    brand: "bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400",
+    brand:
+      "bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400",
     success:
       "bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400",
     warning:
       "bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-orange-400",
-    error: "bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-400",
+    error:
+      "bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-400",
   } as const;
   return (
     <span
