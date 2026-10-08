@@ -5,11 +5,12 @@ import { AUTH_ROUTES } from "../constants/auth.constants";
 import { usePermissions, type PermissionMode } from "../hooks/usePermissions";
 import { useSessionBootstrap } from "../hooks/useSessionBootstrap";
 import { useSession } from "../hooks/useSession";
+import RouteTitle from "@/app/RouteTitle";
 
 /** Root of the route tree: nothing renders until the boot-time refresh has settled. */
 export function SessionGate() {
   const ready = useSessionBootstrap();
-  return ready ? <Outlet /> : <FullPageLoader />;
+  return ready ? <><RouteTitle /><Outlet /></> : <FullPageLoader />;
 }
 
 /** Protected area. Redirects anonymous visitors to sign-in and remembers where they wanted to go. */

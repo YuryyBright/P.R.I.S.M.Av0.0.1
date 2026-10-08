@@ -4,6 +4,7 @@ import type { RouteObject } from "react-router";
 export const homeRoutes: RouteObject[] = [
   {
     index: true,
+    handle: { titleKey: "home.title" },
     lazy: async () => ({
       Component: (await import("./pages/HomePage")).default,
     }),

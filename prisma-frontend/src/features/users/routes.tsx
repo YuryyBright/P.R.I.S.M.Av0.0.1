@@ -6,6 +6,7 @@ import { USERS_ROUTES, USER_PERMISSIONS } from "./constants/users.constants";
 export const usersRoutes: RouteObject[] = [
   {
     path: USERS_ROUTES.list,
+    handle: { titleKey: "sidebar.items.users" },
     element: <RequirePermission permission={USER_PERMISSIONS.read} />,
     children: [{ index: true, lazy: async () => ({ Component: (await import("./pages/UsersPage")).default }) }],
   },

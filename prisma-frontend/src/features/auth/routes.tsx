@@ -12,18 +12,21 @@ export const authGuestRoutes: RouteObject[] = [
     children: [
       {
         path: AUTH_ROUTES.signIn,
+        handle: { titleKey: "auth.signIn.title" },
         lazy: async () => ({
           Component: (await import("./pages/SignInPage")).default,
         }),
       },
       {
         path: AUTH_ROUTES.signUp,
+        handle: { titleKey: "auth.signUp.title" },
         lazy: async () => ({
           Component: (await import("./pages/SignUpPage")).default,
         }),
       },
       {
         path: AUTH_ROUTES.forgotPassword,
+        handle: { titleKey: "auth.forgot.title" },
         lazy: async () => ({
           Component: (await import("./pages/ForgotPasswordPage")).default,
         }),
@@ -42,12 +45,14 @@ export const authOpenRoutes: RouteObject[] = [
     children: [
       {
         path: AUTH_ROUTES.verifyEmail,
+        handle: { titleKey: "auth.verify.loadingTitle" },
         lazy: async () => ({
           Component: (await import("./pages/VerifyEmailPage")).default,
         }),
       },
       {
         path: AUTH_ROUTES.resetPassword,
+        handle: { titleKey: "auth.reset.title" },
         lazy: async () => ({
           Component: (await import("./pages/ResetPasswordPage")).default,
         }),
@@ -62,6 +67,7 @@ export const authOpenRoutes: RouteObject[] = [
 export const authProtectedRoutes: RouteObject[] = [
   {
     path: AUTH_ROUTES.changePassword,
+    handle: { titleKey: "auth.changePassword.pageTitle" },
     lazy: async () => ({
       Component: (await import("./pages/ChangePasswordPage")).default,
     }),

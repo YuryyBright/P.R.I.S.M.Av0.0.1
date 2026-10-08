@@ -10,6 +10,7 @@ import { COLLECTIONS_ROUTES } from "./constants/collections.constants";
 export const collectionsRoutes: RouteObject[] = [
   {
     path: COLLECTIONS_ROUTES.list,
+    handle: { titleKey: "sidebar.items.collections" },
     children: [
       {
         index: true,

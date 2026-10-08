@@ -46,6 +46,7 @@ export const router = createBrowserRouter([
               ...aiRoutes,
               {
                 path: "/403",
+                handle: { titleKey: "errors.forbidden.title" },
                 lazy: async () => ({
                   Component: (await import("@/shared/ui/ForbiddenPage"))
                     .default,
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
 
               {
                 path: "*",
+                handle: { titleKey: "errors.notFound.title" },
                 lazy: async () => ({
                   Component: (await import("@/shared/ui/NotFoundPage")).default,
                 }),

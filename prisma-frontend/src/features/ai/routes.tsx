@@ -16,6 +16,7 @@ export const aiRoutes: RouteObject[] = [
       { index: true, element: <Navigate to={AI_ROUTES.chat} replace /> },
       {
         path: "chat/:conversationId?",
+        handle: { titleKey: "ai.title" },
         lazy: async () => ({
           Component: (await import("./pages/AiChatPage")).default,
         }),
@@ -25,12 +26,14 @@ export const aiRoutes: RouteObject[] = [
         children: [
           {
             index: true,
+            handle: { titleKey: "ai.tasks.title" },
             lazy: async () => ({
               Component: (await import("./pages/AiTasksPage")).default,
             }),
           },
           {
             path: ":taskId",
+            handle: { titleKey: "ai.tasks.title" },
             lazy: async () => ({
               Component: (await import("./pages/AiTaskDetailPage")).default,
             }),
@@ -39,6 +42,7 @@ export const aiRoutes: RouteObject[] = [
       },
       {
         path: "agents",
+        handle: { titleKey: "ai.agents.title" },
         lazy: async () => ({
           Component: (await import("./pages/AiProfilesPage")).default,
         }),

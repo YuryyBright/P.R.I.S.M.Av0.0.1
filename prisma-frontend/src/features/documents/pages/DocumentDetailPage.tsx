@@ -68,8 +68,8 @@ export default function DocumentDetailPage() {
   }, [data, active]);
 
   useEffect(() => {
-    if (data?.title) document.title = data.title;
-  }, [data?.title]);
+    if (data?.title) document.title = `${data.title} | ${t("app.name")}`;
+  }, [data?.title, t]);
 
   const setTab = (next: Tab) =>
     setParams(

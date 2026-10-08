@@ -9,6 +9,7 @@ import { JOBS_ROUTES } from "./constants/jobs.constants";
 export const jobsRoutes: RouteObject[] = [
   {
     path: JOBS_ROUTES.list,
+    handle: { titleKey: "jobs.title" },
     lazy: async () => ({
       Component: (await import("./pages/JobsPage")).default,
     }),

@@ -9,6 +9,7 @@ import { DOCUMENTS_ROUTES } from "./constants/documents.constants";
 export const documentsRoutes: RouteObject[] = [
   {
     path: DOCUMENTS_ROUTES.pattern,
+    handle: { titleKey: "documents.title" },
     lazy: async () => ({
       Component: (await import("./pages/DocumentDetailPage")).default,
     }),
