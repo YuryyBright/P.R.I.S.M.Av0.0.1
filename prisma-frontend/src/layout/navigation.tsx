@@ -13,7 +13,7 @@ import { AUTH_ROUTES } from "@/features/auth";
 import { HOME_ROUTES } from "@/features/home";
 import { USER_PERMISSIONS, USERS_ROUTES } from "@/features/users";
 import { COLLECTIONS_ROUTES } from "@/features/collections";
-import { JOB_PERMISSIONS, JOBS_ROUTES } from "@/features/jobs";
+import { JOBS_ROUTES } from "@/features/jobs";
 import { TaskIcon } from "@/icons";
 import { AI_PERMISSIONS, AI_ROUTES } from "@/features/ai";
 export interface NavItem {
@@ -73,7 +73,6 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         key: "jobs",
         path: JOBS_ROUTES.list,
-        permission: JOB_PERMISSIONS.read,
         icon: <TaskIcon fontSize={ICON} />,
       },
     ],

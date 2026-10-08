@@ -22,6 +22,8 @@ ROLE_PERMISSIONS = {
         "ai.conversations.create",
         "ai.runs.create",
         "ai.profiles.read",
+        "ai.tasks.read",
+        "ai.tasks.create",
     },
     "Manager": {
         "ai.capabilities.read",
@@ -32,6 +34,9 @@ ROLE_PERMISSIONS = {
         "ai.profiles.read",
         "ai.profiles.create",
         "ai.profiles.manage",
+        "ai.tasks.read",
+        "ai.tasks.create",
+        "ai.tasks.manage",
     },
 }
 
@@ -44,6 +49,9 @@ PERMISSIONS = {
     "ai.profiles.read": "Read AI agent profiles.",
     "ai.profiles.create": "Create AI agent profiles.",
     "ai.profiles.manage": "Archive AI agent profiles.",
+    "ai.tasks.read": "Read AI tasks.",
+    "ai.tasks.create": "Create AI tasks.",
+    "ai.tasks.manage": "Manage AI tasks.",
 }
 
 

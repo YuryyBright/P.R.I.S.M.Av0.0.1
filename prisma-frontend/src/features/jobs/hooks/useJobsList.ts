@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
+import { usePermissions } from "@/features/auth";
 import { DEFAULT_PAGE_SIZE } from "@/shared/types/api";
 import { useGetJobsPageQuery } from "../api/jobs.endpoints";
-import { MAX_PAGE_SIZE, POLL_INTERVAL_MS } from "../constants/jobs.constants";
+import {
+  JOB_PERMISSIONS,
+  MAX_PAGE_SIZE,
+  POLL_INTERVAL_MS,
+} from "../constants/jobs.constants";
 import { isActiveJob, parseJobStatus } from "../lib/jobFormat";
 import type { JobStatus } from "../types/job.types";
 
@@ -12,6 +17,8 @@ import type { JobStatus } from "../types/job.types";
  * Polls only while at least one visible job is still queued/processing.
  */
 export function useJobsList() {
+  const { can } = usePermissions();
+  const canReadJobs = can(JOB_PERMISSIONS.read);
   const [params, setParams] = useSearchParams();
 
   const page = Math.max(1, Number(params.get("page")) || 1);
@@ -53,7 +60,7 @@ export function useJobsList() {
   const [pollMs, setPollMs] = useState(0);
   const q = useGetJobsPageQuery(
     { page, size, status },
-    { pollingInterval: pollMs },
+    { pollingInterval: pollMs, skip: !canReadJobs },
   );
 
   const hasActive = q.data?.items.some((j) => isActiveJob(j.status)) ?? false;
