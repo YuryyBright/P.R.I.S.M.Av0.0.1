@@ -4,7 +4,7 @@
 """
 import uuid
 from datetime import datetime
-from typing import Any, cast
+from typing import Any
 
 from sqlalchemy import delete, or_, update
 from sqlmodel import func, select
@@ -16,16 +16,12 @@ from app.models.rag.document_chunk import DocumentChunk
 from app.models.rag.rag_base import utcnow
 from app.rag.domain.enums import DocumentStatus
 
-_document = cast(Any, Document)
-_document_acl = cast(Any, DocumentACL)
-_document_chunk = cast(Any, DocumentChunk)
-_select = cast(Any, select)
 
 
 def _alive(collection_id: uuid.UUID | None = None) -> list[Any]:
-    conds = [_document.deleted_at.is_(None), _document.status != DocumentStatus.DELETED]
+    conds = [Document.deleted_at.is_(None), Document.status != DocumentStatus.DELETED]
     if collection_id is not None:
-        conds.append(_document.collection_id == collection_id)
+        conds.append(Document.collection_id == collection_id)
     return conds
 
 
@@ -48,22 +44,22 @@ class DocumentRepository:
         return doc
 
     async def find_active_id_by_hash(self, collection_id: uuid.UUID, content_hash: str) -> uuid.UUID | None:
-        return (await self.db.exec(select(_document.id).where(
-            _document.collection_id == collection_id,
-            _document.content_hash == content_hash,
-            _document.deleted_at.is_(None),
-            _document.status != DocumentStatus.DELETED))).first()
+        return (await self.db.exec(select(Document.id).where(
+            Document.collection_id == collection_id,
+            Document.content_hash == content_hash,
+            Document.deleted_at.is_(None),
+            Document.status != DocumentStatus.DELETED))).first()
 
     async def list_page(self, collection_id: uuid.UUID, *, limit: int, offset: int,
                         status: DocumentStatus | None = None) -> tuple[list[Document], int]:
         conds = _alive(collection_id)
         if status is not None:
-            conds.append(_document.status == status)
+            conds.append(Document.status == status)
         total = (await self.db.exec(
             select(func.count()).select_from(Document).where(*conds))).one()
         rows = await self.db.exec(
             select(Document).where(*conds)
-            .order_by(_document.created_at.desc()).limit(limit).offset(offset))
+            .order_by(Document.created_at.desc()).limit(limit).offset(offset))
         return list(rows.all()), total
 
     # ---- агрегати для картки документа -------------------------------------
@@ -71,20 +67,20 @@ class DocumentRepository:
     async def chunk_stats(self, document_id: uuid.UUID) -> dict[str, Any]:
         """Зведення по чанках документа (без вмісту): кількість, токени, індексація, моделі."""
         row = (await self.db.exec(
-            _select(
-                func.count(_document_chunk.id),
-                func.coalesce(func.sum(_document_chunk.token_count), 0),
-                func.count(_document_chunk.indexed_at),
-                func.max(_document_chunk.indexed_at),
-                func.max(_document_chunk.page_number),
-            ).where(_document_chunk.document_id == document_id))).one()
+            select(
+                func.count(DocumentChunk.id),
+                func.coalesce(func.sum(DocumentChunk.token_count), 0),
+                func.count(DocumentChunk.indexed_at),
+                func.max(DocumentChunk.indexed_at),
+                func.max(DocumentChunk.page_number),
+            ).where(DocumentChunk.document_id == document_id))).one()
         models = (await self.db.exec(
-            select(_document_chunk.embedding_model).where(
-                _document_chunk.document_id == document_id,
-                _document_chunk.embedding_model.is_not(None)).distinct())).all()
+            select(DocumentChunk.embedding_model).where(
+                DocumentChunk.document_id == document_id,
+                DocumentChunk.embedding_model.is_not(None)).distinct())).all()
         versions = (await self.db.exec(
-            select(_document_chunk.chunking_version).where(
-                _document_chunk.document_id == document_id).distinct())).all()
+            select(DocumentChunk.chunking_version).where(
+                DocumentChunk.document_id == document_id).distinct())).all()
         return {
             "total": int(row[0]), "total_tokens": int(row[1]), "indexed": int(row[2]),
             "last_indexed_at": row[3], "max_page": row[4],
@@ -95,7 +91,7 @@ class DocumentRepository:
     async def acl_count(self, document_id: uuid.UUID) -> int:
         return (await self.db.exec(
             select(func.count()).select_from(DocumentACL)
-            .where(_document_acl.document_id == document_id))).one()
+            .where(DocumentACL.document_id == document_id))).one()
 
     # ---- зміна стану (для ingestion-етапів) --------------------------------
 
@@ -130,19 +126,19 @@ class DocumentRepository:
                                    ) -> list[tuple[uuid.UUID, uuid.UUID]]:
         """(document_id, collection_id) видалених документів, чиє очищення ще не завершене."""
         rows = await self.db.exec(
-            select(_document.id, _document.collection_id).where(
-                _document.status == DocumentStatus.DELETED,
-                ~_document.meta.has_key("cleanup"),
-                or_(_document.deleted_at.is_(None), _document.deleted_at <= older_than),
+            select(Document.id, Document.collection_id).where(
+                Document.status == DocumentStatus.DELETED,
+                ~Document.meta.has_key("cleanup"),
+                or_(Document.deleted_at.is_(None), Document.deleted_at <= older_than),
             ).limit(limit))
         return [(r[0], r[1]) for r in rows.all()]
 
     async def ids_in_collection(self, collection_id: uuid.UUID) -> list[uuid.UUID]:
         """Усі документи колекції, включно з видаленими."""
         rows = await self.db.exec(
-            select(_document.id).where(_document.collection_id == collection_id))
+            select(Document.id).where(Document.collection_id == collection_id))
         return list(rows.all())
 
     async def hard_delete_in_collection(self, collection_id: uuid.UUID) -> None:
         """Фізичне видалення (chunks/acl зникають каскадом БД). Лише після purge векторів."""
-        await self.db.exec(delete(Document).where(_document.collection_id == collection_id))
+        await self.db.exec(delete(Document).where(Document.collection_id == collection_id))

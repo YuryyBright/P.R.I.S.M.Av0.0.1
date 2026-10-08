@@ -1,16 +1,11 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, cast
-
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.ai.domain.records import StepRecord
 from app.models.ai.ai_run_step import AiRunStep
-
-_step = cast(Any, AiRunStep)
-
 
 class StepRepository:
     def __init__(self, db: AsyncSession) -> None:
@@ -27,5 +22,5 @@ class StepRepository:
 
     async def list_for_run(self, run_id: uuid.UUID) -> list[AiRunStep]:
         rows = await self.db.exec(select(AiRunStep).where(AiRunStep.run_id == run_id)
-                                  .order_by(_step.idx))
+                                  .order_by(AiRunStep.idx))
         return list(rows.all())

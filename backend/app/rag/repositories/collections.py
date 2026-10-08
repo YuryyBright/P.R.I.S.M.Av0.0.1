@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from datetime import timezone
-from typing import Any, cast
+from typing import Any
 
 from sqlalchemy import ColumnElement, delete, update
 from sqlmodel import func, select
@@ -14,9 +14,6 @@ from app.models.rag.collection_member import CollectionMember
 from app.models.users.user_model import User
 from app.rag.domain.enums import CollectionRole, CollectionVisibility
 
-_collection = cast(Any, Collection)
-_member = cast(Any, CollectionMember)
-_user = cast(Any, User)
 class CollectionRepository:
     """
     Database access for Collection and CollectionMember.
@@ -144,7 +141,7 @@ class CollectionRepository:
         result = await self.db.exec(
             select(Collection)
             .where(where)
-            .order_by(_collection.created_at.desc())
+            .order_by(Collection.created_at.desc())
             .limit(limit)
             .offset(offset)
         )
@@ -174,8 +171,8 @@ class CollectionRepository:
     ) -> CollectionMember | None:
         result = await self.db.exec(
             select(CollectionMember).where(
-                _member.collection_id == collection_id,
-                _member.user_id == user_id,
+                CollectionMember.collection_id == collection_id,
+                CollectionMember.user_id == user_id,
             )
         )
 
@@ -194,8 +191,8 @@ class CollectionRepository:
     ) -> bool:
         result = await self.db.exec(
             delete(CollectionMember).where(
-                _member.collection_id == collection_id,
-                _member.user_id == user_id,
+                CollectionMember.collection_id == collection_id,
+                CollectionMember.user_id == user_id,
             )
         )
 
@@ -209,7 +206,7 @@ class CollectionRepository:
     ) -> list[CollectionMember]:
         result = await self.db.exec(
             select(CollectionMember).where(
-                _member.collection_id == collection_id
+                CollectionMember.collection_id == collection_id
             )
         )
 
@@ -241,7 +238,7 @@ class CollectionRepository:
         result = await self.db.exec(
             select(Collection)
             .where(where)
-            .order_by(_collection.deleted_at.desc())
+            .order_by(Collection.deleted_at.desc())
             .limit(limit)
             .offset(offset)
         )
@@ -269,9 +266,9 @@ class CollectionRepository:
         result = await self.db.exec(
             update(Collection)
             .where(
-                _collection.deleted_at.is_not(None),
-                _collection.deleted_at <= archived_before,
-                _collection.purge_requested_at.is_(None),
+                Collection.deleted_at.is_not(None),
+                Collection.deleted_at <= archived_before,
+                Collection.purge_requested_at.is_(None),
             )
             .values(
                 purge_requested_at=datetime.now(timezone.utc).replace(tzinfo=None)
@@ -288,11 +285,11 @@ class CollectionRepository:
     ) -> list[uuid.UUID]:
         """Колекції, для яких запрошено purge (явно або після retention), але не завершено."""
         result = await self.db.exec(
-            select(_collection.id)
+            select(Collection.id)
             .where(
-                _collection.deleted_at.is_not(None),
-                _collection.purge_requested_at.is_not(None),
-                _collection.purge_requested_at <= older_than,
+                Collection.deleted_at.is_not(None),
+                Collection.purge_requested_at.is_not(None),
+                Collection.purge_requested_at <= older_than,
             )
             .limit(limit)
         )
@@ -305,12 +302,12 @@ class CollectionRepository:
     ) -> None:
         await self.db.exec(
             delete(CollectionMember).where(
-                _member.collection_id == collection_id
+                CollectionMember.collection_id == collection_id
             )
         )
 
         await self.db.exec(
             delete(Collection).where(
-                _collection.id == collection_id
+                Collection.id == collection_id
             )
         )

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any, cast
+from typing import Any
 
 from sqlalchemy import update
 from sqlmodel import select
@@ -21,22 +21,16 @@ class TaskRepository:
     def add(self, task: AiTask) -> None:
         self.db.add(task)
 
-    @staticmethod
-    def _columns() -> Any:
-        # SQLModel exposes __table__ at runtime, but its typing omits it.
-        return cast(Any, AiTask).__table__.c
-
     async def get(self, task_id: uuid.UUID) -> AiTask | None:
         return await self.db.get(AiTask, task_id)
 
     async def list_for_user(
         self, user_id: uuid.UUID, *, limit: int = 50, offset: int = 0
     ) -> list[AiTask]:
-        table = self._columns()
         statement = (
             select(AiTask)
-            .where(table.user_id == user_id)
-            .order_by(table.created_at.desc())
+            .where(AiTask.user_id == user_id)
+            .order_by(AiTask.created_at.desc())
             .offset(offset)
             .limit(limit)
         )
@@ -44,10 +38,9 @@ class TaskRepository:
         return list(result.all())
 
     async def claim_for_start(self, task_id: uuid.UUID) -> bool:
-        table = self._columns()
         result = await self.db.exec(
             update(AiTask)
-            .where(table.id == task_id, table.status == TaskStatus.QUEUED)
+            .where(AiTask.id == task_id, AiTask.status == TaskStatus.QUEUED)
             .values(
                 status=TaskStatus.RUNNING,
                 started_at=utcnow(),
@@ -58,10 +51,9 @@ class TaskRepository:
         return (result.rowcount or 0) == 1
 
     async def touch(self, task_id: uuid.UUID) -> None:
-        table = self._columns()
         await self.db.exec(
             update(AiTask)
-            .where(table.id == task_id, table.status == TaskStatus.RUNNING)
+            .where(AiTask.id == task_id, AiTask.status == TaskStatus.RUNNING)
             .values(heartbeat_at=utcnow())
         )
 
@@ -70,15 +62,14 @@ class TaskRepository:
     ) -> None:
         await self.db.exec(
             update(AiTask)
-            .where(self._columns().id == task_id)
+            .where(AiTask.id == task_id)
             .values(celery_task_id=celery_task_id)
         )
 
     async def request_cancel(self, task_id: uuid.UUID) -> bool:
-        table = self._columns()
         result = await self.db.exec(
             update(AiTask)
-            .where(table.id == task_id, table.status == TaskStatus.QUEUED)
+            .where(AiTask.id == task_id, AiTask.status == TaskStatus.QUEUED)
             .values(
                 cancellation_requested=True,
                 status=TaskStatus.CANCELLED,
@@ -91,8 +82,8 @@ class TaskRepository:
         result = await self.db.exec(
             update(AiTask)
             .where(
-                table.id == task_id,
-                table.status.in_(
+                AiTask.id == task_id,
+                AiTask.status.in_(
                     (
                         TaskStatus.RUNNING,
                         TaskStatus.PAUSED,
@@ -108,7 +99,7 @@ class TaskRepository:
     async def set_state(self, task_id: uuid.UUID, **values: Any) -> None:
         await self.db.exec(
             update(AiTask)
-            .where(self._columns().id == task_id)
+            .where(AiTask.id == task_id)
             .values(**values)
         )
 
@@ -120,10 +111,9 @@ class TaskRepository:
         error: str | None = None,
         result_artifact_id: uuid.UUID | None = None,
     ) -> bool:
-        table = self._columns()
         result = await self.db.exec(
             update(AiTask)
-            .where(table.id == task_id, table.status.in_(ACTIVE_TASK_STATUSES))
+            .where(AiTask.id == task_id, AiTask.status.in_(ACTIVE_TASK_STATUSES))
             .values(
                 status=status,
                 finished_at=utcnow(),
@@ -136,15 +126,14 @@ class TaskRepository:
     async def claim_stale(
         self, *, older_than: datetime, limit: int = 20
     ) -> list[AiTask]:
-        table = self._columns()
         statement = (
             select(AiTask)
             .where(
-                table.status == TaskStatus.RUNNING,
-                table.heartbeat_at.is_not(None),
-                table.heartbeat_at < older_than,
+                AiTask.status == TaskStatus.RUNNING,
+                AiTask.heartbeat_at.is_not(None),
+                AiTask.heartbeat_at < older_than,
             )
-            .order_by(table.heartbeat_at)
+            .order_by(AiTask.heartbeat_at)
             .limit(limit)
             .with_for_update(skip_locked=True)
         )
@@ -154,15 +143,14 @@ class TaskRepository:
     async def claim_undispatched(
         self, *, older_than: datetime, limit: int = 20
     ) -> list[AiTask]:
-        table = self._columns()
         statement = (
             select(AiTask)
             .where(
-                table.status == TaskStatus.QUEUED,
-                table.celery_task_id.is_(None),
-                table.created_at <= older_than,
+                AiTask.status == TaskStatus.QUEUED,
+                AiTask.celery_task_id.is_(None),
+                AiTask.created_at <= older_than,
             )
-            .order_by(table.created_at)
+            .order_by(AiTask.created_at)
             .limit(limit)
             .with_for_update(skip_locked=True)
         )

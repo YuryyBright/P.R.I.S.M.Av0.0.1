@@ -1,11 +1,11 @@
-"""Доступ до БД для IngestionJob / _stage.
+"""Доступ до БД для IngestionJob / IngestionStage.
 
 Без commit: транзакцією керує caller (stage або сервіс). Методи `mark_*`,
 `bump_progress`, `cancel` лише змінюють стан об'єктів у сесії.
 """
 import uuid
 from datetime import datetime
-from typing import Any, Sequence, cast
+from typing import Sequence
 
 from sqlalchemy import ColumnElement, func, or_, update
 from sqlmodel import delete, select
@@ -24,13 +24,6 @@ ACTIVE_JOB_STATUSES = (
     JobStatus.PROCESSING,
 )
 
-# SQLModel models expose mapped class attributes at runtime, but mypy sees the
-# instance field annotations on those class attributes. These aliases preserve
-# SQLAlchemy's column expression behavior while keeping query typing explicit.
-_job = cast(Any, IngestionJob)
-_document = cast(Any, Document)
-_collection = cast(Any, Collection)
-_stage = cast(Any, IngestionStage)
 
 
 class IngestionJobRepository:
@@ -48,14 +41,14 @@ class IngestionJobRepository:
     async def find_active_for_document(self, document_id: uuid.UUID) -> IngestionJob | None:
         return (await self.db.exec(
             select(IngestionJob)
-            .where(_job.document_id == document_id,
-                   _job.status.in_(ACTIVE_JOB_STATUSES))
-            .order_by(_job.created_at.desc()))).first()
+            .where(IngestionJob.document_id == document_id,
+                   IngestionJob.status.in_(ACTIVE_JOB_STATUSES))
+            .order_by(IngestionJob.created_at.desc()))).first()
 
     async def list_for_document(self, document_id: uuid.UUID, *, limit: int = 20) -> list[IngestionJob]:
         rows = await self.db.exec(
-            select(IngestionJob).where(_job.document_id == document_id)
-            .order_by(_job.created_at.desc()).limit(limit))
+            select(IngestionJob).where(IngestionJob.document_id == document_id)
+            .order_by(IngestionJob.created_at.desc()).limit(limit))
         return list(rows.all())
 
     async def set_celery_task_id(self, job_id: uuid.UUID, task_id: str | None) -> None:
@@ -70,11 +63,11 @@ class IngestionJobRepository:
         rows = await self.db.exec(
             select(IngestionJob)
             .where(
-                _job.status == JobStatus.QUEUED,
-                _job.celery_task_id.is_(None),
-                _job.created_at <= older_than,
+                IngestionJob.status == JobStatus.QUEUED,
+                IngestionJob.celery_task_id.is_(None),
+                IngestionJob.created_at <= older_than,
             )
-            .order_by(_job.created_at)
+            .order_by(IngestionJob.created_at)
             .limit(limit)
             .with_for_update(skip_locked=True)
         )
@@ -124,16 +117,16 @@ class IngestionJobRepository:
         if not document_ids:
             return 0
         res = await self.db.exec(update(IngestionJob).where(
-            _job.document_id.in_(document_ids),
-            _job.status.in_(ACTIVE_JOB_STATUSES),
+            IngestionJob.document_id.in_(document_ids),
+            IngestionJob.status.in_(ACTIVE_JOB_STATUSES),
         ).values(status=JobStatus.CANCELLED, finished_at=utcnow(), error_code="cancelled"))
         return getattr(res, "rowcount", 0) or 0
 
     async def cancel_active_in_collection(self, collection_id: uuid.UUID) -> int:
-        doc_ids = select(_document.id).where(_document.collection_id == collection_id)
+        doc_ids = select(Document.id).where(Document.collection_id == collection_id)
         res = await self.db.exec(update(IngestionJob).where(
-            _job.document_id.in_(doc_ids),
-            _job.status.in_(ACTIVE_JOB_STATUSES),
+            IngestionJob.document_id.in_(doc_ids),
+            IngestionJob.status.in_(ACTIVE_JOB_STATUSES),
         ).values(status=JobStatus.CANCELLED, finished_at=utcnow(), error_code="cancelled"))
         return getattr(res, "rowcount", 0) or 0
 
@@ -144,7 +137,7 @@ class IngestionJobRepository:
     ) -> IngestionStage:
         """get-or-create stage."""
         stage = (await self.db.exec(select(IngestionStage).where(
-            _stage.job_id == job_id, _stage.stage == name))).first()
+            IngestionStage.job_id == job_id, IngestionStage.stage == name))).first()
         if stage is None:
             stage = IngestionStage(job_id=job_id, stage=name)
             self.db.add(stage)
@@ -192,29 +185,29 @@ class IngestionJobRepository:
             а власні job-и без документа лишаються видимими автору.
             """
             stmt = (
-                select(IngestionJob, _document.title, _document.collection_id)
-                .outerjoin(Document, _document.id == _job.document_id)
+                select(IngestionJob, Document.title, Document.collection_id)
+                .outerjoin(Document, Document.id == IngestionJob.document_id)
             )
             if user_id is not None:
-                scope: ColumnElement[bool] = _job.user_id == user_id
+                scope: ColumnElement[bool] = IngestionJob.user_id == user_id
                 if collections_where is not None:
                     scope = or_(
                         scope,
-                        _document.collection_id.in_(
-                            select(_collection.id).where(collections_where)),
+                        Document.collection_id.in_(
+                            select(Collection.id).where(collections_where)),
                     )
                 stmt = stmt.where(scope)
             if status is not None:
-                stmt = stmt.where(_job.status == status)
+                stmt = stmt.where(IngestionJob.status == status)
             if document_id is not None:
-                stmt = stmt.where(_job.document_id == document_id)
+                stmt = stmt.where(IngestionJob.document_id == document_id)
     
             total = (await self.db.exec(
                 select(func.count()).select_from(stmt.order_by(None).subquery())
             )).one()
     
             rows = (await self.db.exec(
-                stmt.order_by(_job.created_at.desc(), _job.id)
+                stmt.order_by(IngestionJob.created_at.desc(), IngestionJob.id)
                     .limit(limit).offset(offset)
             )).all()
             return [(row[0], row[1], row[2]) for row in rows], total
@@ -224,19 +217,19 @@ class IngestionJobRepository:
         Викликається з purge_document ПІСЛЯ того, як job-и вже скасовані
         (soft-delete документа скасовує активні). Повертає кількість видалених job-ів.
         """
-        return await self._hard_delete(_job.document_id == document_id)
+        return await self._hard_delete(IngestionJob.document_id == document_id)
 
     async def delete_in_collection(self, collection_id: uuid.UUID) -> int:
         """Страховка для purge_collection: добирає job-и, чиї документи ще не встигли
         пройти purge_document (або вже втратили document_id)."""
-        doc_ids = select(_document.id).where(_document.collection_id == collection_id)
-        return await self._hard_delete(_job.document_id.in_(doc_ids))
+        doc_ids = select(Document.id).where(Document.collection_id == collection_id)
+        return await self._hard_delete(IngestionJob.document_id.in_(doc_ids))
 
     async def _hard_delete(self, condition: ColumnElement[bool]) -> int:
         # stages мають FK на job — видаляємо першими (безпечно навіть без ON DELETE CASCADE)
-        job_ids = select(_job.id).where(condition)
+        job_ids = select(IngestionJob.id).where(condition)
         await self.db.exec(
-            sa_delete(IngestionStage).where(_stage.job_id.in_(job_ids))
+            sa_delete(IngestionStage).where(IngestionStage.job_id.in_(job_ids))
         )
         res = await self.db.exec(sa_delete(IngestionJob).where(condition))
         return getattr(res, "rowcount", 0) or 0
@@ -248,15 +241,15 @@ class IngestionJobRepository:
         тому додатково їх не чіпаємо.
         """
         res = await self.db.exec(
-            delete(IngestionJob).where(_job.document_id == document_id)
+            delete(IngestionJob).where(IngestionJob.document_id == document_id)
         )
         return getattr(res, "rowcount", 0) or 0
 
     async def hard_delete_in_collection(self, collection_id: uuid.UUID) -> int:
         """Страховка для purge_collection: добирає job-и, чиї документи вже
         втратили document_id (SET NULL) або ще не пройшли purge_document."""
-        doc_ids = select(_document.id).where(_document.collection_id == collection_id)
+        doc_ids = select(Document.id).where(Document.collection_id == collection_id)
         res = await self.db.exec(
-            delete(IngestionJob).where(_job.document_id.in_(doc_ids))
+            delete(IngestionJob).where(IngestionJob.document_id.in_(doc_ids))
         )
         return getattr(res, "rowcount", 0) or 0
