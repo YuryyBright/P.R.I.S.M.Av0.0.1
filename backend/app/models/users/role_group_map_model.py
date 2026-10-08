@@ -8,7 +8,7 @@ class RoleGroupMap(SQLModel, table=True):
     This model handles the many-to-many relationship between Role and RoleGroup models.
     """
 
-    __tablename__ = "RoleGroupMap"
+    __tablename__ = "RoleGroupMap"  # type: ignore[assignment]
 
     role_group_id: UUID = Field(
         foreign_key="RoleGroup.id",

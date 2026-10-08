@@ -8,7 +8,6 @@ Redis incr/expire in auth) are separate.
 
 from __future__ import annotations
 
-import os
 from uuid import UUID
 
 from slowapi import Limiter
@@ -61,9 +60,7 @@ def rate_limit_key(request: Request) -> str:
 
 
 def _is_testing() -> bool:
-    return (
-        os.environ.get("MODE") == "testing" or settings.MODE == ModeEnum.testing or settings.MODE == "testing"
-    )
+    return settings.MODE == ModeEnum.testing
 
 
 def _storage_uri() -> str:

@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 import uuid
 
 from sqlalchemy import ColumnElement, or_
@@ -8,6 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.rag.collection import Collection
 from app.models.rag.collection_member import CollectionMember
+from app.models.users.user_model import User
 from app.rag.domain.enums import CollectionRole, CollectionVisibility
 from app.rag.domain.exceptions import ForbiddenError, NotFoundError
 
@@ -29,6 +30,9 @@ MIN_ROLE: dict[Action, CollectionRole] = {
     Action.WRITE: CollectionRole.EDITOR,
     Action.MANAGE: CollectionRole.OWNER,
 }
+
+_collection = cast(Any, Collection)
+_member = cast(Any, CollectionMember)
 
 
 def role_at_least(
@@ -56,8 +60,8 @@ def roles_at_least(
 
 
 def effective_role(
-    user: Any,
-    collection: Any,
+    user: User,
+    collection: Collection,
 ) -> CollectionRole | None:
     if getattr(user, "is_superuser", False):
         return CollectionRole.OWNER
@@ -91,16 +95,16 @@ class AccessPolicy:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    async def get_role(self, user: Any, collection_id: uuid.UUID) -> CollectionRole | None:
+    async def get_role(self, user: User, collection_id: uuid.UUID) -> CollectionRole | None:
         collection = await self.db.get(Collection, collection_id)
         if collection is None:
             return None
         return effective_role(user, collection)
 
-    async def can(self, user: Any, collection_id: uuid.UUID, action: Action) -> bool:
+    async def can(self, user: User, collection_id: uuid.UUID, action: Action) -> bool:
         return role_allows(await self.get_role(user, collection_id), action)
 
-    async def require(self, user: Any, collection_id: uuid.UUID, action: Action) -> Collection:
+    async def require(self, user: User, collection_id: uuid.UUID, action: Action) -> Collection:
         collection = await self.db.get(Collection, collection_id)
         if collection is None or not getattr(collection, "is_active", False):
             raise NotFoundError("Collection not found")
@@ -109,10 +113,10 @@ class AccessPolicy:
             raise ForbiddenError("Insufficient permissions")
         return collection
 
-    def role_of(self, user: Any, collection: Any) -> CollectionRole | None:
+    def role_of(self, user: User, collection: Collection) -> CollectionRole | None:
         return effective_role(user, collection)
 
-    async def require_archived(self, user: Any, collection_id: uuid.UUID) -> Collection:
+    async def require_archived(self, user: User, collection_id: uuid.UUID) -> Collection:
         """Архівна колекція (soft-deleted, purge ще не запрошено). Керує лише власник/superuser.
 
         effective_role() для неактивних колекцій повертає None, тож `require` тут не годиться.
@@ -131,29 +135,29 @@ class AccessPolicy:
         return collection
 
 
-def visible_where(user: Any) -> ColumnElement[bool]:
+def visible_where(user: User) -> ColumnElement[bool]:
     """SQL-фільтр колекцій, видимих користувачу."""
     if getattr(user, "is_superuser", False):
-        return Collection.is_active.is_(True)
+        return _collection.is_active.is_(True)
 
-    member_subquery = select(CollectionMember.collection_id).where(
-        CollectionMember.user_id == user.id
+    member_subquery = select(_member.collection_id).where(
+        _member.user_id == user.id
     )
-    return Collection.is_active.is_(True) & or_(
-        Collection.owner_id == user.id,
-        Collection.visibility == CollectionVisibility.PUBLIC,
-        Collection.id.in_(member_subquery),
+    return _collection.is_active.is_(True) & or_(
+        _collection.owner_id == user.id,
+        _collection.visibility == CollectionVisibility.PUBLIC,
+        _collection.id.in_(member_subquery),
     )
 
-def archived_where(user: Any) -> ColumnElement[bool]:
+def archived_where(user: User) -> ColumnElement[bool]:
     """SQL-фільтр архіву: власні заархівовані колекції (superuser — усі)."""
-    base = Collection.deleted_at.is_not(None) & Collection.purge_requested_at.is_(None)
+    base = _collection.deleted_at.is_not(None) & _collection.purge_requested_at.is_(None)
     if getattr(user, "is_superuser", False):
         return base
-    return base & (Collection.owner_id == user.id)
+    return base & (_collection.owner_id == user.id)
 
 
-def collections_with_role_where(user: Any, minimum: CollectionRole) -> ColumnElement[bool]:
+def collections_with_role_where(user: User, minimum: CollectionRole) -> ColumnElement[bool]:
     """SQL-фільтр колекцій, де користувач має роль НЕ нижче `minimum`.
 
     SQL-дзеркало effective_role(): owner → member з достатньою роллю →
@@ -161,13 +165,13 @@ def collections_with_role_where(user: Any, minimum: CollectionRole) -> ColumnEle
     Неактивні колекції не враховуються. Superuser — усі активні.
     """
     if getattr(user, "is_superuser", False):
-        return Collection.is_active.is_(True)
+        return _collection.is_active.is_(True)
 
-    member_subquery = select(CollectionMember.collection_id).where(
-        CollectionMember.user_id == user.id,
-        CollectionMember.role.in_(roles_at_least(minimum)),
+    member_subquery = select(_member.collection_id).where(
+        _member.user_id == user.id,
+        _member.role.in_(roles_at_least(minimum)),
     )
-    conditions = [Collection.owner_id == user.id, Collection.id.in_(member_subquery)]
+    conditions = [_collection.owner_id == user.id, _collection.id.in_(member_subquery)]
     if role_at_least(CollectionRole.VIEWER, minimum):   # minimum == VIEWER
-        conditions.append(Collection.visibility == CollectionVisibility.PUBLIC)
-    return Collection.is_active.is_(True) & or_(*conditions)
+        conditions.append(_collection.visibility == CollectionVisibility.PUBLIC)
+    return _collection.is_active.is_(True) & or_(*conditions)

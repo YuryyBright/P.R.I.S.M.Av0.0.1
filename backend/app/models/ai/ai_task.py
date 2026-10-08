@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import DateTime, Index, Text
+from sqlalchemy import Column, DateTime, Index, Text
 from sqlmodel import Field, Relationship
 
 from app.ai.tasks.domain import TaskStatus, TaskType
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class AiTask(RagBaseModel, table=True):
-    __tablename__ = "ai_tasks"
+    __tablename__ = "ai_tasks"  # type: ignore[assignment]
     __table_args__ = (
         Index("ix_ai_tasks_user_status_created", "user_id", "status", "created_at"),
         Index("ix_ai_tasks_status_heartbeat", "status", "heartbeat_at"),
@@ -35,7 +35,7 @@ class AiTask(RagBaseModel, table=True):
         default_factory=dict,
         sa_column=jsonb_column("config"),
     )
-    sources: list[str] = Field(
+    sources: list[dict[str, object]] = Field(
         default_factory=list,
         sa_column=jsonb_column("sources"),
     )
@@ -59,18 +59,18 @@ class AiTask(RagBaseModel, table=True):
             nullable=True,
         ),
     )
-    error: Optional[str] = Field(default=None, sa_type=Text)
+    error: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
     started_at: Optional[datetime] = Field(
         default=None,
-        sa_type=DateTime(timezone=True),
+        sa_column=Column(DateTime(timezone=True), nullable=True),
     )
     finished_at: Optional[datetime] = Field(
         default=None,
-        sa_type=DateTime(timezone=True),
+        sa_column=Column(DateTime(timezone=True), nullable=True),
     )
     heartbeat_at: Optional[datetime] = Field(
         default=None,
-        sa_type=DateTime(timezone=True),
+        sa_column=Column(DateTime(timezone=True), nullable=True),
     )
     cancellation_requested: bool = Field(default=False)
 

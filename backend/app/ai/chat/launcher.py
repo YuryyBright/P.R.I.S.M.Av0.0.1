@@ -10,18 +10,22 @@ import asyncio
 import contextlib
 import logging
 import uuid
-from typing import Awaitable, Callable
+from typing import Any, Callable, Coroutine
 
 logger = logging.getLogger(__name__)
 
 
 class InlineLauncher:
-    def __init__(self, execute: Callable[[uuid.UUID], Awaitable[None]]) -> None:
+    def __init__(
+        self, execute: Callable[[uuid.UUID], Coroutine[Any, Any, None]]
+    ) -> None:
         self._execute = execute
-        self._tasks: set[asyncio.Task] = set()
+        self._tasks: set[asyncio.Task[None]] = set()
 
     async def dispatch(self, run_id: uuid.UUID) -> None:
-        task = asyncio.create_task(self._execute(run_id), name=f"ai-run-{run_id}")
+        task: asyncio.Task[None] = asyncio.create_task(
+            self._execute(run_id), name=f"ai-run-{run_id}"
+        )
         self._tasks.add(task)
         task.add_done_callback(self._done)
 

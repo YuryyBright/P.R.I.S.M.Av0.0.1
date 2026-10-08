@@ -190,7 +190,9 @@ class AgentLoop:
                 input={"query": out.query, "tool_call_id": call.id},
                 output={"chunks": [{"n": n, "chunk_id": str(c.chunk_id), "score": c.score,
                                     "rerank_score": c.rerank_score} for n, c in out.numbered]},
-                retrieval=RetrievalLog(out.query or "", None, out.retrieval.trace.to_dict()))
+                retrieval=RetrievalLog(
+                    out.query or "", None, out.retrieval.trace.to_persistence_dict()
+                ))
 
         yield StepRecord(
             idx=idx, type=StepType.TOOL_CALL, name=call.name,

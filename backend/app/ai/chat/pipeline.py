@@ -75,8 +75,11 @@ class ChatPipeline:
                        "collection_ids": [str(c) for c in cfg.collection_ids] if cfg.collection_ids is not None else None},
                 output={"chunks": [{"n": n, "chunk_id": str(c.chunk_id), "document_id": str(c.document_id),
                                     "score": c.score, "rerank_score": c.rerank_score} for n, c in items]},
-                retrieval=RetrievalLog(ctx.user_text, query if query != ctx.user_text else None,
-                                       result.trace.to_dict()))
+                retrieval=RetrievalLog(
+                    ctx.user_text,
+                    query if query != ctx.user_text else None,
+                    result.trace.to_persistence_dict(),
+                ))
             yield StepFinished(idx=idx, kind=StepType.RETRIEVAL, latency_ms=latency,
                                summary=f"{len(items)} фрагм.")
 

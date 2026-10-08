@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Callable
+from typing import Any, Callable, List
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -18,7 +18,7 @@ class ConversationService:
     def __init__(self, session_factory: Callable[[], AsyncSession]) -> None:
         self._sf = session_factory
 
-    async def create(self, user: Any, body: ConversationCreate):
+    async def create(self, user: Any, body: ConversationCreate) -> RagConversation:
         base = ConversationSettings()
         if body.settings is not None:
             base = ConversationSettings.model_validate(
@@ -32,19 +32,23 @@ class ConversationService:
             await db.refresh(conv)
             return conv
 
-    async def list(self, user: Any, *, archived: bool, limit: int, offset: int):
+    async def list(
+        self, user: Any, *, archived: bool, limit: int, offset: int
+    ) -> tuple[List[RagConversation], int]:
         async with self._sf() as db:
             return await ConversationRepository(db).list_page(
                 user.id, archived=archived, limit=limit, offset=offset)
 
-    async def get(self, user: Any, conversation_id: uuid.UUID):
+    async def get(self, user: Any, conversation_id: uuid.UUID) -> RagConversation:
         async with self._sf() as db:
             conv = await ConversationRepository(db).get_owned(conversation_id, user.id)
         if conv is None:
             raise NotFoundError("Conversation not found")
         return conv
 
-    async def update(self, user: Any, conversation_id: uuid.UUID, body: ConversationUpdate):
+    async def update(
+        self, user: Any, conversation_id: uuid.UUID, body: ConversationUpdate
+    ) -> RagConversation:
         async with self._sf() as db:
             conv = await ConversationRepository(db).get_owned(conversation_id, user.id)
             if conv is None:
@@ -74,7 +78,7 @@ class ConversationService:
             await db.commit()
 
     async def messages(self, user: Any, conversation_id: uuid.UUID, *, limit: int,
-                       before: uuid.UUID | None) -> list[MessageOut]:
+                       before: uuid.UUID | None) -> List[MessageOut]:
         async with self._sf() as db:
             repo = ConversationRepository(db)
             if await repo.get_owned(conversation_id, user.id) is None:

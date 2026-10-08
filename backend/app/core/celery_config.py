@@ -4,7 +4,6 @@ This module provides configuration settings for Celery tasks and workers.
 """
 
 import logging
-import os
 import ssl
 from functools import lru_cache
 from typing import Any, Dict
@@ -13,6 +12,7 @@ from kombu import Queue
 
 from app.core.config import ModeEnum, settings
 from app.rag.settings import get_rag_settings
+from app.ai.settings import get_ai_settings
 
 
 def get_redis_ssl_options() -> Dict[str, Any]:
@@ -22,7 +22,7 @@ def get_redis_ssl_options() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Redis SSL configuration options.
     """
-    cert_path = os.getenv("REDIS_CERT_PATH", "/app/certs")
+    cert_path = settings.REDIS_CERT_PATH
 
     if not os.path.exists(cert_path):
         cert_path = os.path.join(
@@ -77,6 +77,11 @@ def get_celery_config() -> Dict[str, Any]:
         Queue("periodic_tasks"),
         Queue(get_rag_settings().ingestion.queue),
     ]
+    if get_ai_settings().enabled:
+        ai_settings = get_ai_settings()
+        task_queues.extend(
+            [Queue(ai_settings.agent.queue), Queue(ai_settings.tasks.queue)]
+        )
 
     config = {
         # Broker and Backend
@@ -145,7 +150,7 @@ def get_celery_config() -> Dict[str, Any]:
         "task_max_retries": 3,
     }
 
-    if settings.MODE == ModeEnum.production:
+    if settings.redis_ssl_enabled:
         ssl_opts = get_redis_ssl_options()
 
         config.update(

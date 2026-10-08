@@ -10,7 +10,7 @@ import asyncio
 import logging
 from datetime import timedelta
 import uuid
-from typing import Awaitable, Callable
+from typing import Any, Awaitable, Callable, TypeVar
 
 from celery.exceptions import SoftTimeLimitExceeded
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -42,6 +42,14 @@ FINALIZE_TASK = "rag.finalize_document"
 REDISPATCH_TASK = "rag.redispatch_undispatched"
 
 _session_factory: async_sessionmaker | None = None
+T = TypeVar("T")
+
+
+def _run_awaitable(awaitable: Awaitable[T]) -> T:
+    async def wait() -> T:
+        return await awaitable
+
+    return asyncio.run(wait())
 
 
 def _get_session_factory() -> async_sessionmaker:
@@ -55,36 +63,36 @@ def _get_session_factory() -> async_sessionmaker:
 
 
 def _run_stage(
-    task,
+    task: Any,
     job_id: str,
     *,
     label: str,
-    run: Callable[..., Awaitable[dict]],
+    run: Callable[..., Awaitable[dict[str, Any]]],
     fail: Callable[..., Awaitable[None]],
     ok_status: str,
     next_task: str | None,
     dispatch_next: bool,
-) -> dict:
+) -> dict[str, Any]:
     """Спільна обгортка етапу: timeout → failed; тимчасові помилки → retry
     з backoff; після вичерпання retry → failed; успіх → наступна задача
     (збій її постановки теж ретраїться, а не лишає job у PROCESSING)."""
     jid = uuid.UUID(job_id)
     factory = _get_session_factory()
     try:
-        result = asyncio.run(run(factory, jid))
+        result = _run_awaitable(run(factory, jid))
     except SoftTimeLimitExceeded:
-        asyncio.run(fail(factory, jid, "timeout", f"Stage {label} exceeded the time limit"))
+        _run_awaitable(fail(factory, jid, "timeout", f"Stage {label} exceeded the time limit"))
         return {"status": "failed", "error_code": "timeout", "job_id": job_id}
     except Exception as exc:                       # тимчасові: I/O, БД, мережа
         attempt = task.request.retries
         if attempt < task.max_retries:
             logger.warning("%s retry %s/%s job=%s: %r",
                            label, attempt + 1, task.max_retries, job_id, exc)
-            asyncio.run(record_retry(factory, jid, attempt + 1))
+            _run_awaitable(record_retry(factory, jid, attempt + 1))
             raise task.retry(exc=exc, countdown=min(BACKOFF_S * 2 ** attempt, 600))
         logger.exception("%s failed permanently job=%s", label, job_id)
         code = f"{label}_unexpected_error"
-        asyncio.run(fail(factory, jid, code, f"{type(exc).__name__}: {exc}"))
+        _run_awaitable(fail(factory, jid, code, f"{type(exc).__name__}: {exc}"))
         return {"status": "failed", "error_code": code, "job_id": job_id}
 
     if result["status"] == ok_status and dispatch_next and next_task:
@@ -96,16 +104,17 @@ def _run_stage(
                 logger.warning("%s: enqueue %s failed (%r), retrying stage job=%s",
                                label, next_task, exc, job_id)
                 raise task.retry(exc=exc, countdown=BACKOFF_S)   # етапи ідемпотентні
-            asyncio.run(fail(factory, jid, "dispatch_failed", f"Cannot enqueue {next_task}: {exc}"))
+            _run_awaitable(fail(factory, jid, "dispatch_failed", f"Cannot enqueue {next_task}: {exc}"))
             return {"status": "failed", "error_code": "dispatch_failed", "job_id": job_id}
     return result
 
 
 @celery_app.task(
     bind=True, name=PARSE_TASK, queue=RAG_INGESTION_QUEUE, acks_late=True,
-    max_retries=MAX_RETRIES, soft_time_limit=600, time_limit=660,
+    max_retries=MAX_RETRIES, soft_time_limit=_cfg.parse_soft_time_limit_s,
+    time_limit=_cfg.parse_time_limit_s,
 )
-def parse_document(self, job_id: str, dispatch_next: bool = True) -> dict:
+def parse_document(self: Any, job_id: str, dispatch_next: bool = True) -> dict[str, Any]:
     """Розібрати оригінал документа в CanonicalDocument (результат — у storage)."""
     return _run_stage(self, job_id, label="parse", run=run_parse_stage, fail=fail_job,
                       ok_status="parsed", next_task=CHUNK_TASK, dispatch_next=dispatch_next)
@@ -113,9 +122,10 @@ def parse_document(self, job_id: str, dispatch_next: bool = True) -> dict:
 
 @celery_app.task(
     bind=True, name=CHUNK_TASK, queue=RAG_INGESTION_QUEUE, acks_late=True,
-    max_retries=MAX_RETRIES, soft_time_limit=300, time_limit=360,
+    max_retries=MAX_RETRIES, soft_time_limit=_cfg.chunk_soft_time_limit_s,
+    time_limit=_cfg.chunk_time_limit_s,
 )
-def chunk_document(self, job_id: str, dispatch_next: bool = True) -> dict:
+def chunk_document(self: Any, job_id: str, dispatch_next: bool = True) -> dict[str, Any]:
     """Нарізати CanonicalDocument на чанки й записати їх у document_chunks."""
     return _run_stage(self, job_id, label="chunk", run=run_chunk_stage, fail=fail_chunk_job,
                       ok_status="chunked", next_task=EMBED_TASK, dispatch_next=dispatch_next)
@@ -123,9 +133,10 @@ def chunk_document(self, job_id: str, dispatch_next: bool = True) -> dict:
 
 @celery_app.task(
     bind=True, name=EMBED_TASK, queue=RAG_INGESTION_QUEUE, acks_late=True,
-    max_retries=MAX_RETRIES, soft_time_limit=900, time_limit=960,
+    max_retries=MAX_RETRIES, soft_time_limit=_cfg.embed_soft_time_limit_s,
+    time_limit=_cfg.embed_time_limit_s,
 )
-def embed_chunks(self, job_id: str, dispatch_next: bool = True) -> dict:
+def embed_chunks(self: Any, job_id: str, dispatch_next: bool = True) -> dict[str, Any]:
     """Порахувати embeddings чанків і записати їх у vector store."""
     return _run_stage(self, job_id, label="embed", run=run_embed_stage, fail=fail_embed_job,
                       ok_status="embedded", next_task=FINALIZE_TASK, dispatch_next=dispatch_next)
@@ -133,9 +144,10 @@ def embed_chunks(self, job_id: str, dispatch_next: bool = True) -> dict:
 
 @celery_app.task(
     bind=True, name=FINALIZE_TASK, queue=RAG_INGESTION_QUEUE, acks_late=True,
-    max_retries=MAX_RETRIES, soft_time_limit=60, time_limit=90,
+    max_retries=MAX_RETRIES, soft_time_limit=_cfg.finalize_soft_time_limit_s,
+    time_limit=_cfg.finalize_time_limit_s,
 )
-def finalize_document(self, job_id: str, dispatch_next: bool = True) -> dict:
+def finalize_document(self: Any, job_id: str, dispatch_next: bool = True) -> dict[str, Any]:
     """Job → COMPLETED, Document → READY."""
     return _run_stage(self, job_id, label="finalize", run=run_finalize_stage,
                       fail=fail_finalize_job, ok_status="finalized",

@@ -55,22 +55,18 @@ class RedisConnectionFactory:
     _client: Optional[Redis] = None
     # asyncio loop id that owns _pool (Celery uses a new loop per asyncio.run)
     _pool_loop_id: Optional[int] = None
+    _pool_db: Optional[int] = None
+    _pool_max_connections: Optional[int] = None
 
     @classmethod
     def _is_ssl_enabled(cls, mode: ModeEnum) -> bool:
         """Return whether Redis TLS should be used for the given mode."""
-        if mode == ModeEnum.development:
-            return False
-        if mode == ModeEnum.testing:
-            return os.getenv("REDIS_SSL", "false").lower() == "true"
-        # Production defaults to TLS (self-hosted Redis); set REDIS_SSL=false for
-        # plain Compose Redis on the one-box Hub runtime.
-        return os.getenv("REDIS_SSL", "true").lower() == "true"
+        return settings.redis_ssl_enabled
 
     @classmethod
     def _get_cert_dir(cls) -> str:
         """Resolve the directory that holds Redis TLS materials."""
-        cert_path = os.getenv("REDIS_CERT_PATH", "/app/certs")
+        cert_path = settings.REDIS_CERT_PATH
         if not os.path.exists(cert_path):
             # Fallback to local certs directory for development containers
             cert_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "certs")
@@ -111,9 +107,8 @@ class RedisConnectionFactory:
 
         logger.info(f"Loaded CA certificate from {ca_cert_path}")
 
-        check_hostname = True
+        check_hostname = settings.redis_ssl_hostname_check_enabled
         if mode == ModeEnum.testing:
-            check_hostname = os.getenv("REDIS_SSL_CHECK_HOSTNAME", "false").lower() == "true"
             logger.info(f"Testing mode: SSL hostname verification = {check_hostname}")
 
         kwargs: Dict[str, Any] = {
@@ -157,17 +152,18 @@ class RedisConnectionFactory:
         return ssl_context
 
     @classmethod
-    def _get_connection_params(cls, db: int = 0) -> Dict[str, Any]:
+    def _get_connection_params(cls, db: int | None = None) -> Dict[str, Any]:
         """
         Build Redis connection parameters based on environment.
 
         Args:
-            db: Redis database number (default: 0)
+            db: Redis database number; defaults to the shared REDIS_DB setting
 
         Returns:
             Dictionary of connection parameters for redis-py
         """
         mode = settings.MODE
+        db = settings.REDIS_DB if db is None else db
         redis_host = settings.REDIS_HOST
         redis_port = int(settings.REDIS_PORT) if settings.REDIS_PORT else 6379
         redis_password = settings.REDIS_PASSWORD
@@ -219,7 +215,7 @@ class RedisConnectionFactory:
         return params
 
     @classmethod
-    def _create_connection_pool(cls, db: int = 0, max_connections: int = 50) -> ConnectionPool:
+    def _create_connection_pool(cls, db: int, max_connections: int = 50) -> ConnectionPool:
         """
         Create a connection pool for Redis.
 
@@ -266,38 +262,47 @@ class RedisConnectionFactory:
         cls._pool = None
         cls._client = None
         cls._pool_loop_id = None
+        cls._pool_db = None
+        cls._pool_max_connections = None
 
     @classmethod
-    def get_connection_pool(cls, db: int = 0, max_connections: int = 50) -> ConnectionPool:
+    def get_connection_pool(cls, db: int | None = None, max_connections: int = 50) -> ConnectionPool:
         """
         Get or create a singleton connection pool.
 
         Args:
-            db: Redis database number
+            db: Redis database number; defaults to the shared REDIS_DB setting
             max_connections: Maximum number of connections in the pool
 
         Returns:
             ConnectionPool instance
         """
+        db = settings.REDIS_DB if db is None else db
         loop_id = cls._current_loop_id()
         # Prefork Celery workers call asyncio.run() per task; a pool created on
         # loop A must not be reused on loop B ("Future attached to a different loop").
-        if cls._pool is not None and cls._pool_loop_id != loop_id:
-            logger.info("Redis pool was bound to another event loop; creating a new pool")
+        if cls._pool is not None and (
+            cls._pool_loop_id != loop_id
+            or cls._pool_db != db
+            or cls._pool_max_connections != max_connections
+        ):
+            logger.info("Redis pool configuration changed; creating a new pool")
             cls.discard_pool()
 
         if cls._pool is None:
             cls._pool = cls._create_connection_pool(db=db, max_connections=max_connections)
             cls._pool_loop_id = loop_id
+            cls._pool_db = db
+            cls._pool_max_connections = max_connections
         return cls._pool
 
     @classmethod
-    async def get_client(cls, db: int = 0) -> Redis:
+    async def get_client(cls, db: int | None = None) -> Redis:
         """
         Get a Redis client using the connection pool.
 
         Args:
-            db: Redis database number
+            db: Redis database number; defaults to the shared REDIS_DB setting
 
         Returns:
             Redis client instance
@@ -376,15 +381,17 @@ class RedisConnectionFactory:
             cls._client = None
 
         cls._pool_loop_id = None
+        cls._pool_db = None
+        cls._pool_max_connections = None
 
 
 # Convenience functions for backward compatibility
-async def get_redis_client(db: int = 0) -> Redis:
+async def get_redis_client(db: int | None = None) -> Redis:
     """
     Get a Redis client instance.
 
     Args:
-        db: Redis database number (default: 0)
+        db: Redis database number (defaults to the shared REDIS_DB setting)
 
     Returns:
         Redis client instance

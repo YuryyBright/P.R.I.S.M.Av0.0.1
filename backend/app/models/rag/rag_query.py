@@ -16,7 +16,7 @@ class RagQuery(RagImmutableModel, table=True):
     Зберігає параметри пошуку та snapshot доступу — для аналізу й аудиту.
     """
 
-    __tablename__ = "rag_queries"
+    __tablename__ = "rag_queries"  # type: ignore[assignment]
 
     user_id: Optional[uuid.UUID] = Field(
         default=None,  # SET NULL: аналітика переживає видалення користувача
@@ -40,7 +40,7 @@ class RagQuery(RagImmutableModel, table=True):
         default=None, sa_column=Column(PG_UUID(as_uuid=True), nullable=True))
 
     query_text: str = Field(sa_type=Text)
-    rewritten_query: Optional[str] = Field(default=None, sa_type=Text)
+    rewritten_query: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
 
     embedding_model: Optional[str] = Field(default=None, max_length=255)
     llm_model: Optional[str] = Field(default=None, max_length=255)

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from datetime import timezone
+from typing import Any, cast
 
 from sqlalchemy import ColumnElement, delete, update
 from sqlmodel import func, select
@@ -10,9 +12,11 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.models.rag.collection import Collection
 from app.models.rag.collection_member import CollectionMember
 from app.models.users.user_model import User
-from app.rag.domain.enums import CollectionRole
-from datetime import timezone
-from typing import Any
+from app.rag.domain.enums import CollectionRole, CollectionVisibility
+
+_collection = cast(Any, Collection)
+_member = cast(Any, CollectionMember)
+_user = cast(Any, User)
 class CollectionRepository:
     """
     Database access for Collection and CollectionMember.
@@ -39,7 +43,7 @@ class CollectionRepository:
         owner_id: uuid.UUID,
         name: str,
         description: str | None,
-        visibility,
+        visibility: CollectionVisibility,
     ) -> Collection:
         collection = Collection(
             name=name,
@@ -80,7 +84,7 @@ class CollectionRepository:
         self.db.add(collection)
         await self.db.flush()
 
-    async def refresh(self, entity) -> None:
+    async def refresh(self, entity: Collection) -> None:
         await self.db.refresh(entity)
 
     # ---------------- Members ----------------
@@ -140,7 +144,7 @@ class CollectionRepository:
         result = await self.db.exec(
             select(Collection)
             .where(where)
-            .order_by(Collection.created_at.desc())
+            .order_by(_collection.created_at.desc())
             .limit(limit)
             .offset(offset)
         )
@@ -170,8 +174,8 @@ class CollectionRepository:
     ) -> CollectionMember | None:
         result = await self.db.exec(
             select(CollectionMember).where(
-                CollectionMember.collection_id == collection_id,
-                CollectionMember.user_id == user_id,
+                _member.collection_id == collection_id,
+                _member.user_id == user_id,
             )
         )
 
@@ -190,8 +194,8 @@ class CollectionRepository:
     ) -> bool:
         result = await self.db.exec(
             delete(CollectionMember).where(
-                CollectionMember.collection_id == collection_id,
-                CollectionMember.user_id == user_id,
+                _member.collection_id == collection_id,
+                _member.user_id == user_id,
             )
         )
 
@@ -205,7 +209,7 @@ class CollectionRepository:
     ) -> list[CollectionMember]:
         result = await self.db.exec(
             select(CollectionMember).where(
-                CollectionMember.collection_id == collection_id
+                _member.collection_id == collection_id
             )
         )
 
@@ -237,7 +241,7 @@ class CollectionRepository:
         result = await self.db.exec(
             select(Collection)
             .where(where)
-            .order_by(Collection.deleted_at.desc())
+            .order_by(_collection.deleted_at.desc())
             .limit(limit)
             .offset(offset)
         )
@@ -265,9 +269,9 @@ class CollectionRepository:
         result = await self.db.exec(
             update(Collection)
             .where(
-                Collection.deleted_at.is_not(None),
-                Collection.deleted_at <= archived_before,
-                Collection.purge_requested_at.is_(None),
+                _collection.deleted_at.is_not(None),
+                _collection.deleted_at <= archived_before,
+                _collection.purge_requested_at.is_(None),
             )
             .values(
                 purge_requested_at=datetime.now(timezone.utc).replace(tzinfo=None)
@@ -284,11 +288,11 @@ class CollectionRepository:
     ) -> list[uuid.UUID]:
         """Колекції, для яких запрошено purge (явно або після retention), але не завершено."""
         result = await self.db.exec(
-            select(Collection.id)
+            select(_collection.id)
             .where(
-                Collection.deleted_at.is_not(None),
-                Collection.purge_requested_at.is_not(None),
-                Collection.purge_requested_at <= older_than,
+                _collection.deleted_at.is_not(None),
+                _collection.purge_requested_at.is_not(None),
+                _collection.purge_requested_at <= older_than,
             )
             .limit(limit)
         )
@@ -301,12 +305,12 @@ class CollectionRepository:
     ) -> None:
         await self.db.exec(
             delete(CollectionMember).where(
-                CollectionMember.collection_id == collection_id
+                _member.collection_id == collection_id
             )
         )
 
         await self.db.exec(
             delete(Collection).where(
-                Collection.id == collection_id
+                _collection.id == collection_id
             )
         )

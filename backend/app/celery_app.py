@@ -8,6 +8,7 @@ from celery import Celery
 from app.core.celery_config import get_cached_celery_config
 from app.core.config import ModeEnum, settings
 from app.rag.settings import get_rag_settings
+from app.ai.settings import get_ai_settings
 
 # Initialize the main Celery app instance
 celery_app = Celery("prisma")
@@ -37,6 +38,11 @@ from app import worker as _worker_tasks  # noqa: E402, F401
 if get_rag_settings().enabled:
     from app.rag.ingestion import cleanup_tasks as _rag_cleanup_tasks  # noqa: E402, F401
     from app.rag.ingestion import tasks as _rag_tasks  # noqa: E402, F401
+
+if get_ai_settings().enabled:
+    # Register both long-running agent runs and resumable AI task jobs for workers/beat.
+    from app.ai.agent import tasks as _ai_agent_tasks  # noqa: E402, F401
+    from app.ai.tasks import celery as _ai_task_jobs  # noqa: E402, F401
 
 # Conditional configuration for development mode
 if settings.MODE == ModeEnum.development:

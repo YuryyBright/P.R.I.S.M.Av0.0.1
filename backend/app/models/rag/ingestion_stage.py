@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import CheckConstraint, DateTime, Text, UniqueConstraint
+from sqlalchemy import Column, CheckConstraint, DateTime, Text, UniqueConstraint
 from sqlmodel import Field, Relationship
 
 from app.models.rag.rag_base import RagBaseModel, enum_column, fk_column
@@ -18,7 +18,7 @@ class IngestionStage(RagBaseModel, table=True):
     Один рядок на (job, stage); при retry рядок скидається й перезаписується.
     """
 
-    __tablename__ = "ingestion_stages"
+    __tablename__ = "ingestion_stages"  # type: ignore[assignment]
     __table_args__ = (
         UniqueConstraint("job_id", "stage", name="uq_ingestion_stages_job_stage"),
         CheckConstraint(
@@ -33,11 +33,11 @@ class IngestionStage(RagBaseModel, table=True):
         sa_column=enum_column(StageStatus, default=StageStatus.PENDING),
     )
 
-    started_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
-    finished_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    started_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    finished_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
 
     items_total: int = Field(default=0)
     items_processed: int = Field(default=0)
-    error_message: Optional[str] = Field(default=None, sa_type=Text)
+    error_message: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
 
     job: Optional["IngestionJob"] = Relationship(back_populates="stages")

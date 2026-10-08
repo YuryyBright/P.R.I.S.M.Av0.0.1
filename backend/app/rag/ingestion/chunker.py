@@ -91,12 +91,14 @@ def _line_spans(text: str) -> list[tuple[int, int]]:
 def _split_oversize(text: str, s: int, e: int, limit: int, count: TokenCounter) -> list[tuple[int, int]]:
     """Ріже [s:e) на вікна ≤ limit токенів за словами."""
     spans: list[tuple[int, int]] = []
-    cur_s = cur_e = None
+    cur_s: int | None = None
+    cur_e: int | None = None
     cur_t = 0
     for m in _WORD.finditer(text, s, e):
         w_t = count(m.group()) + 1
         if w_t > limit:                       # «слово» завелике саме по собі
             if cur_s is not None:
+                assert cur_e is not None
                 spans.append((cur_s, cur_e))
                 cur_s, cur_t = None, 0
             step = max(1, limit // 2)
@@ -104,6 +106,7 @@ def _split_oversize(text: str, s: int, e: int, limit: int, count: TokenCounter) 
                 spans.append((i, min(i + step, m.end())))
             continue
         if cur_s is not None and cur_t + w_t > limit:
+            assert cur_e is not None
             spans.append((cur_s, cur_e))
             cur_s, cur_t = None, 0
         if cur_s is None:
@@ -111,6 +114,7 @@ def _split_oversize(text: str, s: int, e: int, limit: int, count: TokenCounter) 
         cur_e = m.end()
         cur_t += w_t
     if cur_s is not None:
+        assert cur_e is not None
         spans.append((cur_s, cur_e))
     return spans
 
@@ -137,7 +141,7 @@ def _block_pieces(kind: BlockKind, start: int, end: int, page: int | None, text:
 
 def chunk_document(doc: CanonicalDocument, cfg: ChunkingSettings,
                    count: TokenCounter | None = None) -> list[ChunkDraft]:
-    count = count or default_token_counter()
+    counter: TokenCounter = count or default_token_counter()
     content = doc.content
     drafts: list[ChunkDraft] = []
     cur: list[_Piece] = []
@@ -157,7 +161,7 @@ def chunk_document(doc: CanonicalDocument, cfg: ChunkingSettings,
         drafts.append(ChunkDraft(
             index=len(drafts), content=text,
             content_hash=sha256(text.encode("utf-8")).hexdigest(),
-            token_count=count(text), char_start=first.start, char_end=last.end,
+            token_count=counter(text), char_start=first.start, char_end=last.end,
             page_start=pages[0] if pages else None, page_end=pages[-1] if pages else None,
             heading_path=list(last.path)))
 
@@ -179,14 +183,14 @@ def chunk_document(doc: CanonicalDocument, cfg: ChunkingSettings,
     def add(p: _Piece) -> None:
         nonlocal cur, n_overlap
         if cur:
-            t = count(content[cur[0].start:p.end])
+            t = counter(content[cur[0].start:p.end])
             if t > cfg.max_tokens or (t > cfg.target_tokens and has_body()):
                 if fresh():
                     flush(True)
                 else:
                     cur, n_overlap = [], 0
                 # overlap не має «з'їдати» місце під новий piece
-                if cur and count(content[cur[0].start:p.end]) > cfg.max_tokens:
+                if cur and counter(content[cur[0].start:p.end]) > cfg.max_tokens:
                     cur, n_overlap = [], 0
         cur.append(p)
 
@@ -202,7 +206,7 @@ def chunk_document(doc: CanonicalDocument, cfg: ChunkingSettings,
             stack.append((level, text[:_HEADING_MAX_CHARS]))
         path = tuple(t for _, t in stack)
         for piece in _block_pieces(block.kind, block.start, block.end, block.page,
-                                   text, path, cfg, count):
+                                   text, path, cfg, counter):
             add(piece)
 
     if fresh():

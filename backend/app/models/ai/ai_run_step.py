@@ -17,7 +17,7 @@ class AiRunStep(RagImmutableModel, table=True):
     Подія step.started існує лише в SSE. Токени не зберігаються (живуть у Redis Stream).
     """
 
-    __tablename__ = "ai_run_steps"
+    __tablename__ = "ai_run_steps"  # type: ignore[assignment]
     __table_args__ = (
         UniqueConstraint("run_id", "idx", name="uq_ai_run_steps_position"),
         CheckConstraint("idx >= 0", name="ck_ai_run_steps_idx"),

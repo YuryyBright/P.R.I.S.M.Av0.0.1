@@ -16,6 +16,7 @@ import asyncio
 import logging
 import uuid
 from datetime import timedelta
+from typing import Any
 
 from celery.exceptions import SoftTimeLimitExceeded
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -81,9 +82,13 @@ async def _fail_timeout(run_id: uuid.UUID) -> None:
 @celery_app.task(
     bind=True, name=RUN_AGENT_TASK, queue=AI_AGENT_QUEUE, acks_late=False, max_retries=0,
     soft_time_limit=_cfg.wall_clock_s + _cfg.soft_time_limit_grace_s,
-    time_limit=_cfg.wall_clock_s + _cfg.soft_time_limit_grace_s + 30,
+    time_limit=(
+        _cfg.wall_clock_s
+        + _cfg.soft_time_limit_grace_s
+        + _cfg.hard_time_limit_grace_s
+    ),
 )
-def run_agent(self, run_id: str) -> dict:
+def run_agent(self: Any, run_id: str) -> dict[str, str]:
     rid = uuid.UUID(run_id)
     try:
         asyncio.run(_execute(rid))
@@ -136,7 +141,7 @@ async def _sweep(factory: async_sessionmaker, limit: int = 100) -> dict[str, int
 
 
 @celery_app.task(name=SWEEP_TASK, queue=AI_AGENT_QUEUE)
-def sweep_stale_runs() -> dict:
+def sweep_stale_runs() -> dict[str, int]:
     return asyncio.run(_sweep(_get_session_factory()))
 
 

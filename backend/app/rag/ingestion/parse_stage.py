@@ -8,7 +8,7 @@ import logging
 import uuid
 from dataclasses import dataclass
 from hashlib import sha256
-from typing import Any
+from typing import Any, cast
 
 from app.rag.domain.enums import DocumentStatus, IngestionStageName
 from app.rag.domain.ports import BlobStorage
@@ -20,6 +20,8 @@ from app.rag.ingestion.stage_common import (
 )
 from app.rag.ingestion.storage import get_blob_storage, read_original, save_canonical
 from app.rag.repositories import DocumentRepository, IngestionJobRepository
+from app.models.rag.document import Document
+from app.models.rag.ingestion_job import IngestionJob
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +85,8 @@ async def run_parse_stage(
     # 3) зафіксувати успіх
     async with session_factory() as db:
         jobs, docs = IngestionJobRepository(db), DocumentRepository(db)
-        job = await jobs.get(job_id)
-        doc = await docs.get(src.document_id)
+        job = cast(IngestionJob, await jobs.get(job_id))
+        doc = cast(Document, await docs.get(src.document_id))
 
         await jobs.complete_stage(job_id, STAGE, items=len(canonical.blocks))
         jobs.bump_progress(job, PARSE_PROGRESS)

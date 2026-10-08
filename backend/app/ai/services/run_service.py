@@ -28,6 +28,7 @@ from app.ai.repositories.step_repo import StepRepository
 from app.ai.schemas import ConversationSettings, StartRunRequest, StartRunResponse
 from app.ai.settings import AiSettings
 from app.models.ai.ai_run import AiRun
+from app.models.ai.ai_run_step import AiRunStep
 from app.models.rag.rag_conversation import RagConversation
 from app.models.rag.rag_message import RagMessage
 from app.models.rag.rag_base import utcnow
@@ -187,7 +188,7 @@ class RunService:
             raise RunNotFoundError("Run not found")
         return run
 
-    async def list_steps(self, user: Any, run_id: uuid.UUID):
+    async def list_steps(self, user: Any, run_id: uuid.UUID) -> list[AiRunStep]:
         await self.get_run(user, run_id)
         async with self._sf() as db:
             return await StepRepository(db).list_for_run(run_id)

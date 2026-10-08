@@ -1,7 +1,7 @@
 import uuid
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import CheckConstraint, Float, Text, UniqueConstraint
+from sqlalchemy import Column, CheckConstraint, Float, Text, UniqueConstraint
 from sqlmodel import Field, Relationship
 
 from app.models.rag.rag_base import RagImmutableModel, fk_column, meta_field
@@ -17,7 +17,7 @@ class RagCitation(RagImmutableModel, table=True):
     перечанкінгу цитата у збереженій відповіді лишається (є citation_text).
     """
 
-    __tablename__ = "rag_citations"
+    __tablename__ = "rag_citations"  # type: ignore[assignment]
     __table_args__ = (
         UniqueConstraint("message_id", "rank", name="uq_rag_citations_message_rank"),
         CheckConstraint("rank >= 1", name="ck_rag_citations_rank"),
@@ -34,7 +34,7 @@ class RagCitation(RagImmutableModel, table=True):
     )
 
     rank: int
-    score: Optional[float] = Field(default=None, sa_type=Float)
+    score: Optional[float] = Field(default=None, sa_column=Column(Float, nullable=True))
     citation_text: str = Field(sa_type=Text)  # snapshot фрагмента
     meta: dict = meta_field()  # напр. snapshot title/url/page
 

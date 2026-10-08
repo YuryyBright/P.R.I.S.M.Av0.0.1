@@ -17,7 +17,7 @@ class DocumentACL(RagBaseModel, table=True):
     Додається до доступу через колекції; НЕ замінює RBAC.
     """
 
-    __tablename__ = "document_acl"
+    __tablename__ = "document_acl"  # type: ignore[assignment]
     __table_args__ = (
         UniqueConstraint("document_id", "user_id", name="uq_document_acl_pair"),
     )

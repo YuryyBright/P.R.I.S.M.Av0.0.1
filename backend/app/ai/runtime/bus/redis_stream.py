@@ -6,7 +6,7 @@ id запису Redis Stream = SSE `id:` → Last-Event-ID дає точне д�
 from __future__ import annotations
 
 import uuid
-from typing import AsyncIterator
+from typing import Any, AsyncIterator
 
 from app.ai.domain.events import parse_event
 from app.ai.domain.records import AnyEvent
@@ -18,7 +18,7 @@ def stream_key(run_id: uuid.UUID) -> str:
 
 
 class RedisStreamBus:
-    def __init__(self, cfg: BusSettings, *, redis=None) -> None:
+    def __init__(self, cfg: BusSettings, *, redis: Any | None = None) -> None:
         if redis is None:
             from redis import asyncio as aioredis
             redis = aioredis.from_url(cfg.redis_url, decode_responses=True)
@@ -26,7 +26,7 @@ class RedisStreamBus:
         self.cfg = cfg
 
     @property
-    def redis(self):
+    def redis(self) -> Any:
         return self._r
 
     async def publish(self, run_id: uuid.UUID, event: AnyEvent) -> str:

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class RagConversation(RagBaseModel, table=True):
     """Діалог користувача з RAG (таблиця `rag_conversations`)."""
 
-    __tablename__ = "rag_conversations"
+    __tablename__ = "rag_conversations"  # type: ignore[assignment]
     __table_args__ = (
         Index("ix_rag_conversations_user_updated", "user_id", "updated_at"),
     )

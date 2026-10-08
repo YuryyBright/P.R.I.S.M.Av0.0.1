@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import AsyncIterator, List
 
 from sqlalchemy.exc import IntegrityError
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -65,11 +65,15 @@ class CollectionService:
         await self.repo.refresh(collection)
         return collection
 
-    async def get(self, user, collection_id):
+    async def get(
+        self, user: User, collection_id: uuid.UUID
+    ) -> tuple[Collection, CollectionRole | None]:
         collection = await self.policy.require(user, collection_id, Action.READ)
         return collection, self.policy.role_of(user, collection)
 
-    async def list(self, user, *, limit: int, offset: int):
+    async def list(
+        self, user: User, *, limit: int, offset: int
+    ) -> tuple[list[tuple[Collection, CollectionRole | None]], int]:
         where = visible_where(user)
         total = await self.repo.count_visible(where)
         collections = await self.repo.list_visible(where, limit=limit, offset=offset)
@@ -78,7 +82,12 @@ class CollectionService:
             total,
         )
 
-    async def update(self, user, collection_id, data: CollectionUpdate):
+    async def update(
+        self,
+        user: User,
+        collection_id: uuid.UUID,
+        data: CollectionUpdate,
+    ) -> tuple[Collection, CollectionRole | None]:
         collection = await self.policy.require(user, collection_id, Action.MANAGE)
         changes = data.model_dump(exclude_unset=True)
 
@@ -88,7 +97,7 @@ class CollectionService:
         await self.repo.refresh(collection)
         return collection, self.policy.role_of(user, collection)
 
-    async def delete(self, user, collection_id) -> None:
+    async def delete(self, user: User, collection_id: uuid.UUID) -> None:
         collection = await self.policy.require(user, collection_id, Action.MANAGE)
 
         async with self._transaction("Unable to delete collection"):
@@ -96,14 +105,18 @@ class CollectionService:
 
     # ---------------- Archive ----------------
 
-    async def list_archived(self, user, *, limit: int, offset: int):
+    async def list_archived(
+        self, user: User, *, limit: int, offset: int
+    ) -> tuple[List[tuple[Collection, CollectionRole]], int]:
         """Архів користувача. Роль у відповіді — owner (керувати архівом може лише власник)."""
         where = archived_where(user)
         total = await self.repo.count_archived(where)
         collections = await self.repo.list_archived(where, limit=limit, offset=offset)
         return [(c, CollectionRole.OWNER) for c in collections], total
 
-    async def restore(self, user, collection_id):
+    async def restore(
+        self, user: User, collection_id: uuid.UUID
+    ) -> tuple[Collection, CollectionRole | None]:
         collection = await self.policy.require_archived(user, collection_id)
 
         async with self._transaction("Unable to restore collection"):
@@ -112,7 +125,9 @@ class CollectionService:
         await self.repo.refresh(collection)
         return collection, self.policy.role_of(user, collection)
 
-    async def delete_permanently(self, user, collection_id) -> uuid.UUID:
+    async def delete_permanently(
+        self, user: User, collection_id: uuid.UUID
+    ) -> uuid.UUID:
         """Позначає архівну колекцію на фізичне видалення (після цього відновлення неможливе).
 
         Повертає id: роутер після commit ставить dispatch_purge_collection(id).
@@ -127,7 +142,13 @@ class CollectionService:
 
     # ---------------- Members ----------------
 
-    async def add_member(self, user, collection_id, target_user_id, role) -> CollectionRole:
+    async def add_member(
+        self,
+        user: User,
+        collection_id: uuid.UUID,
+        target_user_id: uuid.UUID,
+        role: CollectionRole,
+    ) -> CollectionRole:
         collection = await self.policy.require(user, collection_id, Action.MANAGE)
 
         if role == CollectionRole.OWNER:
@@ -142,7 +163,12 @@ class CollectionService:
 
         return role
 
-    async def remove_member(self, user, collection_id, target_user_id) -> None:
+    async def remove_member(
+        self,
+        user: User,
+        collection_id: uuid.UUID,
+        target_user_id: uuid.UUID,
+    ) -> None:
         collection = await self.policy.require(user, collection_id, Action.MANAGE)
 
         if target_user_id == collection.owner_id:
@@ -153,10 +179,17 @@ class CollectionService:
             if not removed:
                 raise NotFoundError("Member not found")
 
-    async def list_members(self, user, collection_id) -> list[CollectionMember]:
+    async def list_members(
+        self, user: User, collection_id: uuid.UUID
+    ) -> List[CollectionMember]:
         collection = await self.policy.require(user, collection_id, Action.MANAGE)
         return await self.repo.list_members(collection.id)
 
-    async def get_member(self, user, collection_id, target_user_id):
+    async def get_member(
+        self,
+        user: User,
+        collection_id: uuid.UUID,
+        target_user_id: uuid.UUID,
+    ) -> CollectionMember | None:
         collection = await self.policy.require(user, collection_id, Action.MANAGE)
         return await self.repo.get_member(collection.id, target_user_id)

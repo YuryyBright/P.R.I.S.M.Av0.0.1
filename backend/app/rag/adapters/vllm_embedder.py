@@ -14,7 +14,9 @@ class VLLMEmbedder:
         if not cfg.api_base:
             raise ValueError("RAG_EMBEDDING__API_BASE is required for embedding backend 'vllm'")
         self.model, self.dim, self._batch = cfg.model, cfg.dim, cfg.batch_size
-        self._client = make_client(cfg.api_base, secret(cfg.api_key), cfg.timeout_s, retries=2)
+        self._client = make_client(
+            cfg.api_base, secret(cfg.api_key), cfg.timeout_s, retries=cfg.max_retries
+        )
 
     async def embed(self, texts: Sequence[str]) -> list[list[float]]:
         out: list[list[float]] = []

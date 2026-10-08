@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class AiArtifact(RagImmutableModel, table=True):
-    __tablename__ = "ai_artifacts"
+    __tablename__ = "ai_artifacts"  # type: ignore[assignment]
     __table_args__ = (
         Index("ix_ai_artifacts_task_id", "task_id"),
         Index("ix_ai_artifacts_owner_id", "owner_id"),

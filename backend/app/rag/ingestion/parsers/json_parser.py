@@ -6,7 +6,7 @@ from app.rag.errors import CorruptFileError
 from app.rag.ingestion.parsers._text import (
     decode_text, parse_datetime, split_paragraphs,
 )
-from app.rag.ingestion.parsers.base import BaseParser
+from app.rag.ingestion.parsers.base import BaseParser, ParseContext
 
 _TITLE = ("title", "name", "subject", "headline")
 _BODY = ("content", "text", "body", "message", "description", "summary")
@@ -25,7 +25,7 @@ class JsonParser(BaseParser):
     extensions = (".json", ".jsonl", ".ndjson")
     mime_types = ("application/json", "application/x-ndjson", "text/json")
 
-    def _parse(self, data, ctx, builder) -> dict[str, Any]:
+    def _parse(self, data: bytes, ctx: ParseContext, builder: CanonicalBuilder) -> dict[str, Any]:
         text, encoding = decode_text(data)
         try:
             obj = json.loads(text)

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 
 def cancel_key(run_id: uuid.UUID) -> str:
@@ -9,7 +10,7 @@ def cancel_key(run_id: uuid.UUID) -> str:
 
 
 class RedisCancelStore:
-    def __init__(self, redis, ttl_s: int = 3600) -> None:
+    def __init__(self, redis: Any, ttl_s: int = 3600) -> None:
         self._r, self._ttl = redis, ttl_s
 
     async def request(self, run_id: uuid.UUID) -> None:

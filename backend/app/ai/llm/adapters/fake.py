@@ -1,7 +1,7 @@
 """Скриптований LLM для тестів: кожен виклик stream()/complete() бере наступний сценарій."""
 from __future__ import annotations
 
-from typing import AsyncIterator, Sequence
+from typing import AsyncGenerator, Sequence
 
 from app.ai.llm.types import (
     ChatRequest, Finished, LLMEvent, LLMResult, LLMUsage, TextDelta, ToolCall, ToolCallReady,
@@ -32,7 +32,7 @@ class FakeLLM:
             raise AssertionError("FakeLLM: script exhausted")
         return self._script.pop(0)
 
-    async def stream(self, req: ChatRequest) -> AsyncIterator[LLMEvent]:
+    async def stream(self, req: ChatRequest) -> AsyncGenerator[LLMEvent, None]:
         for ev in self._next(req):
             yield ev
 

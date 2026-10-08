@@ -1,11 +1,11 @@
 import re
 from typing import Any
 
-from app.rag.ingestion.canonical import BlockKind
+from app.rag.ingestion.canonical import BlockKind, CanonicalBuilder
 from app.rag.ingestion.parsers._text import (
     decode_text, normalize_lang, parse_datetime,
 )
-from app.rag.ingestion.parsers.base import BaseParser
+from app.rag.ingestion.parsers.base import BaseParser, ParseContext
 
 _ATX = re.compile(r"^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$")
 _FENCE = re.compile(r"^\s{0,3}(```|~~~)")
@@ -28,7 +28,7 @@ class MarkdownParser(BaseParser):
     extensions = (".md", ".markdown", ".mdown")
     mime_types = ("text/markdown", "text/x-markdown")
 
-    def _parse(self, data, ctx, builder) -> dict[str, Any]:
+    def _parse(self, data: bytes, ctx: ParseContext, builder: CanonicalBuilder) -> dict[str, Any]:
         text, encoding = decode_text(data)
         text = text.replace("\r\n", "\n").replace("\r", "\n")
         front, text = _front_matter(text)
@@ -66,9 +66,10 @@ class MarkdownParser(BaseParser):
         i = 0
         while i < len(lines):
             line = lines[i]
-            if _FENCE.match(line):                       # ``` code ```
+            fence_match = _FENCE.match(line)
+            if fence_match:                              # ``` code ```
                 flush_all()
-                fence = _FENCE.match(line).group(1)
+                fence = fence_match.group(1)
                 code: list[str] = []
                 i += 1
                 while i < len(lines) and not lines[i].lstrip().startswith(fence):

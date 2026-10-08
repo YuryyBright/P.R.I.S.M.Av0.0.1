@@ -13,6 +13,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings.sources import PydanticBaseSettingsSource
+
+from app.core.env_settings import settings_customise_sources
 
 
 class VectorSettings(BaseModel):
@@ -44,6 +47,7 @@ class EmbeddingSettings(BaseModel):
     api_base: str | None = "http://vllm-embed:8000/v1"
     api_key: SecretStr | None = None
     timeout_s: float = 30.0
+    max_retries: int = Field(2, ge=0)
     # sparse (для hybrid)
     sparse_enabled: bool = False
     sparse_backend: Literal["none"] = "none"
@@ -140,6 +144,20 @@ class IngestionSettings(BaseModel):
     ]
     task_max_retries: int = Field(3, ge=0)
     retry_backoff_s: int = Field(30, gt=0)
+    parse_soft_time_limit_s: int = Field(600, gt=0)
+    parse_time_limit_s: int = Field(660, gt=0)
+    chunk_soft_time_limit_s: int = Field(300, gt=0)
+    chunk_time_limit_s: int = Field(360, gt=0)
+    embed_soft_time_limit_s: int = Field(900, gt=0)
+    embed_time_limit_s: int = Field(960, gt=0)
+    finalize_soft_time_limit_s: int = Field(60, gt=0)
+    finalize_time_limit_s: int = Field(90, gt=0)
+    purge_document_soft_time_limit_s: int = Field(300, gt=0)
+    purge_document_time_limit_s: int = Field(360, gt=0)
+    purge_collection_soft_time_limit_s: int = Field(1500, gt=0)
+    purge_collection_time_limit_s: int = Field(1560, gt=0)
+    cleanup_sweep_soft_time_limit_s: int = Field(120, gt=0)
+    cleanup_sweep_time_limit_s: int = Field(150, gt=0)
     # перепостановка job-ів, чий dispatch впав (QUEUED без celery_task_id)
     redispatch_interval_s: int = Field(60, gt=0)
     redispatch_min_age_s: int = Field(60, ge=0)       # не чіпати щойно створені
@@ -159,20 +177,34 @@ class RagSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="RAG_",
         env_nested_delimiter="__",
-        env_file=".env",
+        env_file=None,
+        env_file_encoding="utf-8",
         extra="ignore",
     )
 
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return settings_customise_sources(
+            settings_cls, init_settings, env_settings, dotenv_settings, file_secret_settings
+        )
+
     enabled: bool = True
-    vector: VectorSettings = VectorSettings()
-    embedding: EmbeddingSettings = EmbeddingSettings()
-    llm: LLMSettings = LLMSettings()
-    reranker: RerankerSettings = RerankerSettings()
-    retrieval: RetrievalSettings = RetrievalSettings()
-    chunking: ChunkingSettings = ChunkingSettings()
-    storage: StorageSettings = StorageSettings()
-    ingestion: IngestionSettings = IngestionSettings()
-    chat: ChatSettings = ChatSettings()
+    vector: VectorSettings = Field(default_factory=lambda: VectorSettings())
+    embedding: EmbeddingSettings = Field(default_factory=lambda: EmbeddingSettings())  # type: ignore[call-arg]
+    llm: LLMSettings = Field(default_factory=lambda: LLMSettings())  # type: ignore[call-arg]
+    reranker: RerankerSettings = Field(default_factory=lambda: RerankerSettings())  # type: ignore[call-arg]
+    retrieval: RetrievalSettings = Field(default_factory=lambda: RetrievalSettings())  # type: ignore[call-arg]
+    chunking: ChunkingSettings = Field(default_factory=lambda: ChunkingSettings())  # type: ignore[call-arg]
+    storage: StorageSettings = Field(default_factory=lambda: StorageSettings())
+    ingestion: IngestionSettings = Field(default_factory=lambda: IngestionSettings())  # type: ignore[call-arg]
+    chat: ChatSettings = Field(default_factory=lambda: ChatSettings())  # type: ignore[call-arg]
 
     @model_validator(mode="after")
     def _cross_checks(self) -> "RagSettings":

@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Iterable
+from typing import Any, Iterable, cast
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -15,6 +15,9 @@ from app.models.rag.document_chunk import DocumentChunk
 from app.rag.domain.enums import DocumentStatus
 
 from .types import RetrievedChunk
+
+_document = cast(Any, Document)
+_chunk = cast(Any, DocumentChunk)
 
 
 def _heading(meta: dict[str, Any] | None, payload: dict[str, Any] | None) -> list[str]:
@@ -33,12 +36,12 @@ async def hydrate_chunks(
     if not ids:
         return {}
     rows = (await db.exec(
-        select(DocumentChunk, Document.title, Document.collection_id, Document.url)
-        .join(Document, Document.id == DocumentChunk.document_id)
+        select(DocumentChunk, _document.title, _document.collection_id, _document.url)
+        .join(Document, _document.id == _chunk.document_id)
         .where(
-            DocumentChunk.id.in_(ids),
-            Document.deleted_at.is_(None),
-            Document.status == DocumentStatus.READY,
+            _chunk.id.in_(ids),
+            _document.deleted_at.is_(None),
+            _document.status == DocumentStatus.READY,
         )
     )).all()
     out: dict[uuid.UUID, RetrievedChunk] = {}

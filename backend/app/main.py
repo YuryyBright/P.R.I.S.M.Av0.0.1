@@ -59,7 +59,7 @@ except Exception as e:
     logging.basicConfig(level=logging.DEBUG)
 
 # Set logging level to WARNING in testing mode to suppress debug/info logs
-if getattr(settings, "MODE", None) == ModeEnum.testing or os.environ.get("MODE") == "testing":
+if settings.MODE == ModeEnum.testing:
     logging.getLogger().setLevel(logging.WARNING)
 
 # Get logger for this module

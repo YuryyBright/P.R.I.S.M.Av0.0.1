@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup, Comment, NavigableString, Tag
 
 from app.rag.ingestion.canonical import BlockKind, CanonicalBuilder
 from app.rag.ingestion.parsers._text import normalize_lang, parse_datetime
-from app.rag.ingestion.parsers.base import BaseParser
+from app.rag.ingestion.parsers.base import BaseParser, ParseContext
 
 _HEADINGS = {f"h{i}": i for i in range(1, 7)}
 _SKIP = {"script", "style", "noscript", "template", "svg", "iframe", "nav", "footer",
@@ -23,7 +23,7 @@ class HtmlParser(BaseParser):
     extensions = (".html", ".htm", ".xhtml")
     mime_types = ("text/html", "application/xhtml+xml")
 
-    def _parse(self, data, ctx, builder) -> dict[str, Any]:
+    def _parse(self, data: bytes, ctx: ParseContext, builder: CanonicalBuilder) -> dict[str, Any]:
         try:
             soup = BeautifulSoup(data, "lxml")
         except Exception:

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Sequence
+from typing import Any, Sequence, cast
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -13,17 +13,19 @@ from app.rag.domain.enums import CollectionRole
 
 from .types import AccessScope, CollectionBrief
 
+_collection = cast(Any, Collection)
+
 
 async def resolve_scope(db: AsyncSession, user: Any,
                         requested: Sequence[uuid.UUID] | None) -> AccessScope:
-    stmt = select(Collection.id).where(
+    stmt = select(_collection.id).where(
         collections_with_role_where(user, CollectionRole.VIEWER),
-        Collection.deleted_at.is_(None),
+        _collection.deleted_at.is_(None),
     )
     if requested is not None:
         if not requested:
             return AccessScope([], [], [])
-        stmt = stmt.where(Collection.id.in_(list(requested)))
+        stmt = stmt.where(_collection.id.in_(list(requested)))
     allowed = list((await db.exec(stmt)).all())
     denied: list[uuid.UUID] = []
     if requested is not None:
@@ -34,9 +36,9 @@ async def resolve_scope(db: AsyncSession, user: Any,
 
 async def list_accessible(db: AsyncSession, user: Any) -> list[CollectionBrief]:
     rows = (await db.exec(
-        select(Collection.id, Collection.name, Collection.description).where(
+        select(_collection.id, _collection.name, _collection.description).where(
             collections_with_role_where(user, CollectionRole.VIEWER),
-            Collection.deleted_at.is_(None),
-        ).order_by(Collection.name)
+            _collection.deleted_at.is_(None),
+        ).order_by(_collection.name)
     )).all()
     return [CollectionBrief(r[0], r[1], r[2]) for r in rows]

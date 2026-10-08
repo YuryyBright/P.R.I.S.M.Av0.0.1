@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import time
 import uuid
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -31,6 +31,8 @@ from .types import (
 )
 
 SessionFactory = Callable[[], AsyncSession]
+_document = cast(Any, Document)
+_chunk = cast(Any, DocumentChunk)
 
 
 def _ms(t0: float) -> int:
@@ -95,8 +97,10 @@ class RetrievalService:
         trace.timings["embed_ms"] = _ms(t)
 
         flt = SearchFilter(
-            collection_ids=scope.collection_ids,
-            document_ids=req.document_ids if req.document_ids else None,
+            collection_ids=[str(value) for value in scope.collection_ids],
+            document_ids=[str(value) for value in req.document_ids]
+            if req.document_ids
+            else None,
         )
         t = time.perf_counter()
         dense_task = self._store.search_dense(dense_vec, r.dense_top_k, flt)
@@ -171,8 +175,8 @@ class RetrievalService:
         """Послідовні чанки документа (для read_document). ACL — як у retrieve()."""
         async with self._sf() as db:
             doc = (await db.exec(select(Document).where(
-                Document.id == document_id, Document.deleted_at.is_(None),
-                Document.status == DocumentStatus.READY))).first()
+                _document.id == document_id, _document.deleted_at.is_(None),
+                _document.status == DocumentStatus.READY))).first()
             if doc is None:
                 raise NotFoundError("Document not found")
             scope = await resolve_scope(db, user, [doc.collection_id])
@@ -180,10 +184,10 @@ class RetrievalService:
                 raise NotFoundError("Document not found")      # не розкриваємо існування
             rows = (await db.exec(
                 select(DocumentChunk).where(
-                    DocumentChunk.document_id == document_id,
-                    DocumentChunk.chunk_index >= start,
-                    DocumentChunk.chunk_index < start + count)
-                .order_by(DocumentChunk.chunk_index))).all()
+                    _chunk.document_id == document_id,
+                    _chunk.chunk_index >= start,
+                    _chunk.chunk_index < start + count)
+                .order_by(_chunk.chunk_index))).all()
             return [RetrievedChunk(
                 chunk_id=c.id, document_id=doc.id, collection_id=doc.collection_id,
                 document_title=doc.title, text=c.content, page=c.page_number,

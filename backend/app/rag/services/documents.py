@@ -17,7 +17,7 @@ import logging
 import uuid
 from hashlib import sha256
 from pathlib import PurePosixPath
-from typing import Callable
+from typing import Any, Callable, List
 
 from fastapi import UploadFile
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -26,8 +26,6 @@ from app.models.rag.document import Document
 from app.models.rag.document_chunk import DocumentChunk
 from app.models.rag.ingestion_job import IngestionJob
 from app.models.users.user_model import User
-from app.rag.domain.access import AccessPolicy, Action
-from app.rag.domain.enums import CollectionRole, DocumentSourceType, DocumentStatus, JobStatus, JobType
 from app.rag.domain.exceptions import (
     ConflictError, ForbiddenError, InvalidInputError, NotFoundError,
     PayloadTooLargeError, UnsupportedMediaError,
@@ -35,15 +33,25 @@ from app.rag.domain.exceptions import (
 from app.rag.domain.ports import BlobStorage
 from app.rag.domain.uploads import clean_filename, resolve_mime, title_from_filename
 from app.rag.repositories import DocumentChunkRepository, DocumentRepository, IngestionJobRepository
-from app.rag.schemas import DocumentUpdate, UploadResponse
 from app.rag.services.dispatch import dispatch_parse, dispatch_purge_document
 from app.rag.settings import IngestionSettings, get_rag_settings
 from app.rag.domain.access import AccessPolicy, Action, collections_with_role_where
-from app.rag.domain.enums import (CollectionRole, DocumentSourceType,
-                                DocumentStatus, JobStatus, JobType)
+from app.rag.domain.enums import (
+    CollectionRole,
+    DocumentSourceType,
+    DocumentStatus,
+    JobStatus,
+    JobType,
+)
 from app.rag.schemas import (
-    ChunkStatsRead, DocumentDetailRead, DocumentJobBrief, DocumentUpdate,
-    JobListItem, UploadResponse,
+    ChunkBriefDbRow,
+    ChunkOutlineDbRow,
+    ChunkStatsRead,
+    DocumentDetailRead,
+    DocumentJobBrief,
+    DocumentUpdate,
+    JobListItem,
+    UploadResponse,
 )
 logger = logging.getLogger(__name__)
 
@@ -163,8 +171,8 @@ class DocumentService:
                 owner = await self.db.get(User, doc.owner_id)
                 owner_email = getattr(owner, "email", None)
 
-        def _val(x):  # Enum -> str
-            return getattr(x, "value", x)
+        def _val(value: Any) -> Any:  # Enum -> str
+            return getattr(value, "value", value)
 
         return DocumentDetailRead(
             id=doc.id, collection_id=doc.collection_id,
@@ -195,7 +203,7 @@ class DocumentService:
     # ---- chunks (перегляд; доступ — як у get(): READ на колекцію) --------------
 
     async def list_chunks(self, user: User, document_id: uuid.UUID, *, limit: int, offset: int,
-                          q: str | None = None):
+                          q: str | None = None) -> tuple[List[ChunkBriefDbRow], int]:
         doc = await self.get(user, document_id)
         return await self.chunks.list_brief_page(doc.id, limit=limit, offset=offset, q=q)
 
@@ -206,7 +214,9 @@ class DocumentService:
             raise NotFoundError("Chunk not found")
         return chunk
 
-    async def chunk_outline(self, user: User, document_id: uuid.UUID):
+    async def chunk_outline(
+        self, user: User, document_id: uuid.UUID
+    ) -> List[ChunkOutlineDbRow]:
         doc = await self.get(user, document_id)
         return await self.chunks.outline(doc.id)
 

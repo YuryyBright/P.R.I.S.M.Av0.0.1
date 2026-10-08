@@ -11,7 +11,7 @@
 import asyncio
 import logging
 import uuid
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, TypeVar
 
 from celery.exceptions import SoftTimeLimitExceeded
 
@@ -32,6 +32,14 @@ SWEEP_LIMIT = 100
 PURGE_DOCUMENT_TASK = "rag.purge_document"
 PURGE_COLLECTION_TASK = "rag.purge_collection"
 SWEEP_CLEANUP_TASK = "rag.sweep_pending_cleanup"
+T = TypeVar("T")
+
+
+def _run_awaitable(awaitable: Awaitable[T]) -> T:
+    async def wait() -> T:
+        return await awaitable
+
+    return asyncio.run(wait())
 
 
 # ---- async-обгортки: контейнер створюється й закривається в межах одного loop -------
@@ -70,13 +78,13 @@ async def _find_pending(limit: int) -> tuple[list[uuid.UUID], list[uuid.UUID]]:
 
 # ---- спільна обгортка: timeout / retry з backoff -----------------------------------
 
-def _execute(task, label: str, key: str,
+def _execute(task: Any, label: str, key: str,
              run: Callable[[uuid.UUID], Awaitable[dict[str, Any]]],
              arg: uuid.UUID) -> dict[str, Any]:
     """purge ідемпотентний, тому будь-який збій безпечно повторити. Після вичерпання
     retry ресурс лишається в soft-delete без маркера cleanup — його підбере sweep."""
     try:
-        return asyncio.run(run(arg))
+        return _run_awaitable(run(arg))
     except SoftTimeLimitExceeded:
         logger.warning("%s timed out %s=%s; sweep will redispatch", label, key, arg)
         return {"status": "timeout", key: str(arg)}
@@ -94,9 +102,11 @@ def _execute(task, label: str, key: str,
 
 @celery_app.task(
     bind=True, name=PURGE_DOCUMENT_TASK, queue=QUEUE, acks_late=True,
-    max_retries=MAX_RETRIES, soft_time_limit=300, time_limit=360,
+    max_retries=MAX_RETRIES,
+    soft_time_limit=_cfg.purge_document_soft_time_limit_s,
+    time_limit=_cfg.purge_document_time_limit_s,
 )
-def purge_document_task(self, document_id: str) -> dict:
+def purge_document_task(self: Any, document_id: str) -> dict[str, Any]:
     """Вектори → blob-и → чанки → маркер meta["cleanup"] для видаленого документа."""
     return _execute(self, "purge_document", "document_id",
                     _purge_document, uuid.UUID(document_id))
@@ -104,16 +114,23 @@ def purge_document_task(self, document_id: str) -> dict:
 
 @celery_app.task(
     bind=True, name=PURGE_COLLECTION_TASK, queue=QUEUE, acks_late=True,
-    max_retries=MAX_RETRIES, soft_time_limit=1500, time_limit=1560,
+    max_retries=MAX_RETRIES,
+    soft_time_limit=_cfg.purge_collection_soft_time_limit_s,
+    time_limit=_cfg.purge_collection_time_limit_s,
 )
-def purge_collection_task(self, collection_id: str) -> dict:
+def purge_collection_task(self: Any, collection_id: str) -> dict[str, Any]:
     """Усі документи колекції, потім сама колекція (великі колекції — довго)."""
     return _execute(self, "purge_collection", "collection_id",
                     _purge_collection, uuid.UUID(collection_id))
 
 
-@celery_app.task(name=SWEEP_CLEANUP_TASK, queue=QUEUE, soft_time_limit=120, time_limit=150)
-def sweep_pending_cleanup() -> dict:
+@celery_app.task(
+    name=SWEEP_CLEANUP_TASK,
+    queue=QUEUE,
+    soft_time_limit=_cfg.cleanup_sweep_soft_time_limit_s,
+    time_limit=_cfg.cleanup_sweep_time_limit_s,
+)
+def sweep_pending_cleanup() -> dict[str, int]:
     """Страховка: ставить у чергу purge для того, що видалено, але не очищено
     (dispatch після soft-delete міг упасти)."""
     collection_ids, document_ids = asyncio.run(_find_pending(SWEEP_LIMIT))

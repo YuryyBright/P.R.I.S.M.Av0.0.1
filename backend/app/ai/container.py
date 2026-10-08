@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from functools import cached_property
 from importlib import import_module
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -20,6 +20,7 @@ from app.ai.tasks.bus import RedisTaskEventBus, MemoryTaskEventBus
 from app.ai.tasks.cancel import RedisTaskCancelStore, MemoryTaskCancelStore
 from app.ai.tasks.dispatcher import CeleryTaskDispatcher
 from app.ai.tasks.engine import TaskEngine
+from app.ai.tasks.ports import TaskCancelStore, TaskEventBus, TaskHandler
 from app.ai.tasks.service import TaskService
 from app.ai.tasks.handlers import TaskAnalysisHandler
 from app.ai.tasks.artifacts import ArtifactService
@@ -45,6 +46,9 @@ from app.ai.settings import AiSettings, get_ai_settings
 from app.rag.container import RagContainer
 
 SessionFactory = Callable[[], AsyncSession]
+
+if TYPE_CHECKING:
+    from app.rag.retrieval.service import RetrievalService
 
 _REGISTRY: dict[str, dict[str, str]] = {
     "llm": {"vllm": "app.ai.llm.adapters.vllm:VLLMClient"},
@@ -106,7 +110,7 @@ class AiContainer:
     # ---- rag-інтеграція ------------------------------------------------------------
 
     @cached_property
-    def retrieval(self):
+    def retrieval(self) -> RetrievalService:
         from app.rag.retrieval.service import RetrievalService
         r = self.rag
         return RetrievalService(session_factory=self.session_factory, vector_store=r.vector_store,
@@ -166,30 +170,36 @@ class AiContainer:
 
 
     @cached_property
-    def task_bus(self):
+    def task_bus(self) -> TaskEventBus:
         return MemoryTaskEventBus() if self.settings.bus.backend == "memory" else RedisTaskEventBus(self.settings.bus)
 
     @cached_property
-    def task_cancel(self):
+    def task_cancel(self) -> TaskCancelStore:
         redis=getattr(self.task_bus,"redis",None)
         return RedisTaskCancelStore(redis,self.settings.bus.cancel_ttl_s) if redis is not None else MemoryTaskCancelStore()
 
     @cached_property
-    def artifact_service(self):
+    def artifact_service(self) -> ArtifactService | None:
         if self.artifact_store is None: return None
         return ArtifactService(self.session_factory,self.artifact_store)
 
     @cached_property
-    def task_engine(self):
-        handlers={}
+    def task_engine(self) -> TaskEngine:
+        handlers: dict[str, TaskHandler] = {}
         if self.analyzer is not None:
             handlers["analysis"]=TaskAnalysisHandler(self.analyzer,artifact_service=self.artifact_service)
         return TaskEngine(self.session_factory,bus=self.task_bus,cancel_store=self.task_cancel,handlers=handlers)
 
     @cached_property
-    def task_service(self):
+    def task_service(self) -> TaskService:
         resolver=self.data_source_resolver or (RagDataSourceResolver(self.analysis_catalog) if self.analysis_catalog is not None else None)
-        return TaskService(self.session_factory,bus=self.task_bus,cancel_store=self.task_cancel,source_resolver=resolver,dispatcher=CeleryTaskDispatcher(self.settings.agent.queue.replace("agent","tasks")))
+        return TaskService(
+            self.session_factory,
+            bus=self.task_bus,
+            cancel_store=self.task_cancel,
+            source_resolver=resolver,
+            dispatcher=CeleryTaskDispatcher(self.settings.tasks.queue),
+        )
 
     @cached_property
     def capabilities_service(self) -> CapabilitiesService:

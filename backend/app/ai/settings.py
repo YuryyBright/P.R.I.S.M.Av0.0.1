@@ -5,7 +5,7 @@
   AI_PROVIDERS__default__API_BASE=http://vllm:8000/v1
   AI_MODELS__qwen__NAME=Qwen/Qwen2.5-7B-Instruct
   AI_MODELS__qwen__TOOLS=true
-  AI_BUS__REDIS_URL=redis://redis:6379/1
+  AI_BUS__REDIS_URL overrides the shared REDIS_HOST/PORT/PASSWORD/DB settings
 
 ІНВАРІАНТ (як у rag): значення Literal у `backend` == ключі container._REGISTRY[kind]
 (перевіряє tests/ai/test_registry_consistency.py).
@@ -17,6 +17,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings.sources import PydanticBaseSettingsSource
+
+from app.core.env_settings import settings_customise_sources
+from app.core.service_config import service_settings
 
 
 class ProviderSettings(BaseModel):
@@ -66,11 +70,12 @@ class AgentSettings(BaseModel):
     sweep_interval_s: int = Field(30, gt=0)
     undispatched_after_s: int = Field(60, ge=0)    # QUEUED без celery_task_id → redispatch
     soft_time_limit_grace_s: int = 30
+    hard_time_limit_grace_s: int = Field(30, gt=0)
 
 
 class BusSettings(BaseModel):
     backend: Literal["redis", "memory"] = "redis"
-    redis_url: str = "redis://redis:6379/1"
+    redis_url: str = Field(default_factory=lambda: service_settings.redis_url)
     stream_maxlen: int = Field(20000, gt=0)
     ttl_after_finish_s: int = Field(900, gt=0)     # скільки після завершення можна дочитати події
     flush_interval_ms: int = Field(40, ge=0)       # коалесинг token.delta
@@ -83,19 +88,55 @@ class PromptSettings(BaseModel):
     max_versions_per_template: int = 500
 
 
+class TaskSettings(BaseModel):
+    queue: str = "ai_tasks"
+    max_retries: int = Field(3, ge=0)
+    retry_backoff_s: int = Field(30, gt=0)
+    stale_after_s: int = Field(90, gt=0)
+    undispatched_after_s: int = Field(30, ge=0)
+    sweep_interval_s: int = Field(30, gt=0)
+
+
 class AiSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="AI_", env_nested_delimiter="__", env_file=".env", extra="ignore",
+        env_prefix="AI_", env_nested_delimiter="__", env_file=None, extra="ignore",
+        env_file_encoding="utf-8",
     )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return settings_customise_sources(
+            settings_cls, init_settings, env_settings, dotenv_settings, file_secret_settings
+        )
 
     enabled: bool = True
     default_model: str = "default"
-    providers: dict[str, ProviderSettings] = {"default": ProviderSettings()}
-    models: dict[str, ModelSettings] = {"default": ModelSettings(tools=True, label="Default")}
-    chat: ChatSettings = ChatSettings()
-    agent: AgentSettings = AgentSettings()
-    bus: BusSettings = BusSettings()
-    prompts: PromptSettings = PromptSettings()
+    providers: dict[str, ProviderSettings] = Field(
+        default_factory=lambda: {"default": ProviderSettings()}
+    )
+    models: dict[str, ModelSettings] = Field(
+        default_factory=lambda: {
+            "default": ModelSettings(
+                tools=True,
+                label="Default",
+                context_len=8192,
+                max_output_tokens=2048,
+                temperature=0.2,
+            )
+        }
+    )
+    chat: ChatSettings = Field(default_factory=lambda: ChatSettings())  # type: ignore[call-arg]
+    agent: AgentSettings = Field(default_factory=lambda: AgentSettings())  # type: ignore[call-arg]
+    bus: BusSettings = Field(default_factory=lambda: BusSettings())  # type: ignore[call-arg]
+    prompts: PromptSettings = Field(default_factory=lambda: PromptSettings())
+    tasks: TaskSettings = Field(default_factory=lambda: TaskSettings())  # type: ignore[call-arg]
 
     @model_validator(mode="after")
     def _cross_checks(self) -> "AiSettings":

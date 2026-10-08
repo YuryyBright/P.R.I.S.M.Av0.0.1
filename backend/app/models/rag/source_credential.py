@@ -17,7 +17,7 @@ class SourceCredential(RagBaseModel, table=True):
     шифрування/дешифрування робить application-шар, ніколи не модель.
     """
 
-    __tablename__ = "source_credentials"
+    __tablename__ = "source_credentials"  # type: ignore[assignment]
     __table_args__ = (
         UniqueConstraint("source_id", "credential_type", name="uq_source_credentials_type"),
     )

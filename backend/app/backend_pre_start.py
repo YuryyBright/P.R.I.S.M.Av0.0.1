@@ -33,8 +33,10 @@ wait_seconds = 1
 def wait_for_database() -> None:
     """Check if the database is ready for connections."""
     try:
-        # Try explicit SQLALCHEMY_DATABASE_URI first (e.g., from Docker Compose)
-        database_uri = os.getenv("SQLALCHEMY_DATABASE_URI")
+        # Probe the application database, not the separate Celery schedule DB.
+        database_uri = settings.SQLALCHEMY_DATABASE_URI or str(
+            settings.ASYNC_DATABASE_URI
+        ).replace("+asyncpg", "").replace("+aiosqlite", "")
 
         # If not available, try different drivers
         if not database_uri:
@@ -102,22 +104,21 @@ def wait_for_redis() -> None:
         # Get Redis connection details based on environment mode
         if settings.MODE == ModeEnum.development:
             # In Docker development, use the container name from settings
-            redis_host = os.getenv("REDIS_HOST", str(redis_host_from_settings))
-            redis_port_str = os.getenv("REDIS_PORT", str(redis_port_from_settings))
+            redis_host = redis_host_from_settings or "localhost"
+            redis_port_str = str(redis_port_from_settings or default_redis_port)
             redis_ssl = False
             logger.info("Development mode: Using configured Redis without SSL.")
         elif settings.MODE == ModeEnum.testing:
             # Use configured Redis for testing (likely Docker)
-            redis_host = os.getenv("REDIS_HOST", str(redis_host_from_settings))
-            redis_port_str = os.getenv("REDIS_PORT", str(redis_port_from_settings))
-            redis_ssl = os.getenv("REDIS_SSL", "").lower() == "true"
+            redis_host = redis_host_from_settings or "localhost"
+            redis_port_str = str(redis_port_from_settings or default_redis_port)
+            redis_ssl = settings.redis_ssl_enabled
             logger.info("Testing mode: Using configured Redis (Docker/settings).")
         else:  # Production or other modes
             # Default to environment variables or settings
-            redis_host = os.getenv("REDIS_HOST", str(redis_host_from_settings))
-            redis_port_str = os.getenv("REDIS_PORT", str(redis_port_from_settings))
-            # In production, get SSL setting from environment or default to True
-            redis_ssl = os.getenv("REDIS_SSL", "true").lower() == "true"
+            redis_host = redis_host_from_settings or "localhost"
+            redis_port_str = str(redis_port_from_settings or default_redis_port)
+            redis_ssl = settings.redis_ssl_enabled
             logger.info(
                 "%s mode: Using configured Redis with SSL=%s.",
                 settings.MODE.value,
@@ -137,7 +138,7 @@ def wait_for_redis() -> None:
             logger.warning("REDIS_HOST is not set. Defaulting to 'localhost'.")  # type: ignore
             redis_host = "localhost"
 
-        redis_password = os.getenv("REDIS_PASSWORD", settings.REDIS_PASSWORD)
+        redis_password = settings.REDIS_PASSWORD
 
         # Get SSL certificate paths when SSL is enabled
         ssl_ca_certs: str | None = None
@@ -146,7 +147,7 @@ def wait_for_redis() -> None:
 
         if redis_ssl:
             # Path to the certificate files (adjust for container paths)
-            base_cert_path = os.getenv("REDIS_CERT_PATH", "/app/certs")
+            base_cert_path = settings.REDIS_CERT_PATH
 
             # For local development or when running outside container
             if not os.path.exists(base_cert_path):
@@ -212,11 +213,7 @@ def wait_for_redis() -> None:
             # - prisma_redis
             # - localhost
             # so we can (and should) verify hostnames in production.
-            ssl_check_hostname_env = os.getenv("REDIS_SSL_CHECK_HOSTNAME")
-            if ssl_check_hostname_env is not None:
-                ssl_kwargs["ssl_check_hostname"] = ssl_check_hostname_env.lower() == "true"
-            else:
-                ssl_kwargs["ssl_check_hostname"] = settings.MODE == ModeEnum.production
+            ssl_kwargs["ssl_check_hostname"] = settings.redis_ssl_hostname_check_enabled
 
             # Log the SSL settings being used
             logger.info(f"Redis SSL configuration: {ssl_kwargs}")
@@ -225,7 +222,7 @@ def wait_for_redis() -> None:
                 host=redis_host,
                 port=redis_port,
                 password=redis_password if redis_password else None,
-                db=0,
+                db=settings.REDIS_DB,
                 **ssl_kwargs,
             )  # type: ignore[arg-type]
         elif redis_password:
@@ -234,11 +231,11 @@ def wait_for_redis() -> None:
                 host=redis_host,
                 port=redis_port,
                 password=redis_password if redis_password else None,
-                db=0,
+                db=settings.REDIS_DB,
             )
         else:
             logger.info("Connecting to Redis without a password and without SSL.")
-            r = redis.Redis(host=redis_host, port=redis_port, db=0)
+            r = redis.Redis(host=redis_host, port=redis_port, db=settings.REDIS_DB)
 
         r.ping()
         logger.info("Redis is ready")

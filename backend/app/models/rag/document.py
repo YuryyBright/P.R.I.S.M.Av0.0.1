@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import BigInteger, DateTime, Index, Text, text
+from sqlalchemy import Column, BigInteger, DateTime, Index, Text, text
 from sqlmodel import Field, Relationship
 
 from app.models.rag.rag_base import (
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 class Document(RagBaseModel, table=True):
     """Один документ у колекції (таблиця `documents`). Оригінал — у blob storage."""
 
-    __tablename__ = "documents"
+    __tablename__ = "documents"  # type: ignore[assignment]
     __table_args__ = (
         Index("ix_documents_collection_status", "collection_id", "status"),
         Index("ix_documents_collection_hash", "collection_id", "content_hash"),
@@ -54,7 +54,7 @@ class Document(RagBaseModel, table=True):
     title: str = Field(max_length=512)
     filename: Optional[str] = Field(default=None, max_length=512)
     mime_type: Optional[str] = Field(default=None, max_length=128)
-    size_bytes: Optional[int] = Field(default=None, sa_type=BigInteger)
+    size_bytes: Optional[int] = Field(default=None, sa_column=Column(BigInteger, nullable=True))
 
     source_type: DocumentSourceType = Field(
         default=DocumentSourceType.UPLOAD,
@@ -68,8 +68,8 @@ class Document(RagBaseModel, table=True):
     # поля з CanonicalDocument (потрібні для цитат)
     language: Optional[str] = Field(default=None, max_length=16)
     author: Optional[str] = Field(default=None, max_length=255)
-    url: Optional[str] = Field(default=None, sa_type=Text)
-    published_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    url: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
+    published_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
 
     status: DocumentStatus = Field(
         default=DocumentStatus.PENDING,
@@ -78,8 +78,8 @@ class Document(RagBaseModel, table=True):
     version: int = Field(default=1, sa_column_kwargs={"server_default": text("1")})
     meta: dict = meta_field()
 
-    indexed_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
-    deleted_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    indexed_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    deleted_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
 
     collection: Optional["Collection"] = Relationship(
         back_populates="documents", sa_relationship_kwargs={"lazy": "selectin"}

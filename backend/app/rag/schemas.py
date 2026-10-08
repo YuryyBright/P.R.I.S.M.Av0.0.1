@@ -7,7 +7,7 @@ storage_path, meta та інші внутрішні поля не віддаєм
 
 import uuid
 from datetime import datetime
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Sequence, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -20,6 +20,10 @@ from app.rag.domain.enums import (
     JobType,
     StageStatus,
 )
+from app.models.rag.document_chunk import DocumentChunk
+
+ChunkBriefDbRow = tuple[uuid.UUID, int, str, int, int | None, dict[str, Any], Any]
+ChunkOutlineDbRow = tuple[int, int, bool]
 
 
 T = TypeVar("T")
@@ -321,7 +325,7 @@ class ChunkRead(BaseModel):
     page_end: int | None = None
     char_start: int | None = None
     char_end: int | None = None
-    heading_path: list[str] = []
+    heading_path: list[str] = Field(default_factory=list)
     chunking_version: str
     embedding_model: str | None = None
     embedding_version: str | None = None
@@ -329,7 +333,7 @@ class ChunkRead(BaseModel):
     is_indexed: bool = False
 
     @classmethod
-    def from_chunk(cls, c) -> "ChunkRead":
+    def from_chunk(cls, c: DocumentChunk) -> "ChunkRead":
         meta = c.meta or {}
         return cls(
             id=c.id, chunk_index=c.chunk_index, content=c.content,
@@ -351,11 +355,11 @@ class ChunkBriefRead(BaseModel):
     preview: str
     token_count: int
     page_number: int | None = None
-    heading_path: list[str] = []
+    heading_path: list[str] = Field(default_factory=list)
     is_indexed: bool = False
 
     @classmethod
-    def from_row(cls, r) -> "ChunkBriefRead":
+    def from_row(cls, r: ChunkBriefDbRow) -> "ChunkBriefRead":
         # r: (id, chunk_index, preview, token_count, page_number, meta, indexed_at)
         meta = r[5] or {}
         return cls(
@@ -380,6 +384,6 @@ class ChunkMapRead(BaseModel):
     indexed: list[bool]     # чи є вектор у Qdrant
 
     @classmethod
-    def from_rows(cls, rows) -> "ChunkMapRead":
+    def from_rows(cls, rows: Sequence[ChunkOutlineDbRow]) -> "ChunkMapRead":
         # rows: (chunk_index, token_count, indexed), відсортовані за chunk_index
         return cls(count=len(rows), tokens=[r[1] for r in rows], indexed=[bool(r[2]) for r in rows])

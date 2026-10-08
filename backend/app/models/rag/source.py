@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, Index, Text, text
+from sqlalchemy import Column, DateTime, Index, Text, text
 from sqlmodel import Field, Relationship
 
 from app.models.rag.rag_base import (
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class Source(RagBaseModel, table=True):
     """Джерело даних: Telegram-канал, RSS, сайт... (таблиця `sources`)."""
 
-    __tablename__ = "sources"
+    __tablename__ = "sources"  # type: ignore[assignment]
     __table_args__ = (
         # планувальник синхронізацій: WHERE is_active AND next_sync_at <= now()
         Index("ix_sources_active_next_sync", "is_active", "next_sync_at"),
@@ -36,7 +36,7 @@ class Source(RagBaseModel, table=True):
     type: SourceType = Field(
         sa_column=enum_column(SourceType, index=True)
     )
-    url: Optional[str] = Field(default=None, sa_type=Text)
+    url: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
     external_id: Optional[str] = Field(default=None, max_length=512)
     parser_type: Optional[str] = Field(default=None, max_length=64)
 
@@ -56,10 +56,10 @@ class Source(RagBaseModel, table=True):
     )
 
     sync_interval_seconds: Optional[int] = Field(default=None)
-    last_sync_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
-    next_sync_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    last_sync_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    next_sync_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
     last_sync_status: Optional[str] = Field(default=None, max_length=32)
-    last_sync_error: Optional[str] = Field(default=None, sa_type=Text)
+    last_sync_error: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
 
     default_collection: Optional["Collection"] = Relationship(
         back_populates="sources", sa_relationship_kwargs={"lazy": "selectin"}

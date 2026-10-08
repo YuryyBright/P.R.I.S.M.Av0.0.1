@@ -12,7 +12,7 @@ commit прогресу. Обидва рядки IngestionStage (EMBED, INDEX) �
 import logging
 import uuid
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from app.rag.container import build_container
 from app.rag.domain.enums import DocumentStatus, IngestionStageName, JobStatus
@@ -22,6 +22,8 @@ from app.rag.ingestion.stage_common import (
     SessionFactory, fail_job_stages, fail_stages, load_context,
 )
 from app.rag.repositories import DocumentChunkRepository, DocumentRepository, IngestionJobRepository
+from app.models.rag.document import Document
+from app.models.rag.ingestion_job import IngestionJob
 
 logger = logging.getLogger(__name__)
 
@@ -157,13 +159,13 @@ async def _run(session_factory: SessionFactory, job_id: uuid.UUID,
         async with session_factory() as db:
             jobs, docs = IngestionJobRepository(db), DocumentRepository(db)
             job = await jobs.get(job_id)
-            doc = await docs.get_active(info.id)
+            active_doc = await docs.get_active(info.id)
             if job is None or job.status == JobStatus.CANCELLED:
                 reason = "job_cancelled"
-            elif doc is None:
+            elif active_doc is None:
                 reason = "document_deleted"
             else:
-                docs.set_status(doc, DocumentStatus.INDEXING)
+                docs.set_status(active_doc, DocumentStatus.INDEXING)
                 jobs.mark_processing(job, INDEX)
                 await db.commit()
         if reason:
@@ -178,8 +180,8 @@ async def _run(session_factory: SessionFactory, job_id: uuid.UUID,
     # 3) зафіксувати успіх
     async with session_factory() as db:
         jobs, docs = IngestionJobRepository(db), DocumentRepository(db)
-        job = await jobs.get(job_id)
-        doc = await docs.get(info.id)
+        job = cast(IngestionJob, await jobs.get(job_id))
+        doc = cast(Document, await docs.get(info.id))
         for name in (EMBED, INDEX):
             await jobs.complete_stage(job_id, name, items=total)
         jobs.bump_progress(job, PROGRESS_END)
@@ -201,7 +203,7 @@ async def _record_batch(session_factory: SessionFactory, job_id: uuid.UUID, docu
         jobs, docs = IngestionJobRepository(db), DocumentRepository(db)
         await DocumentChunkRepository(db).mark_indexed(chunk_ids, model, EMBEDDING_VERSION)
         await jobs.set_stage_items(job_id, (EMBED, INDEX), done)
-        job = await jobs.get(job_id)
+        job = cast(IngestionJob, await jobs.get(job_id))
         jobs.bump_progress(job, PROGRESS_START + (PROGRESS_END - PROGRESS_START) * done // total)
         reason = None
         if job.status == JobStatus.CANCELLED:

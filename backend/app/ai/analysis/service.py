@@ -11,7 +11,7 @@ import logging
 import asyncio
 from collections.abc import Sequence
 from dataclasses import replace
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol, cast
 from uuid import UUID
 
 from app.ai.analysis.contracts import (
@@ -121,8 +121,11 @@ class AnalysisOrchestrator:
         confidence = raw.get("confidence")
         if confidence is not None:
             confidence = max(0.0, min(1.0, float(confidence)))
+        severity_value = cast(
+            Literal["info", "low", "medium", "high", "critical"], severity
+        )
         return Finding(
-            title=str(raw.get("title", "Untitled finding"))[:500], severity=severity,
+            title=str(raw.get("title", "Untitled finding"))[:500], severity=severity_value,
             summary=str(raw.get("summary", ""))[:4000],
             evidence=tuple(str(x)[:2000] for x in raw.get("evidence", [])[:10]),
             document_ids=ids, confidence=confidence,

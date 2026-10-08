@@ -34,7 +34,7 @@ class RunRecorder:
                     query_text=rec.retrieval.query_text,
                     rewritten_query=rec.retrieval.rewritten_query,
                     llm_model=llm_model,
-                    **trace.to_persistence_dict(),
+                    **trace,
                 )
             )
             await db.commit()

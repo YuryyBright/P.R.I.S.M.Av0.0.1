@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import CheckConstraint, DateTime, Index, Text, text
+from sqlalchemy import Column, CheckConstraint, DateTime, Index, Text, text
 from sqlmodel import Field, Relationship
 
 from app.models.rag.rag_base import (
@@ -19,10 +19,10 @@ if TYPE_CHECKING:
 class IngestionJob(RagBaseModel, table=True):
     """Стан Celery/RAG pipeline (таблиця `ingestion_jobs`).
 
-    Історія jobs переживає видалення документа/джерела (SET NULL).
+    Job-и видаляються разом із документом; системні job-и можуть не мати документа.
     """
 
-    __tablename__ = "ingestion_jobs"
+    __tablename__ = "ingestion_jobs"  # type: ignore[assignment]
     __table_args__ = (
         CheckConstraint("progress BETWEEN 0 AND 100", name="ck_ingestion_jobs_progress"),
         Index("ix_ingestion_jobs_status_created", "status", "created_at"),
@@ -60,10 +60,10 @@ class IngestionJob(RagBaseModel, table=True):
     payload: dict = Field(default_factory=dict, sa_column=jsonb_column("payload"))
 
     error_code: Optional[str] = Field(default=None, max_length=64)
-    error_message: Optional[str] = Field(default=None, sa_type=Text)
+    error_message: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
 
-    started_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
-    finished_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    started_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    finished_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
 
     document: Optional["Document"] = Relationship(sa_relationship_kwargs={"lazy": "raise"})
     source: Optional["Source"] = Relationship(sa_relationship_kwargs={"lazy": "raise"})

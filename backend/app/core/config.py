@@ -16,30 +16,13 @@ from pydantic import (
 )
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
-# Add these imports for settings sources
-from pydantic_settings.sources import DotEnvSettingsSource, PydanticBaseSettingsSource
-
-
-def get_project_root() -> str:
-    """Get the project root path based on environment"""
-    if os.getenv("FASTAPI_ENV") == "production":
-        return "/app"
-
-    # For development and testing
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.dirname(os.path.dirname(current_dir))
+from pydantic_settings.sources import PydanticBaseSettingsSource
+from app.core.env_settings import get_project_root, settings_customise_sources
+from app.core.redis_config import build_redis_url
 
 
 # Get project root path
 project_root = get_project_root()
-
-# Create paths to environment files
-env_development_file = os.path.join(project_root, ".env.development")
-env_test_file = os.path.join(project_root, ".env.test")
-env_production_file = os.path.join(project_root, ".env.production")
-env_local_file = os.path.join(project_root, ".env.local")
-env_file_legacy = os.path.join(project_root, "backend.env")
-
 
 class ModeEnum(str, Enum):
     development = "development"
@@ -86,8 +69,9 @@ class Settings(BaseSettings):
 
     # Token Settings
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 1  # 1 hour
-    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 100  # 100 days
-    REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7)
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = Field(default=60 * 24 * 100, gt=0)
+    # Backward-compatible input alias. Minutes remain the runtime source of truth.
+    REFRESH_TOKEN_EXPIRE_DAYS: int | None = Field(default=None, gt=0)
     PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = Field(default=30)
     # Single source of truth for how long a verification link works: the Redis
     # TTL that /verify-email enforces, the JWT exp, and the duration stated in
@@ -96,7 +80,6 @@ class Settings(BaseSettings):
     VERIFICATION_TOKEN_EXPIRE_MINUTES: int = Field(default=1440)  # 24 hours
     UNVERIFIED_ACCOUNT_CLEANUP_HOURS: int = Field(default=72)  # 3 days
     MAX_LOGIN_ATTEMPTS: int = Field(default=5)
-    LOCKOUT_DURATION_MINUTES: int = Field(default=15)
     PASSWORD_HISTORY_SIZE: int = Field(default=5)  # Number of old passwords to store
     PREVENT_PASSWORD_REUSE: int = Field(default=5)  # Number of recent passwords to check against
     TOKEN_ISSUER: Optional[str] = None  # Added
@@ -129,18 +112,22 @@ class Settings(BaseSettings):
     DATABASE_CELERY_NAME: str = "celery_schedule_jobs"
     SQLITE_DB_PATH: Optional[str] = None
     POSTGRES_URL: Optional[str] = None
+    SQLALCHEMY_DATABASE_URI: Optional[str] = None
     SUPABASE_URL: Optional[str] = None
     SUPABASE_JWT_SECRET: Optional[str] = None
-    DB_POOL_SIZE: int = 83
-    WEB_CONCURRENCY: int = 9
-    POOL_SIZE: int = max(DB_POOL_SIZE // WEB_CONCURRENCY, 5)
+    DB_POOL_SIZE: int = Field(default=83, gt=0)
+    WEB_CONCURRENCY: int = Field(default=9, gt=0)
+    POOL_SIZE: int = Field(default=5, gt=0)
     ASYNC_DATABASE_URI: PostgresDsn | str = ""
 
     # Redis Settings
     REDIS_HOST: Optional[str] = None
-    REDIS_PORT: Optional[str] = None
+    REDIS_PORT: Optional[int] = None
     REDIS_PASSWORD: Optional[str] = None
-    REDIS_SSL: bool = False
+    REDIS_DB: int = Field(default=0, ge=0)
+    REDIS_SSL: Optional[bool] = None
+    REDIS_CERT_PATH: str = "/app/certs"
+    REDIS_SSL_CHECK_HOSTNAME: Optional[bool] = None
 
     # PgAdmin settings
     PGADMIN_DEFAULT_EMAIL: EmailStr = "admin@example.com"
@@ -169,7 +156,8 @@ class Settings(BaseSettings):
     # Registration Security Settings
     MAX_REGISTRATION_ATTEMPTS_PER_HOUR: int = 5
     MAX_REGISTRATION_ATTEMPTS_PER_EMAIL: int = 3
-    UNVERIFIED_ACCOUNT_CLEANUP_DELAY_HOURS: int = 24  # ADDED to match auth.py usage
+    # Backward-compatible alias for UNVERIFIED_ACCOUNT_CLEANUP_HOURS.
+    UNVERIFIED_ACCOUNT_CLEANUP_DELAY_HOURS: int | None = Field(default=None, gt=0)
     EMAIL_DOMAIN_BLACKLIST: List[str] = []
     EMAIL_DOMAIN_ALLOWLIST: List[str] = []  # Empty means all domains allowed
 
@@ -182,7 +170,6 @@ class Settings(BaseSettings):
     PASSWORD_REQUIRE_SPECIAL: bool = True  # At least one special character
     PASSWORD_SPECIAL_CHARS: str = "!@#$%^&*()_+-=[]{}|;:,.<>?"
     PASSWORD_HASHING_ITERATIONS: int = 12  # bcrypt work factor (12 is good balance)
-    PASSWORD_PREVENT_REUSE: bool = True  # Prevent reuse of recent passwords
     COMMON_PASSWORDS: List[str] = [  # List of commonly used passwords to prevent
         "password",
         "123456",
@@ -227,7 +214,8 @@ class Settings(BaseSettings):
 
     # Account Security Settings
     MAX_PASSWORD_CHANGE_ATTEMPTS: int = 3  # Maximum password change attempts per hour
-    ACCOUNT_LOCKOUT_DURATION: int = 1800  # 30 minutes lockout
+    # Backward-compatible seconds alias; lockout code uses minutes.
+    ACCOUNT_LOCKOUT_DURATION: int | None = Field(default=None, gt=0)
     REQUIRE_PASSWORD_CHANGE_DAYS: int = 90  # Force password change every 90 days
     ENABLE_BRUTE_FORCE_PROTECTION: bool = True
     BRUTE_FORCE_TIME_WINDOW: int = 3600  # 1 hour window for attempt counting
@@ -328,6 +316,18 @@ class Settings(BaseSettings):
     # is rejected -- see app.utils.client_address.
     TRUSTED_PROXIES: Annotated[List[str], NoDecode] = ["127.0.0.1", "::1"]
 
+    @property
+    def redis_ssl_enabled(self) -> bool:
+        if self.REDIS_SSL is not None:
+            return self.REDIS_SSL
+        return self.MODE == ModeEnum.production
+
+    @property
+    def redis_ssl_hostname_check_enabled(self) -> bool:
+        if self.REDIS_SSL_CHECK_HOSTNAME is not None:
+            return self.REDIS_SSL_CHECK_HOSTNAME
+        return self.MODE == ModeEnum.production
+
     # Rate Limiting and Security Settings
     # MAX_VERIFICATION_ATTEMPTS_PER_HOUR: int = 5
     # VERIFICATION_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
@@ -366,6 +366,14 @@ class Settings(BaseSettings):
             text = v.strip()
             return json.loads(text) if text.startswith("[") else split_entries(text)
         return v
+
+    @field_validator("REDIS_PASSWORD", mode="before")
+    @classmethod
+    def ignore_password_placeholder(cls, value: Any) -> Any:
+        """Treat an inline dotenv comment as an unset optional password."""
+        if isinstance(value, str) and value.lstrip().startswith("# Optional:"):
+            return None
+        return value
 
     @field_validator("TRUSTED_PROXIES", mode="after")
     def validate_trusted_proxies(cls, v: List[str]) -> List[str]:
@@ -510,20 +518,43 @@ class Settings(BaseSettings):
 
     def get_celery_redis_url(self) -> str:
         """Build Redis URL for Celery broker and backend"""
-        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/0"
+        return build_redis_url(
+            host=self.REDIS_HOST,
+            port=self.REDIS_PORT,
+            password=self.REDIS_PASSWORD,
+            db=self.REDIS_DB,
+            ssl_enabled=self.redis_ssl_enabled,
+            cert_path=self.REDIS_CERT_PATH,
+            check_hostname=self.redis_ssl_hostname_check_enabled,
+            production=self.MODE == ModeEnum.production,
+        )
 
     @field_validator("CELERY_BROKER_URL", "CELERY_RESULT_BACKEND", mode="after")
     def assemble_redis_urls(cls, v: str, info: ValidationInfo) -> str:
         if isinstance(v, str) and "{" in v:  # If it's a template string
-            redis_host = info.data.get("REDIS_HOST", "localhost")
-            redis_port = info.data.get("REDIS_PORT", "6379")
-
-            scheme = "redis"
-            if info.data.get("MODE") == ModeEnum.production:
-                # If in production, assume SSL is used based on celery_config.py modifications
-                scheme = "rediss"
-
-            return f"{scheme}://{redis_host}:{redis_port}/0"
+            mode = info.data.get("MODE", ModeEnum.development)
+            configured_ssl = info.data.get("REDIS_SSL")
+            ssl_enabled = (
+                mode == ModeEnum.production
+                if configured_ssl is None
+                else configured_ssl
+            )
+            configured_hostname_check = info.data.get("REDIS_SSL_CHECK_HOSTNAME")
+            check_hostname = (
+                mode == ModeEnum.production
+                if configured_hostname_check is None
+                else configured_hostname_check
+            )
+            return build_redis_url(
+                host=info.data.get("REDIS_HOST"),
+                port=info.data.get("REDIS_PORT"),
+                password=info.data.get("REDIS_PASSWORD"),
+                db=info.data.get("REDIS_DB", 0),
+                ssl_enabled=ssl_enabled,
+                cert_path=info.data.get("REDIS_CERT_PATH", "/app/certs"),
+                check_hostname=check_hostname,
+                production=mode == ModeEnum.production,
+            )
         return v
 
     @model_validator(mode="after")
@@ -548,6 +579,46 @@ class Settings(BaseSettings):
             self.PASSWORD_RESET_URL = f"{base}/reset-password"
         if "EMAIL_VERIFICATION_URL" not in self.model_fields_set or not self.EMAIL_VERIFICATION_URL:
             self.EMAIL_VERIFICATION_URL = f"{base}/verify-email"
+        return self
+
+    @model_validator(mode="after")
+    def normalize_refresh_token_lifetime(self) -> "Settings":
+        """Keep legacy day-based config in sync with the canonical minute value."""
+        minutes_were_set = "REFRESH_TOKEN_EXPIRE_MINUTES" in self.model_fields_set
+        if not minutes_were_set and self.REFRESH_TOKEN_EXPIRE_DAYS is not None:
+            self.REFRESH_TOKEN_EXPIRE_MINUTES = self.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60
+        self.REFRESH_TOKEN_EXPIRE_DAYS = (self.REFRESH_TOKEN_EXPIRE_MINUTES + 1439) // 1440
+        return self
+
+    @model_validator(mode="after")
+    def normalize_legacy_duration_settings(self) -> "Settings":
+        """Normalize deprecated duration aliases to the active settings."""
+        cleanup_hours_were_set = "UNVERIFIED_ACCOUNT_CLEANUP_HOURS" in self.model_fields_set
+        cleanup_alias = self.UNVERIFIED_ACCOUNT_CLEANUP_DELAY_HOURS
+        cleanup_alias_was_set = (
+            "UNVERIFIED_ACCOUNT_CLEANUP_DELAY_HOURS" in self.model_fields_set
+            and cleanup_alias is not None
+        )
+        if not cleanup_hours_were_set and cleanup_alias_was_set and cleanup_alias is not None:
+            self.UNVERIFIED_ACCOUNT_CLEANUP_HOURS = cleanup_alias
+        self.UNVERIFIED_ACCOUNT_CLEANUP_DELAY_HOURS = self.UNVERIFIED_ACCOUNT_CLEANUP_HOURS
+
+        lockout_minutes_were_set = "ACCOUNT_LOCKOUT_MINUTES" in self.model_fields_set
+        lockout_alias = self.ACCOUNT_LOCKOUT_DURATION
+        lockout_alias_was_set = (
+            "ACCOUNT_LOCKOUT_DURATION" in self.model_fields_set
+            and lockout_alias is not None
+        )
+        if not lockout_minutes_were_set and lockout_alias_was_set and lockout_alias is not None:
+            self.ACCOUNT_LOCKOUT_MINUTES = (lockout_alias + 59) // 60
+        self.ACCOUNT_LOCKOUT_DURATION = self.ACCOUNT_LOCKOUT_MINUTES * 60
+        return self
+
+    @model_validator(mode="after")
+    def derive_pool_size(self) -> "Settings":
+        """Derive the default pool size after environment overrides are loaded."""
+        if "POOL_SIZE" not in self.model_fields_set:
+            self.POOL_SIZE = max(self.DB_POOL_SIZE // self.WEB_CONCURRENCY, 5)
         return self
 
     @model_validator(mode="after")
@@ -630,63 +701,11 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        # Determine mode for .env file selection
-        # The MODE field itself will be loaded by env_settings or init_settings first if set.
-        # If not set, it defaults to development as per the field definition.
-        # We can get an early read of MODE from environment variables if needed for file selection.
-        mode_str = os.getenv("MODE", cls.model_fields["MODE"].default.value)
-        mode = ModeEnum(mode_str)
-
-        selected_env_files: List[str] = []
-
-        # 1. Add default backend.env file if it exists (lowest priority among .env files)
-        if os.path.isfile(env_file_legacy):
-            selected_env_files.append(env_file_legacy)
-
-        # 2. Add mode-specific .env file if it exists (e.g., .env.development)
-        #    These will be inserted at the beginning of the list to take precedence over backend.env
-        mode_specific_env_file: Optional[str] = None
-        if mode == ModeEnum.development and os.path.isfile(env_development_file):
-            mode_specific_env_file = env_development_file
-        elif mode == ModeEnum.testing and os.path.isfile(env_test_file):
-            mode_specific_env_file = env_test_file
-        elif mode == ModeEnum.production and os.path.isfile(env_production_file):
-            mode_specific_env_file = env_production_file
-
-        if mode_specific_env_file:
-            if env_file_legacy in selected_env_files:
-                legacy_idx = selected_env_files.index(env_file_legacy)
-                selected_env_files.insert(legacy_idx, mode_specific_env_file)
-            else:
-                selected_env_files.append(mode_specific_env_file)
-
-        # 3. Add local .env file if it exists (highest priority among .env files)
-        if os.path.isfile(env_local_file):
-            selected_env_files.insert(0, env_local_file)
-
-        # Deduplicate while preserving order (last occurrence wins for insert(0,...))
-        # For .env files, earlier in the list means higher priority.
-        # os.path.abspath can normalize paths if needed, but simple strings are fine.
-        ordered_unique_files = list(dict.fromkeys(selected_env_files))
-
-        final_env_files_paths: Optional[tuple[str, ...]] = None
-        if ordered_unique_files:
-            final_env_files_paths = tuple(ordered_unique_files)
-            # print(f"Loading .env files in order: {final_env_files_paths}")
-
-        # Safely access model_config values with defaults if not present
-        env_file_encoding = settings_cls.model_config.get("env_file_encoding", "utf-8")
-        case_sensitive = settings_cls.model_config.get("case_sensitive", True)
-
-        return (
+        return settings_customise_sources(
+            settings_cls,
             init_settings,
             env_settings,
-            DotEnvSettingsSource(
-                settings_cls=settings_cls,
-                env_file=final_env_files_paths,
-                env_file_encoding=env_file_encoding,
-                case_sensitive=case_sensitive,
-            ),
+            dotenv_settings,
             file_secret_settings,
         )
 

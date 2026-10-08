@@ -1,13 +1,21 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator, Protocol, Sequence
+from typing import Any, AsyncIterator, Awaitable, Callable, Literal, Protocol, Sequence
 from uuid import UUID
-from .domain import ItemStatus, StageKind
+from .domain import StageKind
 from .events import TaskEvent
+
+DataSourceType = Literal["document", "file", "collection", "rag_collection"]
+SUPPORTED_DATA_SOURCE_TYPES: tuple[DataSourceType, ...] = (
+    "document",
+    "file",
+    "collection",
+    "rag_collection",
+)
 
 @dataclass(frozen=True, slots=True)
 class DataSourceRef:
-    type: str
+    type: DataSourceType
     id: str
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -42,6 +50,7 @@ class TaskProgressState:
     successful: int = 0
     failed: int = 0
     skipped: int = 0
+    percent: float = 0.0
     current_operation: str | None = None
 
 @dataclass(slots=True)
@@ -53,8 +62,8 @@ class TaskContext:
     sources: tuple[DataSourceRef, ...]
     progress: TaskProgressState
     checkpoint: dict[str, Any]
-    cancellation_requested: Any
-    emit: Any
+    cancellation_requested: Callable[[], Awaitable[bool]]
+    emit: Callable[[TaskEvent], Awaitable[None]]
 
 class TaskHandler(Protocol):
     task_type: str
@@ -62,3 +71,9 @@ class TaskHandler(Protocol):
 
 class TaskExecutionAdapter(Protocol):
     async def dispatch(self, task_id: UUID) -> str | None: ...
+
+
+class TaskCancelStore(Protocol):
+    async def request(self, task_id: UUID) -> None: ...
+    async def requested(self, task_id: UUID) -> bool: ...
+    async def clear(self, task_id: UUID) -> None: ...

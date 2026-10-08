@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, Index, Text, text
+from sqlalchemy import Column, DateTime, Index, Text, text
 from sqlmodel import Field, Relationship
 
 from app.ai.domain.enums import RunMode, RunStatus
@@ -21,7 +21,7 @@ class AiRun(RagBaseModel, table=True):
     prompt_version_ids, ліміти). Executor читає лише його.
     """
 
-    __tablename__ = "ai_runs"
+    __tablename__ = "ai_runs"  # type: ignore[assignment]
     __table_args__ = (
         Index("ix_ai_runs_status_heartbeat", "status", "heartbeat_at"),   # sweeper
         Index("ix_ai_runs_conversation_created", "conversation_id", "created_at"),
@@ -59,12 +59,12 @@ class AiRun(RagBaseModel, table=True):
     usage: dict = Field(default_factory=dict, sa_column=jsonb_column("usage"))
 
     celery_task_id: Optional[str] = Field(default=None, max_length=255)
-    heartbeat_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
-    started_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
-    finished_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    heartbeat_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    started_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    finished_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
 
     error_code: Optional[str] = Field(default=None, max_length=64)
-    error_message: Optional[str] = Field(default=None, sa_type=Text)
+    error_message: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
 
     steps: list["AiRunStep"] = Relationship(
         back_populates="run",

@@ -1,12 +1,12 @@
 import io
 from typing import Any
 
-from app.rag.ingestion.canonical import BlockKind
+from app.rag.ingestion.canonical import BlockKind, CanonicalBuilder
 from app.rag.errors import (
     CorruptFileError, EmptyContentError, EncryptedFileError, LimitExceededError,
 )
 from app.rag.ingestion.parsers._text import parse_datetime, split_paragraphs
-from app.rag.ingestion.parsers.base import BaseParser
+from app.rag.ingestion.parsers.base import BaseParser, ParseContext
 
 
 class PdfParser(BaseParser):
@@ -18,7 +18,7 @@ class PdfParser(BaseParser):
     extensions = (".pdf",)
     mime_types = ("application/pdf", "application/x-pdf")
 
-    def _parse(self, data, ctx, builder) -> dict[str, Any]:
+    def _parse(self, data: bytes, ctx: ParseContext, builder: CanonicalBuilder) -> dict[str, Any]:
         from pypdf import PdfReader
         from pypdf.errors import PdfReadError
 
@@ -29,9 +29,9 @@ class PdfParser(BaseParser):
 
         if reader.is_encrypted:
             try:
-                ok = reader.decrypt("")
+                ok = bool(reader.decrypt(""))
             except Exception:
-                ok = 0
+                ok = False
             if not ok:
                 raise EncryptedFileError("PDF is password-protected")
 

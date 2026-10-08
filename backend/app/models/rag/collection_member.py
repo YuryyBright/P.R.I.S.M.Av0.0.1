@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 class CollectionMember(RagBaseModel, table=True):
     """Участь користувача в RAG-колекції."""
 
-    __tablename__ = "collection_members"
+    __tablename__ = "collection_members"  # type: ignore[assignment]
 
     __table_args__ = (
         UniqueConstraint(

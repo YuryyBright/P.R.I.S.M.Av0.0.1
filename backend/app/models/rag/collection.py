@@ -1,7 +1,7 @@
 import uuid
 from typing import TYPE_CHECKING, Optional
 from datetime import datetime
-from sqlalchemy import Text, UniqueConstraint, text
+from sqlalchemy import Column, Text, UniqueConstraint, text
 from sqlmodel import Field, Relationship
 
 from app.models.rag.rag_base import (
@@ -19,13 +19,13 @@ if TYPE_CHECKING:
 class Collection(RagBaseModel, table=True):
     """Логічний контейнер документів (таблиця `collections`)."""
 
-    __tablename__ = "collections"
+    __tablename__ = "collections"  # type: ignore[assignment]
     __table_args__ = (
         UniqueConstraint("owner_id", "name", name="uq_collections_owner_name"),
     )
 
     name: str = Field(max_length=255)
-    description: Optional[str] = Field(default=None, sa_type=Text)
+    description: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
 
     # RESTRICT: не можна видалити користувача, поки в нього є колекції
     owner_id: uuid.UUID = Field(sa_column=fk_column(USER_ID_FK, ondelete="RESTRICT"))

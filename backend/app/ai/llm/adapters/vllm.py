@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, AsyncIterator
+from typing import Any, AsyncGenerator
 
 from app.ai.llm.types import (
     ChatRequest, Finished, LLMEvent, LLMResult, LLMUsage, TextDelta, ToolCallReady, make_tool_call,
@@ -74,7 +74,7 @@ class VLLMClient:
 
     # ---- stream ----------------------------------------------------------------
 
-    async def stream(self, req: ChatRequest) -> AsyncIterator[LLMEvent]:
+    async def stream(self, req: ChatRequest) -> AsyncGenerator[LLMEvent, None]:
         acc: dict[int, dict[str, str | None]] = {}
         usage: LLMUsage | None = None
         finish: str | None = None

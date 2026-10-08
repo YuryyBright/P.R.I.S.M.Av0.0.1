@@ -3,10 +3,10 @@ import re
 import zipfile
 from typing import Any
 
-from app.rag.ingestion.canonical import BlockKind
+from app.rag.ingestion.canonical import BlockKind, CanonicalBuilder
 from app.rag.errors import CorruptFileError, LimitExceededError
 from app.rag.ingestion.parsers._text import normalize_lang, parse_datetime
-from app.rag.ingestion.parsers.base import BaseParser
+from app.rag.ingestion.parsers.base import BaseParser, ParseContext
 
 _HEADING_RE = re.compile(r"^heading\s*(\d)", re.IGNORECASE)
 
@@ -21,7 +21,7 @@ class DocxParser(BaseParser):
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
 
-    def _parse(self, data, ctx, builder) -> dict[str, Any]:
+    def _parse(self, data: bytes, ctx: ParseContext, builder: CanonicalBuilder) -> dict[str, Any]:
         import docx
         from docx.table import Table
         from docx.text.paragraph import Paragraph
@@ -70,12 +70,12 @@ class DocxParser(BaseParser):
         }
 
 
-def _is_numbered(p) -> bool:
+def _is_numbered(p: Any) -> bool:
     ppr = p._p.pPr
     return ppr is not None and ppr.numPr is not None
 
 
-def _table_text(table) -> str:
+def _table_text(table: Any) -> str:
     rows = []
     for row in table.rows:
         cells, seen = [], None

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import AsyncIterator, Mapping
+from typing import AsyncGenerator, Mapping
 
 from app.ai.domain.ports import LLMClient
 
@@ -30,7 +30,7 @@ class LLMRouter:
         client, resolved = self._resolve(req)
         return await client.complete(resolved)
 
-    def stream(self, req: ChatRequest) -> AsyncIterator[LLMEvent]:
+    def stream(self, req: ChatRequest) -> AsyncGenerator[LLMEvent, None]:
         client, resolved = self._resolve(req)
         return client.stream(resolved)
 

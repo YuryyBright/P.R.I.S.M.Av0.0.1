@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import contextmanager
-from typing import Sequence
+from typing import Any, Iterator, Sequence
 
 from qdrant_client import AsyncQdrantClient, models
 from qdrant_client.http.exceptions import UnexpectedResponse
@@ -25,13 +25,14 @@ _UPSERT_BATCH = 256
 
 
 @contextmanager
-def _guard():
+def _guard() -> Iterator[None]:
     """Постійні 4xx → ProviderError; 429/5xx/мережа проходять як є (тимчасові → retry)."""
     try:
         yield
     except UnexpectedResponse as e:
-        if 400 <= e.status_code < 500 and e.status_code != 429:
-            raise ProviderError(f"qdrant {e.status_code}: {str(e.content)[:300]}") from e
+        status_code = e.status_code
+        if status_code is not None and 400 <= status_code < 500 and status_code != 429:
+            raise ProviderError(f"qdrant {status_code}: {str(e.content)[:300]}") from e
         raise
 
 
@@ -118,7 +119,7 @@ class QdrantStore:
         if flt is None:
             return None
 
-        must = []
+        must: list[models.Condition] = []
 
         for key, values in (
             ("collection_id", flt.collection_ids),
@@ -140,7 +141,13 @@ class QdrantStore:
     def _denied(flt: SearchFilter | None) -> bool:
         return flt is not None and (flt.collection_ids == [] or flt.document_ids == [])
 
-    async def _search(self, query, using: str, limit: int, flt: SearchFilter | None) -> list[ScoredPoint]:
+    async def _search(
+        self,
+        query: Any,
+        using: str,
+        limit: int,
+        flt: SearchFilter | None,
+    ) -> list[ScoredPoint]:
         if self._denied(flt):
             return []
         with _guard():

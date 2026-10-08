@@ -14,6 +14,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.ai.domain.enums import PromptKind
 from app.ai.domain.exceptions import ForbiddenError, InvalidInputError, PromptNotFoundError
 from app.ai.repositories.prompt_repo import PromptRepository
+from app.models.ai.prompt_template import AiPromptTemplate
+from app.models.ai.prompt_version import AiPromptVersion
 from app.ai.settings import PromptSettings
 
 from . import renderer
@@ -113,8 +115,9 @@ class PromptService:
 
     async def create_template(self, user: Any, *, slug: str, name: str, kind: PromptKind,
                               content: str, description: str | None = None,
-                              variables_schema: dict | None = None,
-                              model_params: dict | None = None, system: bool = False):
+                              variables_schema: dict[str, Any] | None = None,
+                              model_params: dict[str, Any] | None = None,
+                              system: bool = False) -> tuple[AiPromptTemplate, AiPromptVersion]:
         self._check_content(content, variables_schema)
         if system and not getattr(user, "is_superuser", False):
             raise ForbiddenError("Only admins can create system prompts")
@@ -132,8 +135,10 @@ class PromptService:
             return template, version
 
     async def add_version(self, user: Any, template_id: uuid.UUID, *, content: str,
-                          variables_schema: dict | None = None, model_params: dict | None = None,
-                          changelog: str | None = None, activate: bool = True):
+                          variables_schema: dict[str, Any] | None = None,
+                          model_params: dict[str, Any] | None = None,
+                          changelog: str | None = None,
+                          activate: bool = True) -> tuple[AiPromptTemplate, AiPromptVersion]:
         self._check_content(content, variables_schema)
         async with self._sf() as db:
             repo = PromptRepository(db)
@@ -148,7 +153,9 @@ class PromptService:
             await db.commit()
             return template, version
 
-    async def activate(self, user: Any, template_id: uuid.UUID, version_id: uuid.UUID):
+    async def activate(
+        self, user: Any, template_id: uuid.UUID, version_id: uuid.UUID
+    ) -> AiPromptTemplate:
         async with self._sf() as db:
             repo = PromptRepository(db)
             template = await self._owned_template(repo, user, template_id)
@@ -159,7 +166,14 @@ class PromptService:
             await db.commit()
             return template
 
-    async def fork(self, user: Any, template_id: uuid.UUID, *, slug: str, name: str | None = None):
+    async def fork(
+        self,
+        user: Any,
+        template_id: uuid.UUID,
+        *,
+        slug: str,
+        name: str | None = None,
+    ) -> tuple[AiPromptTemplate, AiPromptVersion]:
         """Копія (системного чи чужого доступного) промпту у власні."""
         async with self._sf() as db:
             repo = PromptRepository(db)
@@ -180,14 +194,18 @@ class PromptService:
             await db.commit()
             return template, version
 
-    def _check_content(self, content: str, variables_schema: dict | None) -> None:
+    def _check_content(
+        self, content: str, variables_schema: dict[str, Any] | None
+    ) -> None:
         if len(content) > self._cfg.max_content_chars:
             raise InvalidInputError(f"Prompt is too long (max {self._cfg.max_content_chars} chars)")
         extra = list(((variables_schema or {}).get("properties") or {}).keys())
         renderer.validate_template(content, extra)
 
     @staticmethod
-    async def _owned_template(repo: PromptRepository, user: Any, template_id: uuid.UUID):
+    async def _owned_template(
+        repo: PromptRepository, user: Any, template_id: uuid.UUID
+    ) -> AiPromptTemplate:
         template = await repo.get_template(template_id)
         if template is None:
             raise PromptNotFoundError("Prompt not found")

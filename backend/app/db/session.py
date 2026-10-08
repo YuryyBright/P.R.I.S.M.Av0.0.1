@@ -8,9 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import ModeEnum, settings
 
-DB_POOL_SIZE = settings.DB_POOL_SIZE
-WEB_CONCURRENCY = settings.WEB_CONCURRENCY
-POOL_SIZE = max(DB_POOL_SIZE // WEB_CONCURRENCY, 5)
+POOL_SIZE = settings.POOL_SIZE
 
 # Create engine with different configurations based on mode
 if settings.MODE == ModeEnum.testing:

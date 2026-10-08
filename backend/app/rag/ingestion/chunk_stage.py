@@ -7,7 +7,7 @@
 import asyncio
 import logging
 import uuid
-from typing import Any
+from typing import Any, cast
 
 from app.models.rag.document_chunk import DocumentChunk
 from app.rag.domain.enums import DocumentStatus, IngestionStageName
@@ -18,6 +18,8 @@ from app.rag.ingestion.stage_common import SessionFactory, fail_job_stages, load
 from app.rag.ingestion.storage import BlobStorage, get_blob_storage, load_canonical
 from app.rag.repositories import DocumentChunkRepository, DocumentRepository, IngestionJobRepository
 from app.rag.settings import ChunkingSettings, get_rag_settings
+from app.models.rag.document import Document
+from app.models.rag.ingestion_job import IngestionJob
 
 logger = logging.getLogger(__name__)
 
@@ -79,8 +81,8 @@ async def run_chunk_stage(
     async with session_factory() as db:
         jobs, docs, chunks = (IngestionJobRepository(db), DocumentRepository(db),
                               DocumentChunkRepository(db))
-        job = await jobs.get(job_id)
-        doc = await docs.get(document_id)
+        job = cast(IngestionJob, await jobs.get(job_id))
+        doc = cast(Document, await docs.get(document_id))
 
         await chunks.replace_for_document(document_id, [
             DocumentChunk(

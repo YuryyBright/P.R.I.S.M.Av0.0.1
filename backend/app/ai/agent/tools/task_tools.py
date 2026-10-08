@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -9,6 +10,7 @@ from app.ai.domain.enums import ToolRisk
 from app.ai.runtime.context import RunContext
 from app.ai.tasks.domain import TaskType
 from app.ai.tasks.ports import DataSourceRef
+from app.ai.task_api import TaskSourceIn
 
 
 class CreateTaskArgs(BaseModel):
@@ -20,10 +22,10 @@ class CreateTaskArgs(BaseModel):
         default=TaskType.ANALYSIS,
     )
     title: str | None = None
-    sources: list[dict] = Field(
+    sources: list[TaskSourceIn] = Field(
         default_factory=list,
     )
-    config: dict = Field(
+    config: dict[str, object] = Field(
         default_factory=dict,
     )
 
@@ -36,11 +38,11 @@ class CreateTaskTool(BaseTool):
     )
     args_model = CreateTaskArgs
 
-    def __init__(self, service):
+    def __init__(self, service: Any) -> None:
         self._service = service
 
     @property
-    def service(self):
+    def service(self) -> Any:
         return self._service() if callable(self._service) else self._service
 
     async def run(
@@ -50,9 +52,9 @@ class CreateTaskTool(BaseTool):
     ) -> ToolOutput:
         refs = [
             DataSourceRef(
-                type=str(source.get("type")),
-                id=str(source.get("id")),
-                metadata=source.get("metadata", {}),
+                type=source.type,
+                id=source.id,
+                metadata=source.metadata,
             )
             for source in args.sources
         ]
@@ -81,11 +83,11 @@ class GetTaskStatusTool(BaseTool):
     description = "Get persistent status and progress of a long-running task."
     args_model = TaskIdArgs
 
-    def __init__(self, service):
+    def __init__(self, service: Any) -> None:
         self._service = service
 
     @property
-    def service(self):
+    def service(self) -> Any:
         return self._service() if callable(self._service) else self._service
 
     async def run(
@@ -116,11 +118,11 @@ class CancelTaskTool(BaseTool):
     description = "Request graceful cancellation of a long-running task."
     args_model = TaskIdArgs
 
-    def __init__(self, service):
+    def __init__(self, service: Any) -> None:
         self._service = service
 
     @property
-    def service(self):
+    def service(self) -> Any:
         return self._service() if callable(self._service) else self._service
 
     async def run(

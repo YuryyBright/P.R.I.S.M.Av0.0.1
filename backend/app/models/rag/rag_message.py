@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class RagMessage(RagImmutableModel, table=True):
     """Повідомлення діалогу (таблиця `rag_messages`). Append-only."""
 
-    __tablename__ = "rag_messages"
+    __tablename__ = "rag_messages"  # type: ignore[assignment]
     __table_args__ = (
         Index("ix_rag_messages_conversation_created", "conversation_id", "created_at"),
     )

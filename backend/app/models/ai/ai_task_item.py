@@ -3,7 +3,7 @@
 import uuid
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Text, UniqueConstraint
+from sqlalchemy import Column, Text, UniqueConstraint
 from sqlmodel import Field, Relationship
 
 from app.ai.tasks.domain import ItemStatus
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class AiTaskItem(RagImmutableModel, table=True):
-    __tablename__ = "ai_task_items"
+    __tablename__ = "ai_task_items"  # type: ignore[assignment]
     __table_args__ = (
         UniqueConstraint("task_id", "item_key", name="uq_ai_task_items_task_key"),
     )
@@ -28,7 +28,7 @@ class AiTaskItem(RagImmutableModel, table=True):
         sa_column=enum_column(ItemStatus, index=True),
     )
     attempts: int = Field(default=0, ge=0)
-    error: Optional[str] = Field(default=None, sa_type=Text)
+    error: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
     meta: dict[str, object] = Field(
         default_factory=dict,
         sa_column=jsonb_column("metadata"),

@@ -2,7 +2,7 @@
 лише під TYPE_CHECKING)."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, AsyncIterator, Protocol
+from typing import TYPE_CHECKING, Any, AsyncGenerator, AsyncIterator, Protocol
 from uuid import UUID
 
 from .records import AnyEvent, ExecutorOutput
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class LLMClient(Protocol):
     async def complete(self, req: "ChatRequest") -> "LLMResult": ...
 
-    def stream(self, req: "ChatRequest") -> AsyncIterator["LLMEvent"]: ...
+    def stream(self, req: "ChatRequest") -> AsyncGenerator["LLMEvent", None]: ...
 
 
 class EventBus(Protocol):
