@@ -48,7 +48,9 @@ export const toDocumentItem = (d: DocumentDetails): DocumentItem => ({
   filename: d.filename,
   mime_type: d.mime_type,
   size_bytes: d.size_bytes,
-  source_type: d.source_type,
   status: d.status,
+  language: d.language,
+  author: d.author,
   created_at: d.created_at ?? "",
+  indexed_at: d.indexed_at,
 });

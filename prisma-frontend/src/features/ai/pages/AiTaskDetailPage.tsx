@@ -186,6 +186,33 @@ export default function AiTaskDetailPage() {
               </p>
             </Card>
 
+            {task.sources.length > 0 && (
+              <Card title={t("ai.tasks.form.sources", "Джерела даних")}>
+                <ul className="space-y-3">
+                  {task.sources.map((source, index) => (
+                    <li
+                      key={`${source.type}:${source.id}:${index}`}
+                      className="rounded-lg border border-gray-100 p-3 dark:border-white/10"
+                    >
+                      <p className="text-theme-xs font-semibold text-gray-700 dark:text-gray-300">
+                        {t(`ai.tasks.sourceType.${source.type}`, {
+                          defaultValue: source.type,
+                        })}
+                      </p>
+                      <p className="mt-1 break-all font-mono text-theme-xs text-gray-500 dark:text-gray-400">
+                        {source.id}
+                      </p>
+                      {Object.keys(source.metadata).length > 0 && (
+                        <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-theme-xs text-gray-500 dark:text-gray-400">
+                          {JSON.stringify(source.metadata, null, 2)}
+                        </pre>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            )}
+
             <Card
               title={t("ai.tasks.artifacts", "Результати")}
               aside={

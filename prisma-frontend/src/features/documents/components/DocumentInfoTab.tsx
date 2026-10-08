@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { formatDateTime } from "@/shared/lib/date";
 import { formatBytes } from "../lib/documentFormat";
 import { mutedText, sectionLabel } from "../lib/styles";
+import { jobTypeLabel } from "@/features/jobs/lib/jobFormat";
 import type { DocumentDetails } from "../types/document.types";
 
 const EMPTY = "—";
@@ -187,8 +188,8 @@ export function DocumentInfoTab({ data }: { data: DocumentDetails }) {
       {data.recent_jobs.length > 0 && (
         <Section title={t("documents.details.sections.jobs", "Останні задачі")}>
           {data.recent_jobs.map((j) => (
-            <Row key={j.id} label={j.job_type}>
-              <span className="mr-2">{j.status}</span>
+            <Row key={j.id} label={t(`jobs.type.${j.job_type}`, { defaultValue: jobTypeLabel(j.job_type) })}>
+              <span className="me-2">{t(`jobs.status.${j.status}`, { defaultValue: j.status })}</span>
               <span className={mutedText}>{dt(j.created_at)}</span>
             </Row>
           ))}

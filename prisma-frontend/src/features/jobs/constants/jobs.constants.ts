@@ -37,9 +37,10 @@ export const ACTIVE_JOB_STATUSES: readonly JobStatus[] = ["queued", "processing"
 /** Mirrors JobService.ensure_retryable. */
 export const RETRYABLE_JOB_STATUSES: readonly JobStatus[] = ["failed", "cancelled"];
 
-/** Pipeline order (tasks.py: PARSE → CHUNK → EMBED(+INDEX) → FINALIZE). */
+/** Pipeline order from the backend ingestion stage enum. */
 export const STAGE_ORDER: StageName[] = [
   "parse",
+  "clean",
   "chunk",
   "embed",
   "index",

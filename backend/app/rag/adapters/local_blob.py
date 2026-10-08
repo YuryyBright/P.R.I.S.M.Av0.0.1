@@ -1,5 +1,6 @@
 """Локальне blob-сховище. Запис атомарний; вихід за межі root заборонено."""
 from __future__ import annotations
+
 import os
 import tempfile
 from pathlib import Path
@@ -41,9 +42,7 @@ class LocalBlobStorage:
         except BaseException:
             Path(tmp).unlink(missing_ok=True)
             raise
+
     def delete(self, path: str) -> None:
         target = self._resolve(path)
-        try:
-            target.unlink()
-        except FileNotFoundError as e:
-            raise MissingFileError(f"blob not found: {path}") from e
+        target.unlink(missing_ok=True)

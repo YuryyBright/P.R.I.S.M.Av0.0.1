@@ -35,6 +35,7 @@ export interface RerankerSettings {
   enabled: boolean;
   top_k?: number | null;
 }
+export type RerankerSettingsPatch = Partial<RerankerSettings>;
 
 /** ConversationSettings. `collection_ids: null` = all accessible; `[]` with RAG on is a backend error. */
 export interface ConversationSettings {
@@ -49,7 +50,18 @@ export interface ConversationSettings {
   prompt_variables: Record<string, string>;
   profile_id: UUID | null;
 }
-export type ConversationSettingsPatch = Partial<ConversationSettings>;
+export interface ConversationSettingsPatch {
+  mode?: RunMode | null;
+  model?: string | null;
+  rag_enabled?: boolean | null;
+  web_enabled?: boolean | null;
+  collection_ids?: UUID[] | null;
+  reranker?: RerankerSettingsPatch | null;
+  prompt_template_id?: UUID | null;
+  prompt_version_id?: UUID | null;
+  prompt_variables?: Record<string, string> | null;
+  profile_id?: UUID | null;
+}
 
 export interface Conversation {
   id: UUID;
@@ -241,10 +253,14 @@ export interface TaskProgressData {
   current_operation?: string | null;
 }
 export interface TaskSource {
-  type: string;
-  id: string;
-  metadata?: Record<string, unknown>;
+  type: "document" | "file" | "collection" | "rag_collection";
+  id: UUID;
+  metadata: Record<string, unknown>;
 }
+/** Request source: backend supplies empty metadata when omitted. */
+export type TaskSourceInput = Omit<TaskSource, "metadata"> & {
+  metadata?: Record<string, unknown>;
+};
 
 export interface Task {
   id: UUID;
@@ -274,9 +290,9 @@ export interface TaskCreatePayload {
   instruction: string;
   type: TaskType;
   title?: string | null;
-  sources: TaskSource[];
-  config: Record<string, unknown>;
-  output: { formats: string[] };
+  sources?: TaskSourceInput[];
+  config?: Record<string, unknown>;
+  output?: { formats?: string[] };
 }
 export interface TaskCreateResponse {
   task_id: UUID;

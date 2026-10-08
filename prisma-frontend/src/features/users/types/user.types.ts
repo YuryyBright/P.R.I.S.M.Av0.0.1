@@ -2,9 +2,7 @@ import type { ISODateString, UUID } from "@/shared/types/api";
 
 /* =====================================================================
  * RESPONSE TYPES  (what serialize_user() in user_utils.py produces)
- * The route's return annotation is IGetResponseBase[IUserRead], so FastAPI
- * may drop keys that UserBase/IUserRead don't declare. Fields marked `?`
- * are the ones I can't confirm without user_model.py -> check Network tab.
+ * Rows are produced by serialize_user() and wrapped in the API envelope.
  * ===================================================================== */
 
 /** Result of _ref(): {id, name} | null. */
@@ -38,17 +36,17 @@ export interface User {
   needs_to_change_password: boolean;
   contact_phone: string | null;
   expiry_date: ISODateString | null;
-  last_changed_password_date?: ISODateString | null;
-  number_of_failed_attempts?: number | null;
-  is_locked?: boolean;
-  locked_until?: ISODateString | null;
-  verified?: boolean;
+  last_changed_password_date: ISODateString | null;
+  number_of_failed_attempts: number | null;
+  is_locked: boolean;
+  locked_until: ISODateString | null;
+  verified: boolean;
   /** Full role objects (IUserRead.roles: list[dict]). */
   roles: UserRole[];
   /** Flat, sorted, unique permission names across all roles. e.g. ["users.read", ...] */
   permissions: string[];
-  created_at?: ISODateString;
-  updated_at?: ISODateString | null;
+  created_at: ISODateString;
+  updated_at: ISODateString;
 }
 
 /* =====================================================================

@@ -1,12 +1,13 @@
 import { Navigate, Outlet, useLocation } from "react-router";
-import { useAuth } from "../../features/auth/hooks/useAuth";
+import { useSession, useSessionBootstrap } from "@/features/auth";
 
 export default function ProtectedRoute() {
-  const { isAuthenticated, isInitialized, isLoading } = useAuth();
+  const isInitialized = useSessionBootstrap();
+  const { isAuthenticated, isLoadingUser } = useSession();
   const location = useLocation();
 
   // Чекаємо, поки auth перевірить сесію
-  if (!isInitialized || isLoading) {
+  if (!isInitialized || isLoadingUser) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-gray-500">Завантаження...</div>

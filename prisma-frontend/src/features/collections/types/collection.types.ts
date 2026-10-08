@@ -21,7 +21,7 @@ export interface Collection {
   owner_id: UUID;
   created_at: ISODateString;
   /** Set only for archived (soft-deleted) collections. */
-  deleted_at?: ISODateString | null;
+  deleted_at: ISODateString | null;
   my_role: CollectionRole | null;
 }
 
@@ -51,9 +51,9 @@ export interface CollectionCreatePayload {
 
 /** PATCH /collections/{id}: only sent keys change; `description: null` clears it. */
 export interface CollectionUpdatePayload {
-  name?: string;
+  name?: string | null;
   description?: string | null;
-  visibility?: CollectionVisibility;
+  visibility?: CollectionVisibility | null;
 }
 
 /** POST /collections/{id}/members (upsert: adds or changes role) */

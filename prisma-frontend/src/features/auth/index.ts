@@ -10,6 +10,7 @@ export { AUTH_ROUTES } from "./constants/auth.constants";
 
 // for other features
 export { useSession } from "./hooks/useSession";
+export { useSessionBootstrap } from "./hooks/useSessionBootstrap";
 export { usePermissions } from "./hooks/usePermissions";
 export { Can } from "./components/Can";
 export { LogoutButton } from "./components/LogoutButton";

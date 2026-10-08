@@ -118,7 +118,7 @@ export function CreateTaskModal({ onClose }: Props) {
         instruction: v.instruction.trim(),
         type: v.type,
         title: v.title.trim() || null,
-        sources: v.collections.map((id) => ({ type: "rag_collection", id })),
+        sources: v.collections.map((id) => ({ type: "rag_collection", id, metadata: {} })),
         config,
         output: { formats: v.formats },
       }).unwrap();

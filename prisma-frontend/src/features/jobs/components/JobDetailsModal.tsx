@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
+import { COLLECTIONS_ROUTES } from "@/features/collections";
 import { formatDateTime } from "@/shared/lib/date";
 import { Alert } from "@/shared/ui/Alert";
 import { Modal } from "@/shared/ui/Modal";
 import { btnSecondary } from "@/shared/ui/classes";
 import { useGetJobByIdQuery } from "../api/jobs.endpoints";
 import { POLL_INTERVAL_MS, STAGE_ORDER } from "../constants/jobs.constants";
-import { formatDuration, isActiveJob } from "../lib/jobFormat";
+import { formatDuration, isActiveJob, jobTypeLabel } from "../lib/jobFormat";
 import type { JobListItem, JobStage, StageStatus } from "../types/job.types";
 import { AlertTriangleIcon, CheckIcon, SpinnerIcon, XIcon } from "./JobIcons";
 import { JobProgress } from "./JobProgress";
@@ -21,13 +23,12 @@ interface Props {
 const skeleton =
   "animate-pulse rounded-lg bg-gray-100 motion-reduce:animate-none dark:bg-white/5";
 
-const STAGE_DOT: Record<string, string> = {
+const STAGE_DOT: Record<StageStatus, string> = {
   pending: "bg-gray-100 text-gray-400 dark:bg-white/5 dark:text-gray-500",
   processing: "bg-brand-50 text-brand-500 dark:bg-brand-500/15 dark:text-brand-400",
   completed:
     "bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400",
   failed: "bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400",
-  cancelled: "bg-gray-100 text-gray-400 dark:bg-white/5 dark:text-gray-500",
   skipped: "bg-gray-100 text-gray-400 dark:bg-white/5 dark:text-gray-500",
 };
 
@@ -65,15 +66,19 @@ function Fact({ label, value }: { label: string; value: string }) {
 export function JobDetailsModal({ job, onClose }: Props) {
   const { t } = useTranslation();
 
-  // Poll the single job while it runs (the list may be on a different page / filter).
-  const [pollMs, setPollMs] = useState(
-    isActiveJob(job.status) ? POLL_INTERVAL_MS : 0,
-  );
-  const q = useGetJobByIdQuery(job.id, { pollingInterval: pollMs });
+  const q = useGetJobByIdQuery(job.id);
+  const { refetch } = q;
 
   const live = q.data ?? job;
   const active = isActiveJob(live.status);
-  useEffect(() => setPollMs(active ? POLL_INTERVAL_MS : 0), [active]);
+  // The timer is an external subscription; stop it as soon as the server marks the job terminal.
+  useEffect(() => {
+    if (!active) return;
+    const timer = window.setInterval(() => {
+      void refetch();
+    }, POLL_INTERVAL_MS);
+    return () => window.clearInterval(timer);
+  }, [active, refetch]);
 
   // Always show the whole pipeline: stages that haven't started yet have no row -> "pending".
   const byName = new Map<string, JobStage>(
@@ -103,12 +108,24 @@ export function JobDetailsModal({ job, onClose }: Props) {
         <div className="space-y-3">
           <p className="text-theme-sm font-medium wrap-break-word text-gray-800 dark:text-white/90">
             {job.document_title ??
-              t("jobs.table.documentDeleted", "Документ видалено")}
+              (job.collection_id ? (
+                <Link
+                  to={COLLECTIONS_ROUTES.detail(job.collection_id)}
+                  title={job.collection_id}
+                  className="text-brand-600 hover:underline dark:text-brand-400"
+                >
+                  {t("jobs.table.collectionReference", "Колекція")}: {job.collection_id.slice(0, 8)}…
+                </Link>
+              ) : (
+                t("jobs.table.noDocument", "Без пов’язаного документа")
+              ))}
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <JobStatusBadge status={live.status} />
             <span className="text-theme-xs text-gray-500 dark:text-gray-400">
-              {t(`jobs.type.${live.job_type}`, { defaultValue: live.job_type })}
+              {t(`jobs.type.${live.job_type}`, {
+                defaultValue: jobTypeLabel(live.job_type),
+              })}
             </span>
           </div>
           <JobProgress job={live} />

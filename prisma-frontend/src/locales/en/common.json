@@ -603,10 +603,13 @@
     },
     "type": {
       "document_ingest": "New document ingestion",
-      "reindex": "Reindex"
+      "source_sync": "Source sync",
+      "reindex": "Reindex",
+      "cleanup": "Cleanup"
     },
     "stage": {
       "parse": "Parsing",
+      "clean": "Cleaning",
       "chunk": "Chunking",
       "embed": "Embedding",
       "index": "Indexing",
@@ -625,7 +628,8 @@
       "empty": "No jobs yet",
       "emptyHint": "Ingestion jobs appear here after you upload or reindex documents.",
       "emptyFiltered": "No jobs with this status. Change the filter to see others.",
-      "documentDeleted": "Document deleted",
+      "noDocument": "No associated document",
+      "collectionReference": "Collection",
       "retries": "retries: {count}",
 
       "columns": {

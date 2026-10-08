@@ -8,7 +8,9 @@ import { POLL_INTERVAL_MS } from "../constants/documents.constants";
 import { useGetDocumentDetailsQuery } from "../api/documents.endpoints";
 import { formatBytes, isActiveStatus } from "../lib/documentFormat";
 import type { DocumentItem } from "../types/document.types";
-import { SpinnerIcon, btnContent } from "./DocumentIcons";
+import { SpinnerIcon } from "./DocumentIcons";
+import { btnContent } from "../lib/styles";
+import { jobTypeLabel } from "@/features/jobs/lib/jobFormat";
 import { DocumentChunksList } from "./DocumentChunksList";
 import { DocumentStatusBadge } from "./DocumentStatusBadge";
 
@@ -251,8 +253,8 @@ export function DocumentDetailsModal({ document: doc, onClose }: Props) {
             {data.recent_jobs.length > 0 && (
               <Section title={t("documents.details.sections.jobs", "Останні задачі")}>
                 {data.recent_jobs.map((j) => (
-                  <Row key={j.id} label={j.job_type}>
-                    <span className="mr-2">{j.status}</span>
+                  <Row key={j.id} label={t(`jobs.type.${j.job_type}`, { defaultValue: jobTypeLabel(j.job_type) })}>
+                    <span className="me-2">{t(`jobs.status.${j.status}`, { defaultValue: j.status })}</span>
                     <span className="text-gray-500 dark:text-gray-400">{dt(j.created_at)}</span>
                   </Row>
                 ))}

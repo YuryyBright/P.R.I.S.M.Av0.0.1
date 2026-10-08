@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { COLLECTIONS_ROUTES } from "@/features/collections";
 import { formatDateTime } from "@/shared/lib/date";
-import { formatDuration } from "../lib/jobFormat";
+import { formatDuration, jobTypeLabel } from "../lib/jobFormat";
 import type { JobListItem } from "../types/job.types";
 import { JobActions } from "./JobActions";
 import { QueueIcon } from "./JobIcons";
@@ -43,7 +43,7 @@ function JobTile() {
 function JobTitle({ job, wrap }: { job: JobListItem; wrap?: boolean }) {
   const { t } = useTranslation();
   const typeLabel = t(`jobs.type.${job.job_type}`, {
-    defaultValue: job.job_type,
+    defaultValue: jobTypeLabel(job.job_type),
   });
   const textCls = wrap ? "wrap-break-word" : "max-w-md truncate";
 
@@ -67,9 +67,19 @@ function JobTitle({ job, wrap }: { job: JobListItem; wrap?: boolean }) {
           </p>
         )
       ) : (
-        <p className="text-gray-400 italic dark:text-gray-500">
-          {t("jobs.table.documentDeleted", "Документ видалено")}
-        </p>
+        job.collection_id ? (
+          <Link
+            to={COLLECTIONS_ROUTES.detail(job.collection_id)}
+            className={`${docLink} block ${textCls}`}
+            title={job.collection_id}
+          >
+            {t("jobs.table.collectionReference", "Колекція")}: {job.collection_id.slice(0, 8)}…
+          </Link>
+        ) : (
+          <p className="text-gray-400 italic dark:text-gray-500">
+            {t("jobs.table.noDocument", "Без пов’язаного документа")}
+          </p>
+        )
       )}
       <p className="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
         {typeLabel}

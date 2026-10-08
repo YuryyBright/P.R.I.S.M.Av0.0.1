@@ -1,4 +1,5 @@
 import type { ISODateString, UUID } from "@/shared/types/api";
+import type { JobStatus, JobType } from "@/features/jobs/types/job.types";
 
 /* app/rag/schemas.py — DocumentRead / UploadResponse.
  * VERIFY the field list against DocumentRead; only fields used by the UI are declared. */
@@ -24,9 +25,11 @@ export interface DocumentItem {
   filename: string | null;
   mime_type: string | null;
   size_bytes: number | null;
-  source_type: DocumentSourceType;
   status: DocumentStatus;
+  language: string | null;
+  author: string | null;
   created_at: ISODateString;
+  indexed_at: ISODateString | null;
 }
 
 /** app/rag/schemas.py — ChunkStatsRead */
@@ -44,8 +47,8 @@ export interface ChunkStats {
 /** app/rag/schemas.py — DocumentJobBrief */
 export interface DocumentJobBrief {
   id: UUID;
-  job_type: string;
-  status: string;
+  job_type: JobType;
+  status: JobStatus;
   created_at: ISODateString | null;
 }
 
@@ -58,7 +61,7 @@ export interface DocumentDetails {
   filename: string | null;
   mime_type: string | null;
   size_bytes: number | null;
-  source_type: DocumentSourceType;
+  source_type: string;
   source_id: UUID | null;
   external_id: string | null;
   language: string | null;
@@ -140,6 +143,7 @@ export interface LimitOffsetPage<T> {
 export interface UploadResponse {
   document_id: UUID;
   job_id: UUID;
+  status: JobStatus;
 }
 
 export interface DocumentsPageArgs {

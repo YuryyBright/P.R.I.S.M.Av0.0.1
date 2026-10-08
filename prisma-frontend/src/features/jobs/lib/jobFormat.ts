@@ -3,7 +3,7 @@ import {
   JOB_STATUSES,
   RETRYABLE_JOB_STATUSES,
 } from "../constants/jobs.constants";
-import type { JobStatus } from "../types/job.types";
+import type { JobStatus, JobType } from "../types/job.types";
 
 /**
  * The API may send naive timestamps ("2026-10-06T10:00:00", no "Z"/offset) that
@@ -33,6 +33,16 @@ export const isRetryableJob = (s: JobStatus): boolean =>
 
 export const parseJobStatus = (v: string | null): JobStatus | undefined =>
   JOB_STATUSES.find((s) => s === v);
+
+export const jobTypeLabel = (type: JobType): string => {
+  const labels: Record<JobType, string> = {
+    document_ingest: "Document ingestion",
+    source_sync: "Source sync",
+    reindex: "Reindex",
+    cleanup: "Cleanup",
+  };
+  return labels[type];
+};
 
 export const clampProgress = (n: number | null | undefined): number =>
   Math.min(100, Math.max(0, Math.round(n ?? 0)));

@@ -1,18 +1,18 @@
-import type { UUID } from "@/shared/types/api";
+import type { ISODateString, UUID } from "@/shared/types/api";
 
 /* ---------- what the backend returns (IUserRead inside Token / GET /users/me) ---------- */
 
 export interface SessionRole {
   id: UUID;
   name: string;
-  description?: string | null;
+  description: string | null;
 }
 
 /**
  * The signed-in user as auth sees it. The admin-facing `User` (users feature) is
  * a richer type; auth deliberately owns its own minimal one so that
- * auth never imports users. `needs_to_change_password` / `verified` come from
- * UserBase (not visible to me) -> optional.
+ * auth never imports users. The backend serializes these flags on login and
+ * GET /users/me.
  */
 export interface SessionUser {
   id: UUID;
@@ -21,10 +21,16 @@ export interface SessionUser {
   last_name: string | null;
   is_active: boolean;
   is_superuser: boolean;
-  needs_to_change_password?: boolean;
-  /** Present when GET /users/me returns it (serialize_user does); optional until confirmed in the Network tab. */
-  contact_phone?: string | null;
-  verified?: boolean;
+  needs_to_change_password: boolean;
+  contact_phone: string | null;
+  expiry_date: ISODateString | null;
+  is_locked: boolean;
+  verified: boolean;
+  last_changed_password_date: ISODateString | null;
+  number_of_failed_attempts: number | null;
+  locked_until: ISODateString | null;
+  created_at: ISODateString;
+  updated_at: ISODateString;
   roles: SessionRole[];
   /** flat, unique permission names from all roles, e.g. "users.read" */
   permissions: string[];

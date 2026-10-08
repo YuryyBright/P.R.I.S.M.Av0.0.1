@@ -12,16 +12,15 @@ export type JobStatus =
   | "failed"
   | "cancelled";
 
-export type JobType = "document_ingest" | "reindex";
+export type JobType = "document_ingest" | "source_sync" | "reindex" | "cleanup";
 
-export type StageName = "parse" | "chunk" | "embed" | "index" | "finalize";
+export type StageName = "parse" | "clean" | "chunk" | "embed" | "index" | "finalize";
 
 export type StageStatus =
   | "pending"
   | "processing"
   | "completed"
   | "failed"
-  | "cancelled"
   | "skipped";
 
 /** StageRead */
@@ -54,7 +53,7 @@ export interface Job {
 
 /** JobListItem — GET /jobs rows: a Job without stages + document info for the table. */
 export type JobListItem = Omit<Job, "stages"> & {
-  /** null = the document was physically deleted (FK SET NULL). */
+  /** Null for jobs that are not associated with a retained document. */
   document_title: string | null;
   collection_id: UUID | null;
 };

@@ -37,7 +37,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.config import settings
 from app.crud.user_crud import clear_user_delete_references
 from app.models.users.user_model import User
-from app.models.user_role_model import UserRole
+from app.models.users.user_role_model import UserRole
 
 logger = logging.getLogger(__name__)
 
