@@ -43,10 +43,12 @@ class EmbeddingSettings(BaseModel):
     backend: Literal["vllm"] = "vllm"
     model: str = "BAAI/bge-m3"
     dim: int = Field(1024, gt=0)                      # МАЄ збігатися з моделлю
-    batch_size: int = Field(64, gt=0)
+    # Keep embedding requests small enough that one slow chunk does not hold
+    # the whole document's progress behind a single provider response.
+    batch_size: int = Field(8, gt=0)
     api_base: str | None = "http://vllm-embed:8000/v1"
     api_key: SecretStr | None = None
-    timeout_s: float = 30.0
+    timeout_s: float = Field(120.0, gt=0)
     max_retries: int = Field(2, ge=0)
     # sparse (для hybrid)
     sparse_enabled: bool = False

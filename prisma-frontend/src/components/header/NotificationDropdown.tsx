@@ -105,14 +105,14 @@ function JobsBell() {
                 {activeCount > 0 &&
                   t("header.notifications.summaryActive", {
                     count: activeCount,
-                    defaultValue: "{{count}} в обробці",
+                    defaultValue: "{count} в обробці",
                   })}
                 {activeCount > 0 && failedUnread > 0 && " · "}
                 {failedUnread > 0 && (
                   <span className="text-error-600 dark:text-error-400">
                     {t("header.notifications.summaryFailed", {
                       count: failedUnread,
-                      defaultValue: "{{count}} з помилкою",
+                      defaultValue: "{count} з помилкою",
                     })}
                   </span>
                 )}

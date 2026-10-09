@@ -7,6 +7,7 @@ import {
   UserCircleIcon,
   FolderIcon,
   AiIcon,
+  SearchIcon,
 } from "@/icons";
 import { ACCOUNT_ROUTES } from "@/features/account";
 import { AUTH_ROUTES } from "@/features/auth";
@@ -16,6 +17,7 @@ import { COLLECTIONS_ROUTES } from "@/features/collections";
 import { JOBS_ROUTES } from "@/features/jobs";
 import { TaskIcon } from "@/icons";
 import { AI_PERMISSIONS, AI_ROUTES } from "@/features/ai";
+import { SEARCH_ROUTE } from "@/features/search";
 export interface NavItem {
   /** i18n key under `sidebar.items.*` */
   key: string;
@@ -69,6 +71,11 @@ export const NAV_GROUPS: NavGroup[] = [
         key: "collections",
         path: COLLECTIONS_ROUTES.list,
         icon: <FolderIcon fontSize={ICON} />,
+      },
+      {
+        key: "vectorSearch",
+        path: SEARCH_ROUTE,
+        icon: <SearchIcon width={ICON} height={ICON} />,
       },
       {
         key: "jobs",

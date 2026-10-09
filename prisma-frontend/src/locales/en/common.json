@@ -42,6 +42,7 @@
       "home": "Home",
       "users": "Users",
       "collections": "Collections",
+      "vectorSearch": "Knowledge search",
       "jobs": "Jobs",
       "aiChat": "AI Chat",
       "aiTasks": "AI Tasks",
@@ -611,7 +612,7 @@
       "parse": "Parsing",
       "clean": "Cleaning",
       "chunk": "Chunking",
-      "embed": "Embedding",
+      "embed": "Embedding and indexing",
       "index": "Indexing",
       "finalize": "Finalizing"
     },
@@ -665,6 +666,24 @@
     "pagination": {
       "total": "Total: {count}"
     }
+  },
+  "search": {
+    "title": "Knowledge base search",
+    "subtitle": "Semantic search across indexed documents. Results are returned without generating an AI answer.",
+    "query": "What are you looking for?",
+    "queryPlaceholder": "Enter a question or topic…",
+    "collections": "Collections",
+    "selectedCollections": "Search only selected collections",
+    "allCollections": "With no selection, search runs across all collections you can access.",
+    "searching": "Searching…",
+    "submit": "Search",
+    "error": "Search failed. Check your connection and try again.",
+    "resultCount": "Found: {count}",
+    "empty": "No results found for this query.",
+    "chunk": "Chunk {index}",
+    "page": "Page {{page}}",
+    "exactTitle": "Exact title match",
+    "exactText": "Exact text match"
   },
   "ai": {
     "agents": {

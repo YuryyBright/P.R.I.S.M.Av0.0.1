@@ -4,6 +4,8 @@ export { aiRoutes } from "./routes";
 export { aiUiSlice } from "./store/aiUiSlice";
 export { configureAiTransport } from "./lib/sse";
 export { AI_PERMISSIONS, AI_ROUTES } from "./constants/ai.constants";
+export { CollectionPicker } from "./components/CollectionPicker";
+export { useCollectionOptions } from "./hooks/useCollectionOptions";
 export type {
   Conversation,
   ConversationSettings,

@@ -66,26 +66,29 @@ function JobTitle({ job, wrap }: { job: JobListItem; wrap?: boolean }) {
             {job.document_title}
           </p>
         )
+      ) : job.collection_id ? (
+        <Link
+          to={COLLECTIONS_ROUTES.detail(job.collection_id)}
+          className={`${docLink} block ${textCls}`}
+          title={job.collection_id}
+        >
+          {t("jobs.table.collectionReference", "Колекція")}:{" "}
+          {job.collection_id.slice(0, 8)}…
+        </Link>
       ) : (
-        job.collection_id ? (
-          <Link
-            to={COLLECTIONS_ROUTES.detail(job.collection_id)}
-            className={`${docLink} block ${textCls}`}
-            title={job.collection_id}
-          >
-            {t("jobs.table.collectionReference", "Колекція")}: {job.collection_id.slice(0, 8)}…
-          </Link>
-        ) : (
-          <p className="text-gray-400 italic dark:text-gray-500">
-            {t("jobs.table.noDocument", "Без пов’язаного документа")}
-          </p>
-        )
+        <p className="text-gray-400 italic dark:text-gray-500">
+          {t("jobs.table.noDocument", "Без пов’язаного документа")}
+        </p>
       )}
       <p className="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
         {typeLabel}
         {job.retry_count > 0 && (
           <span className="ms-2">
-            · {t("jobs.table.retries", { count: job.retry_count, defaultValue: "повторів: {{count}}" })}
+            ·{" "}
+            {t("jobs.table.retries", {
+              count: job.retry_count,
+              defaultValue: "повторів: {count}",
+            })}
           </span>
         )}
       </p>
@@ -96,7 +99,9 @@ function JobTitle({ job, wrap }: { job: JobListItem; wrap?: boolean }) {
 function EmptyState({ isFiltered }: { isFiltered?: boolean }) {
   const { t } = useTranslation();
   return (
-    <div className={`${surface} flex flex-col items-center px-6 py-14 text-center`}>
+    <div
+      className={`${surface} flex flex-col items-center px-6 py-14 text-center`}
+    >
       <span className="flex size-12 items-center justify-center rounded-2xl bg-gray-50 text-gray-400 ring-1 ring-gray-200/70 ring-inset dark:bg-white/5 dark:text-gray-500 dark:ring-white/5">
         <QueueIcon className="size-6" />
       </span>

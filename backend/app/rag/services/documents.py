@@ -40,6 +40,7 @@ from app.rag.domain.enums import (
     CollectionRole,
     DocumentSourceType,
     DocumentStatus,
+    IngestionStageName,
     JobStatus,
     JobType,
 )
@@ -289,6 +290,19 @@ class JobService:
             allowed = doc is not None and await self.policy.can(user, doc.collection_id, Action.READ)
         if not allowed:
             raise NotFoundError("Job not found")
+
+        # EMBED and INDEX are one batch pipeline. Use persisted chunk markers as
+        # the source of truth so old/stale stage counters cannot show 0/N while
+        # successful Qdrant upserts have already been committed.
+        if job.document_id:
+            chunks = DocumentChunkRepository(self.db)
+            total = await chunks.count(job.document_id)
+            if total:
+                pending = await chunks.count(job.document_id, pending_only=True)
+                for stage in job.stages:
+                    if stage.stage in (IngestionStageName.EMBED, IngestionStageName.INDEX):
+                        stage.items_total = total
+                        stage.items_processed = total - pending
         return job
 
     async def list_for_document(self, user: User, document_id: uuid.UUID, *,

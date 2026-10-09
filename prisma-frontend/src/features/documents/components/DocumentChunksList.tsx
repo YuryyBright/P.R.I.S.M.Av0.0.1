@@ -4,7 +4,10 @@ import { Alert } from "@/shared/ui/Alert";
 import { Pagination } from "@/shared/ui/Pagination";
 import type { UUID } from "@/shared/types/api";
 import { useGetDocumentChunksQuery } from "../api/documents.endpoints";
-import { CHUNKS_PAGE_SIZE, POLL_INTERVAL_MS } from "../constants/documents.constants";
+import {
+  CHUNKS_PAGE_SIZE,
+  POLL_INTERVAL_MS,
+} from "../constants/documents.constants";
 import type { ChunkBrief } from "../types/document.types";
 import { SpinnerIcon } from "./DocumentIcons";
 
@@ -84,7 +87,10 @@ export function DocumentChunksList({ documentId, active }: Props) {
 
   const q = useGetDocumentChunksQuery(
     { id: documentId, page, size },
-    { pollingInterval: active ? POLL_INTERVAL_MS : 0, skipPollingIfUnfocused: true },
+    {
+      pollingInterval: active ? POLL_INTERVAL_MS : 0,
+      skipPollingIfUnfocused: true,
+    },
   );
 
   // Same rule as the documents list: only a real page switch greys out the controls,
@@ -111,7 +117,10 @@ export function DocumentChunksList({ documentId, active }: Props) {
 
       {q.data && q.data.items.length === 0 && (
         <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-          {t("documents.chunks.empty", "Чанків ще немає — документ не пройшов етап чанкінгу.")}
+          {t(
+            "documents.chunks.empty",
+            "Чанків ще немає — документ не пройшов етап чанкінгу.",
+          )}
         </p>
       )}
 
@@ -136,7 +145,7 @@ export function DocumentChunksList({ documentId, active }: Props) {
           size={size}
           totalLabel={t("documents.chunks.total", {
             count: total,
-            defaultValue: "Усього чанків: {{count}}",
+            defaultValue: "Усього чанків: {count}",
           })}
           disabled={isSwitching}
           onPage={setPage}

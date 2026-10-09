@@ -111,24 +111,29 @@ async def _run(session_factory: SessionFactory, job_id: uuid.UUID,
         doc = ctx.doc
         ctx.jobs.mark_processing(ctx.job, EMBED)
         ctx.docs.set_status(doc, DocumentStatus.EMBEDDING)
-        rows = await DocumentChunkRepository(db).list_for_embedding(doc.id)
+        chunk_repo = DocumentChunkRepository(db)
+        total = await chunk_repo.count(doc.id)
+        all_chunk_ids = await chunk_repo.list_ids(doc.id)
+        rows = await chunk_repo.list_for_embedding(doc.id, pending_only=True)
+        already_indexed = total - len(rows)
         for name in (EMBED, INDEX):
-            await ctx.jobs.begin_stage(job_id, name, items_total=len(rows))
+            await ctx.jobs.begin_stage(job_id, name, items_total=total,
+                                       items_processed=already_indexed)
         info = _DocInfo(doc.id, doc.collection_id, doc.source_id, doc.title, doc.language)
-        if not rows:
+        if total == 0:
             await fail_stages(db, ctx.job, doc, "no_chunks", "Document has no chunks", EMBED, INDEX)
             return {"status": "failed", "error_code": "no_chunks", "job_id": str(job_id)}
         await db.commit()
 
     chunks = [_Chunk(r[0], r[1], r[2], r[3], list((r[4] or {}).get("heading_path") or []))
               for r in rows]
-    total = len(chunks)
+    pending = len(chunks)
 
     # 2) embed → upsert батчами (без відкритої транзакції під час мережевих викликів)
     try:
         await deps.store.ensure(deps.embedder.dim, sparse=deps.sparse is not None)
-        done = 0
-        for i in range(0, total, bs):
+        done = already_indexed
+        for i in range(0, pending, bs):
             batch = chunks[i:i + bs]
             dense = await deps.embedder.embed([_embedding_text(info.title, c) for c in batch])
             _check_vectors(dense, len(batch), deps.embedder.dim)
@@ -154,6 +159,8 @@ async def _run(session_factory: SessionFactory, job_id: uuid.UUID,
                                          [c.id for c in batch], deps.embedder.model, done, total)
             if reason:
                 return await _abort(deps, info, job_id, reason)
+            logger.info("embed indexed batch job=%s document=%s processed=%s/%s",
+                        job_id, info.id, done, total)
 
         reason = None
         async with session_factory() as db:
@@ -170,7 +177,7 @@ async def _run(session_factory: SessionFactory, job_id: uuid.UUID,
                 await db.commit()
         if reason:
             return await _abort(deps, info, job_id, reason)
-        removed = await deps.store.delete_stale(str(info.id), [str(c.id) for c in chunks])
+        removed = await deps.store.delete_stale(str(info.id), [str(chunk_id) for chunk_id in all_chunk_ids])
     except ParseError as exc:
         logger.warning("embed failed job=%s code=%s: %s", job_id, exc.code, exc.message)
         await fail_job_stages(session_factory, job_id, exc.code, exc.message, EMBED, INDEX)
@@ -192,7 +199,7 @@ async def _run(session_factory: SessionFactory, job_id: uuid.UUID,
         await db.commit()
 
     return {"status": "embedded", "job_id": str(job_id), "document_id": str(info.id),
-            "chunks": total, "stale_removed": removed}
+            "chunks": total, "resumed_from": already_indexed, "stale_removed": removed}
 
 
 async def _record_batch(session_factory: SessionFactory, job_id: uuid.UUID, document_id: uuid.UUID,

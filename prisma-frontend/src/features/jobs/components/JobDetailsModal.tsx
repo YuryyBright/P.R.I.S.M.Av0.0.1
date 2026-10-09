@@ -86,7 +86,9 @@ export function JobDetailsModal({ job, onClose }: Props) {
   );
   const names = [
     ...STAGE_ORDER,
-    ...[...byName.keys()].filter((n) => !STAGE_ORDER.includes(n as never)),
+    ...[...byName.keys()].filter(
+      (n) => n !== "index" && !STAGE_ORDER.includes(n as never),
+    ),
   ];
 
   return (

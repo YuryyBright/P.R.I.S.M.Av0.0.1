@@ -12,6 +12,7 @@ import time
 import uuid
 from typing import Any, Callable, cast
 
+from sqlalchemy import String, cast as sql_cast, or_
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -133,10 +134,76 @@ class RetrievalService:
             c = hydrated.get(uuid.UUID(h.id))
             if c is not None:
                 c.score = h.score
+                c.match_type = "semantic"
                 chunks.append(c)
         dropped = len(fused) - len(chunks)
         if dropped:
             trace.warnings.append(f"dropped_stale:{dropped}")
+
+        # Optional exact phrase pass for the standalone search UI. This uses
+        # Postgres text already stored with each chunk, so exact titles/phrases
+        # do not depend on the embedding model's semantic ranking.
+        if req.exact_match:
+            escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            phrase = f"%{escaped}%"
+            lexical_limit = min(max((req.top_k or self._cfg.reranker.top_k) * 3, 30), 100)
+            async with self._sf() as db:
+                rows = (await db.exec(
+                    select(
+                        DocumentChunk,
+                        _document.title,
+                        _document.collection_id,
+                        _document.url,
+                    )
+                    .join(Document, _document.id == _chunk.document_id)
+                    .where(
+                        _document.deleted_at.is_(None),
+                        _document.status == DocumentStatus.READY,
+                        _document.collection_id.in_(scope.collection_ids),
+                        or_(
+                            _document.title.ilike(phrase, escape="\\"),
+                            _chunk.content.ilike(phrase, escape="\\"),
+                            sql_cast(_chunk.meta, String).ilike(phrase, escape="\\"),
+                        ),
+                    )
+                    .order_by(
+                        _document.title.ilike(phrase, escape="\\").desc(),
+                        _chunk.chunk_index,
+                    )
+                    .limit(lexical_limit)
+                )).all()
+            vector_ids = {chunk.chunk_id for chunk in chunks}
+            vector_by_id = {chunk.chunk_id: chunk for chunk in chunks}
+            lexical: list[RetrievedChunk] = []
+            exact_chunks_by_document: dict[uuid.UUID, int] = {}
+            for chunk, title, collection_id, url in rows:
+                if chunk.id in vector_ids:
+                    # Keep the vector score, but label the independently
+                    # confirmed phrase match for the UI.
+                    existing = vector_by_id.get(chunk.id)
+                    if existing is not None:
+                        existing.match_type = "title_exact" if query.casefold() in title.casefold() else "text_exact"
+                    continue
+                title_match = query.casefold() in title.casefold()
+                seen = exact_chunks_by_document.get(chunk.document_id, 0)
+                if seen >= 3:
+                    continue
+                exact_chunks_by_document[chunk.document_id] = seen + 1
+                lexical.append(RetrievedChunk(
+                    chunk_id=chunk.id,
+                    document_id=chunk.document_id,
+                    collection_id=collection_id,
+                    document_title=title,
+                    text=chunk.content,
+                    page=chunk.page_number,
+                    heading_path=[str(h) for h in (chunk.meta or {}).get("heading_path", [])],
+                    score=1.0 if title_match else 0.99,
+                    token_count=chunk.token_count,
+                    document_url=url,
+                    chunk_index=chunk.chunk_index,
+                    match_type="title_exact" if title_match else "text_exact",
+                ))
+            chunks = lexical + chunks
 
         # 5) rerank
         want_rerank = (self._reranker is not None) if req.rerank is None else req.rerank

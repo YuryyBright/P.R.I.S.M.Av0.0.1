@@ -150,7 +150,7 @@ function ToolRow({ tool }: { tool: TimelineTool }) {
         )}
       </div>
       {tool.args && (
-        <p className="mt-0.5 font-mono text-theme-xs break-all text-gray-500 dark:text-gray-400">
+        <p className="font-mono mt-0.5 text-theme-xs break-all text-gray-500 dark:text-gray-400">
           {tool.args}
         </p>
       )}
@@ -289,7 +289,7 @@ function StepItem({ step, last }: { step: TimelineStep; last: boolean }) {
                 <summary className="cursor-pointer list-none text-theme-xs font-medium text-brand-600 select-none hover:text-brand-700 dark:text-brand-400">
                   {t("ai.timeline.details", "Деталі кроку")}
                 </summary>
-                <pre className="mt-1.5 max-h-60 overflow-auto rounded-lg bg-gray-50 p-2.5 font-mono text-[12px] leading-5 text-gray-600 dark:bg-black/30 dark:text-gray-300">
+                <pre className="font-mono mt-1.5 max-h-60 overflow-auto rounded-lg bg-gray-50 p-2.5 text-[12px] leading-5 text-gray-600 dark:bg-black/30 dark:text-gray-300">
                   {step.detail}
                 </pre>
               </details>
@@ -336,7 +336,11 @@ export function RunTimeline({
         className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-start focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:outline-none disabled:cursor-default"
       >
         <span className="text-brand-500 dark:text-brand-400">
-          {live ? <SpinnerIcon className="size-4" /> : <WrenchIcon className="size-4" />}
+          {live ? (
+            <SpinnerIcon className="size-4" />
+          ) : (
+            <WrenchIcon className="size-4" />
+          )}
         </span>
         <span className="min-w-0 flex-1 truncate text-theme-sm font-medium text-gray-800 dark:text-white/90">
           {live
@@ -345,8 +349,9 @@ export function RunTimeline({
           <span className="ms-2 font-normal text-gray-500 dark:text-gray-400">
             {t("ai.timeline.summary", "{{steps}} кр.", { steps: steps.length })}
             {toolCount > 0 &&
-              ` · ${t("ai.timeline.tools", "{{count}} викл.", { count: toolCount })}`}
-            {failed > 0 && ` · ${t("ai.timeline.failed", "помилок: {{count}}", { count: failed })}`}
+              ` · ${t("ai.timeline.tools", "{count} викл.", { count: toolCount })}`}
+            {failed > 0 &&
+              ` · ${t("ai.timeline.failed", "помилок: {count}", { count: failed })}`}
           </span>
         </span>
         {!live && (
@@ -370,7 +375,9 @@ export function RunTimeline({
 export function PersistedRunTimeline({ runId }: { runId: string }) {
   const { t } = useTranslation();
   const [requested, setRequested] = useState(false);
-  const { data, isFetching, error } = useGetRunStepsQuery(runId, { skip: !requested });
+  const { data, isFetching, error } = useGetRunStepsQuery(runId, {
+    skip: !requested,
+  });
 
   if (!requested) {
     return (

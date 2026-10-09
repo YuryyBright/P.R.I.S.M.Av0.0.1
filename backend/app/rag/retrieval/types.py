@@ -13,6 +13,7 @@ class RetrievalRequest:
     document_ids: list[uuid.UUID] | None = None
     rerank: bool | None = None                       # None = дефолт із settings (є reranker → так)
     top_k: int | None = None
+    exact_match: bool = False
 
 
 @dataclass(slots=True)
@@ -29,6 +30,7 @@ class RetrievedChunk:
     token_count: int = 0
     document_url: str | None = None
     chunk_index: int = 0
+    match_type: str | None = None
 
 
 @dataclass(slots=True)

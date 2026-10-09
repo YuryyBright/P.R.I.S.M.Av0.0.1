@@ -33,13 +33,27 @@ class DocumentChunkRepository:
     async def delete_for_document(self, document_id: uuid.UUID) -> None:
         await self.db.exec(delete(DocumentChunk).where(DocumentChunk.document_id == document_id))
 
-    async def list_for_embedding(self, document_id: uuid.UUID) -> list[ChunkEmbeddingRow]:
-        """(id, chunk_index, content, page_number, meta) у порядку chunk_index."""
+    async def list_for_embedding(
+        self, document_id: uuid.UUID, *, pending_only: bool = False
+    ) -> list[ChunkEmbeddingRow]:
+        """(id, chunk_index, content, page_number, meta) у порядку chunk_index.
+
+        Retry ingestion може передати лише чанки без успішно зафіксованого upsert.
+        """
+        conds = [DocumentChunk.document_id == document_id]
+        if pending_only:
+            conds.append(DocumentChunk.indexed_at.is_(None))
         rows = await self.db.exec(
             select(DocumentChunk.id, DocumentChunk.chunk_index, DocumentChunk.content,
                    DocumentChunk.page_number, DocumentChunk.meta)
-            .where(DocumentChunk.document_id == document_id)
+            .where(*conds)
             .order_by(DocumentChunk.chunk_index))
+        return list(rows.all())
+
+    async def list_ids(self, document_id: uuid.UUID) -> list[uuid.UUID]:
+        rows = await self.db.exec(
+            select(DocumentChunk.id).where(DocumentChunk.document_id == document_id)
+        )
         return list(rows.all())
 
     async def mark_indexed(self, chunk_ids: Sequence[uuid.UUID], model: str, version: str) -> None:

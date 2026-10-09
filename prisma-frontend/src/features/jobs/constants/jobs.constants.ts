@@ -43,7 +43,6 @@ export const STAGE_ORDER: StageName[] = [
   "clean",
   "chunk",
   "embed",
-  "index",
   "finalize",
 ];
 

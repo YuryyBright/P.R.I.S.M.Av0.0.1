@@ -16,6 +16,7 @@ import { collectionsRoutes } from "@/features/collections";
 import { jobsRoutes } from "@/features/jobs";
 import { documentsRoutes } from "@/features/documents/routes";
 import { aiRoutes } from "@/features/ai";
+import { searchRoutes } from "@/features/search";
 /**
  * Composition only: each feature owns its routes, this file decides WHERE they sit
  * (public / guest-only / protected). New feature = spread its routes into the right group.
@@ -44,6 +45,7 @@ export const router = createBrowserRouter([
               ...documentsRoutes,
               ...jobsRoutes,
               ...aiRoutes,
+              ...searchRoutes,
               {
                 path: "/403",
                 handle: { titleKey: "errors.forbidden.title" },

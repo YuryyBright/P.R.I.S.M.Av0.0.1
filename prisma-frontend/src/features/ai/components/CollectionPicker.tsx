@@ -27,7 +27,9 @@ export function CollectionPicker({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? options.filter((o) => o.name.toLowerCase().includes(q)) : options;
+    return q
+      ? options.filter((o) => o.name.toLowerCase().includes(q))
+      : options;
   }, [options, query]);
 
   const toggle = (id: UUID) => {
@@ -57,7 +59,8 @@ export function CollectionPicker({
       >
         {isLoading && (
           <li className="flex items-center gap-2 px-3 py-2 text-theme-xs text-gray-500">
-            <SpinnerIcon className="size-4" /> {t("common.loading", "Завантаження…")}
+            <SpinnerIcon className="size-4" />{" "}
+            {t("common.loading", "Завантаження…")}
           </li>
         )}
         {!isLoading && filtered.length === 0 && (
@@ -75,7 +78,9 @@ export function CollectionPicker({
                 className="mt-0.5 size-4 shrink-0 rounded border-gray-300 text-brand-500 focus:ring-brand-500/40 dark:border-white/20 dark:bg-transparent"
               />
               <span className="min-w-0">
-                <span className="block truncate text-theme-sm text-gray-800 dark:text-white/90">{o.name}</span>
+                <span className="block truncate text-theme-sm text-gray-800 dark:text-white/90">
+                  {o.name}
+                </span>
                 {o.description && (
                   <span className="block truncate text-theme-xs text-gray-500 dark:text-gray-400">
                     {o.description}
@@ -88,8 +93,16 @@ export function CollectionPicker({
       </ul>
 
       <div className="flex items-center justify-between text-theme-xs text-gray-500 dark:text-gray-400">
-        <span>{t("ai.settings.selectedCount", "Вибрано: {{count}}", { count: value.length })}</span>
-        {truncated && <span>{t("ai.settings.truncated", "Показано перші 100 колекцій.")}</span>}
+        <span>
+          {t("ai.settings.selectedCount", "Вибрано: {count}", {
+            count: value.length,
+          })}
+        </span>
+        {truncated && (
+          <span>
+            {t("ai.settings.truncated", "Показано перші 100 колекцій.")}
+          </span>
+        )}
       </div>
     </div>
   );

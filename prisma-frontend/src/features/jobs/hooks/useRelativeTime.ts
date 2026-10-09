@@ -22,7 +22,7 @@ export function useRelativeTime() {
       default:
         return t("header.notifications.dayAgo", {
           count,
-          defaultValue: "{{count}} дн. тому",
+          defaultValue: "{count} дн. тому",
         });
     }
   };

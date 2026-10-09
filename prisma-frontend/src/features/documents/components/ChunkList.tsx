@@ -181,7 +181,7 @@ export function ChunkList({
           {searching
             ? t("documents.chunks.found", {
                 count: total,
-                defaultValue: "Знайдено: {{count}}",
+                defaultValue: "Знайдено: {count}",
               })
             : `${from}–${to} ${t("documents.chunks.of", "з")} ${total}`}
         </span>

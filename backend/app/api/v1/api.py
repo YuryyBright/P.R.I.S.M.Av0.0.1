@@ -6,6 +6,7 @@ from app.api.v1.endpoints.rag import (
     collections,
     documents,
     jobs,
+    search,
 )
 from app.api.v1.endpoints.users import (
     auth,
@@ -95,6 +96,7 @@ api_router.include_router(
 api_router.include_router(collections.router)
 api_router.include_router(documents.router)
 api_router.include_router(jobs.router)
+api_router.include_router(search.router)
 
 
 # ---------------------------------------------------------------------------

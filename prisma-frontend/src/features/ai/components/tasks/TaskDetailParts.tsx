@@ -4,7 +4,11 @@ import { Alert } from "@/shared/ui/Alert";
 import { AI_PATHS, STAGE_LABELS } from "../../constants/ai.constants";
 import { formatBytes, formatTime, truncate } from "../../lib/format";
 import { fetchBlob } from "../../lib/sse";
-import type { TaskFailedItem, TaskLogEntry, TaskStageState } from "../../lib/taskReducer";
+import type {
+  TaskFailedItem,
+  TaskLogEntry,
+  TaskStageState,
+} from "../../lib/taskReducer";
 import type { StageKind, TaskArtifact } from "../../types/ai.types";
 import {
   AlertTriangleIcon,
@@ -66,7 +70,10 @@ export function StageStepper({
                     : "font-medium text-gray-800 dark:text-white/90"
                 }`}
               >
-                {t(`ai.tasks.stage.${s.stage}`, STAGE_LABELS[s.stage as StageKind] ?? s.stage)}
+                {t(
+                  `ai.tasks.stage.${s.stage}`,
+                  STAGE_LABELS[s.stage as StageKind] ?? s.stage,
+                )}
               </p>
             </div>
           </li>
@@ -78,7 +85,7 @@ export function StageStepper({
             <span className="size-1.5 rounded-full bg-current" />
           </span>
           <p className="text-theme-sm text-gray-400 dark:text-gray-500">
-            {t("ai.tasks.moreStages", "Ще етапів: {{count}}", { count: pending })}
+            {t("ai.tasks.moreStages", "Ще етапів: {count}", { count: pending })}
           </p>
         </li>
       )}
@@ -100,7 +107,7 @@ export function FailedItems({ items }: { items: TaskFailedItem[] }) {
           <li key={`${f.key}-${i}`} className="flex gap-3 py-2.5">
             <AlertTriangleIcon className="mt-0.5 size-4 text-error-500" />
             <div className="min-w-0">
-              <p className="truncate font-mono text-theme-xs font-medium text-gray-800 dark:text-white/90">
+              <p className="font-mono truncate text-theme-xs font-medium text-gray-800 dark:text-white/90">
                 {f.key}
               </p>
               <p className="text-theme-xs wrap-break-word text-gray-500 dark:text-gray-400">
@@ -121,7 +128,9 @@ export function FailedItems({ items }: { items: TaskFailedItem[] }) {
         >
           {all
             ? t("ai.timeline.less", "Згорнути")
-            : t("ai.tasks.showAllFailed", "Показати всі ({{count}})", { count: items.length })}
+            : t("ai.tasks.showAllFailed", "Показати всі ({count})", {
+                count: items.length,
+              })}
         </button>
       )}
     </div>
@@ -149,11 +158,17 @@ export function EventLog({ entries }: { entries: TaskLogEntry[] }) {
     <ol className="max-h-72 space-y-2 overflow-y-auto pe-1">
       {[...entries].reverse().map((e) => (
         <li key={e.key} className="flex items-start gap-2.5">
-          <span aria-hidden="true" className={`mt-1.5 size-1.5 shrink-0 rounded-full ${LOG_DOT[e.tone]}`} />
+          <span
+            aria-hidden="true"
+            className={`mt-1.5 size-1.5 shrink-0 rounded-full ${LOG_DOT[e.tone]}`}
+          />
           <p className="min-w-0 flex-1 text-theme-sm wrap-break-word text-gray-700 dark:text-gray-300">
             {e.text}
           </p>
-          <time className="shrink-0 text-theme-xs text-gray-400 tabular-nums dark:text-gray-500" dateTime={e.ts}>
+          <time
+            className="shrink-0 text-theme-xs text-gray-400 tabular-nums dark:text-gray-500"
+            dateTime={e.ts}
+          >
             {formatTime(e.ts)}
           </time>
         </li>
@@ -192,12 +207,19 @@ export function ArtifactsList({
     setBusy(a.id);
     setError(null);
     try {
-      const { blob, filename } = await fetchBlob(AI_PATHS.taskArtifactDownload(taskId, a.id));
+      const { blob, filename } = await fetchBlob(
+        AI_PATHS.taskArtifactDownload(taskId, a.id),
+      );
       saveBlob(blob, filename ?? a.name);
     } catch (e) {
       setError(
-        e instanceof Error && "status" in e && (e as { status: number }).status === 404
-          ? t("ai.tasks.downloadMissing", "Завантаження недоступне: на сервері немає endpoint для файлів завдання.")
+        e instanceof Error &&
+          "status" in e &&
+          (e as { status: number }).status === 404
+          ? t(
+              "ai.tasks.downloadMissing",
+              "Завантаження недоступне: на сервері немає endpoint для файлів завдання.",
+            )
           : e instanceof Error
             ? e.message
             : t("errors.unexpected", "Сталася неочікувана помилка"),
@@ -210,13 +232,17 @@ export function ArtifactsList({
   if (isLoading)
     return (
       <p className="inline-flex items-center gap-2 text-theme-sm text-gray-500">
-        <SpinnerIcon className="size-4" /> {t("common.loading", "Завантаження…")}
+        <SpinnerIcon className="size-4" />{" "}
+        {t("common.loading", "Завантаження…")}
       </p>
     );
   if (!artifacts.length)
     return (
       <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-        {t("ai.tasks.noArtifacts", "Файли з'являться після завершення завдання.")}
+        {t(
+          "ai.tasks.noArtifacts",
+          "Файли з'являться після завершення завдання.",
+        )}
       </p>
     );
 
@@ -233,7 +259,9 @@ export function ArtifactsList({
               <FileIcon className="size-4.5" />
             </IconTile>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-theme-sm font-medium text-gray-800 dark:text-white/90">{a.name}</p>
+              <p className="truncate text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                {a.name}
+              </p>
               <p className="text-theme-xs text-gray-500 dark:text-gray-400">
                 {a.type.toUpperCase()} · {formatBytes(a.size)}
               </p>
@@ -245,7 +273,11 @@ export function ArtifactsList({
               aria-label={`${t("ai.tasks.download", "Завантажити")}: ${a.name}`}
               className={`inline-flex size-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 disabled:opacity-50 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white/90 ${focusRing}`}
             >
-              {busy === a.id ? <SpinnerIcon className="size-4.5" /> : <DownloadIcon className="size-4.5" />}
+              {busy === a.id ? (
+                <SpinnerIcon className="size-4.5" />
+              ) : (
+                <DownloadIcon className="size-4.5" />
+              )}
             </button>
           </li>
         ))}

@@ -144,11 +144,11 @@ class IngestionJobRepository:
         return stage
 
     async def begin_stage(self, job_id: uuid.UUID, name: IngestionStageName, *,
-                          items_total: int = 0) -> IngestionStage:
+                          items_total: int = 0, items_processed: int = 0) -> IngestionStage:
         """Скинути й запустити stage (retry перезаписує рядок)."""
         stage = await self.get_or_create_stage(job_id, name)
         stage.status, stage.started_at, stage.finished_at = StageStatus.PROCESSING, utcnow(), None
-        stage.items_total, stage.items_processed = items_total, 0
+        stage.items_total, stage.items_processed = items_total, min(items_processed, items_total)
         stage.error_message = None
         return stage
 
